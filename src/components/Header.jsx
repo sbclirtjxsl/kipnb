@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import logoImg from '../assets/Logo.png';
+import logoImg from '../assets/ALogo.png';
 
 // 메뉴 데이터 구조를 이름(name)과 경로(path) 객체 배열로 변경합니다.
 const menuItems = [
