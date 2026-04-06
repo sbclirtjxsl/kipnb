@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import LogoImg from '../assets/Logo.png';
+// import LogoImg from '../assets/Logo.png';
 
 const Soon = () => {
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ const Soon = () => {
           
           {/* 아이콘/로고 영역 */}
           <div className="mb-10 inline-block p-6 bg-white rounded-full shadow-sm border border-gray-100">
-            <img src={LogoImg} alt="사람과건축 로고" className="h-12 w-auto opacity-50 grayscale" />
+            {/* <img src={LogoImg} alt="사람과건축 로고" className="h-12 w-auto opacity-50 grayscale" /> */}
           </div>
 
           {/* 메인 문구 */}
