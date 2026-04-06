@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import logoImg from '../assets/logo.png';
+import logoImg from '../assets/Logo.png';
 
 // 메뉴 데이터 구조를 이름(name)과 경로(path) 객체 배열로 변경합니다.
 const menuItems = [
@@ -56,7 +56,7 @@ const menuItems = [
 
 const Header = () => {
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+    <Header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-[1200px] mx-auto px-4 py-4">
         <div className="flex justify-between items-center mb-4">
           <Link to="/" className="block">
@@ -111,7 +111,7 @@ const Header = () => {
           ))}
         </nav>
       </div>
-    </header>
+    </Header>
   );
 };
 
