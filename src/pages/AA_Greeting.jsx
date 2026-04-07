@@ -2,74 +2,67 @@ import React from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
+// 이미지 파일들이 assets 폴더에 있다고 가정합니다.
+// 실제 경로에 맞게 수정해주세요.
+import GreetingMainImg from '../assets/greeting.webp'; // 사진1의 건물 이미지
+import LogoMolit from '../assets/MOLIT_logo.webp';         // 국토교통부 로고
+import LogoChungnam from '../assets/Chungnam.webp';   // 충청남도 로고
+
 const AA__Greeting = () => {
   return (
     <div className="min-h-screen bg-white font-sans text-gray-800">
       <Header />
 
       <main>
-        {/* 1. 서브 페이지 헤더 (타이틀 영역) */}
-        <section className="bg-gray-50 border-b border-gray-200 py-16">
+        {/* 1. 서브 페이지 헤더 (타이틀 영역) - 사진 1 스타일로 슬림하게 수정 */}
+        <section className="py-12"> {/* 배경색 제거, 패딩 축소 */}
           <div className="max-w-[1200px] mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">인사말</h2>
-            <div className="text-sm text-gray-500 flex justify-center gap-2">
-              <span>Home</span>
-              <span>&gt;</span>
+            
+            {/* 브레드크럼 디자인 수정: separator 제거, 색상 통일 */}
+            <div className="text-sm text-gray-500 flex justify-center gap-1">
               <span>사람과건축 소개</span>
               <span>&gt;</span>
-              <span className="font-bold text-[#317F81]">인사말</span>
+              <span className="text-gray-500">인사말</span> {/* 색상 강조 제거 */}
             </div>
           </div>
         </section>
 
-        {/* 2. 본문 영역 */}
-        <section className="py-20">
+        {/* 2. 본문 영역 - 세로 1단 구조로 전면 수정 */}
+        <section className="pb-20">
           <div className="max-w-[1000px] mx-auto px-4">
-            <div className="flex flex-col md:flex-row gap-12 items-start">
-              
-              {/* 왼쪽: 이사장/대표 이미지 영역 */}
-              <div className="w-full md:w-1/3">
-                <div className="aspect-[3/4] bg-gray-200 rounded-lg overflow-hidden shadow-inner flex items-center justify-center">
-                  {/* 실제 사진이 있다면 src에 넣으시면 됩니다 */}
-                  <span className="text-gray-400 italic text-sm">대표 이미지 준비중</span>
-                </div>
-              </div>
-
-              {/* 오른쪽: 인사말 텍스트 영역 */}
-              <div className="w-full md:w-2/3">
-                <h3 className="text-2xl font-bold text-[#317F81] mb-6 leading-tight">
-                  "사람 중심의 건축문화를 선도하는 <br />
-                  사단법인 사람과건축입니다."
-                </h3>
-                
-                <div className="space-y-6 text-[16px] leading-relaxed text-gray-700 break-keep">
-                  <p>
-                    안녕하십니까? 사단법인 사람과건축 홈페이지를 방문해 주셔서 진심으로 감사드립니다.
-                  </p>
-                  <p>
-                    우리 법인은 건축이 단순한 물리적 구조물을 넘어 그 속에 살아가는 사람들의 삶의 질을 결정한다는 신념 아래, 
-                    모든 사용자가 차별 없이 편리하게 이용할 수 있는 건축 환경을 조성하기 위해 노력해 왔습니다.
-                  </p>
-                  <p>
-                    특히 <strong>배리어 프리(Barrier-Free)</strong> 인증과 연구를 통해 장애인, 노인, 임산부 등 
-                    사회적 약자를 포함한 모든 구성원이 물리적 장벽 없이 자유롭게 소통할 수 있는 공간을 만드는 데 앞장서고 있습니다.
-                  </p>
-                  <p>
-                    앞으로도 우리 사람과건축은 공익사업과 지속적인 연구를 통해 안전하고 아름다운 대한민국 건축 문화를 만들어가는 
-                    든든한 파트너가 될 것을 약속드립니다.
-                  </p>
-                  <p>
-                    여러분의 지속적인 관심과 성원을 부탁드립니다. 감사합니다.
-                  </p>
-                </div>
-
-                {/* 하단 서명 영역 */}
-                <div className="mt-12 text-right">
-                  <p className="text-lg font-medium text-gray-500">사단법인 사람과건축</p>
-                  <p className="text-2xl font-bold mt-2 text-gray-900">이사장 OOO (인)</p>
-                </div>
-              </div>
+            
+            {/* [추가] 상단 메인 이미지 영역 (사진 1처럼 와이드하게) */}
+            <div className="w-full h-[450px] md:h-[150px] mb-12 rounded-lg overflow-hidden shadow-md">
+              <img 
+                src={GreetingMainImg} 
+                alt="사람과건축 전경" 
+                className="w-full h-auto object-cover aspect-[21/9]" // 와이드 비율 유지
+              />
+              {/* 이미지가 없을 때를 위한 fallback (개발용) */}
+              {/* <div className="aspect-[21/9] bg-gray-200 flex items-center justify-center text-gray-400">메인 이미지 준비중</div> */}
             </div>
+
+            {/* 텍스트 영역: 기존 flex 구조 제거, break-keep 적용으로 한글 가독성 향상 */}
+            <div className="space-y-8 text-[16px] leading-relaxed text-gray-700 break-keep text-justify">
+              <p>
+                우리는 현재 기후 변화와 자원 고갈, 도시화 등의 문제로 인해 건축 환경이 도전받고 있는 상황에 직면해 있습니다. 
+                이러한 문제들은 건축물의 안전성, 쾌적성, 경제성 등에 영향을 미치며, 인류의 생존과 발전에 위협이 되고 있습니다.
+              </p>
+              <p>
+                이에 사단법인 사람과 건축은 공공건축물의 지속 가능한 건축, 장애물 없는 생활환경과 관련된 각종 현안에 대하여 조사·연구의 수행, 
+                관련 정보와 자료의 축적, 건설 산업 현장에의 관련 기술 적용 및 인증, 간행물 발간 등의 활동을 통하여, 
+                지속 가능한 건축과 장애물 없는 생활환경에 대한 올바른 방향과 정책대안을 제시함으로써 사용자의 삶의 질을 향상 시키고 
+                기후변화와 탄소 문제를 해결하는데 기여하고자 합니다.
+              </p>
+            </div>
+
+            {/* [추가] 하단 유관기관 로고 영역 */}
+            <div className="mt-16 pt-10 border-t border-gray-100 flex justify-center items-center gap-10">
+              <img src={LogoMolit} alt="국토교통부" className="h-10 w-auto opacity-90" />
+              <img src={LogoChungnam} alt="충청남도" className="h-10 w-auto opacity-90" />
+            </div>
+
           </div>
         </section>
       </main>

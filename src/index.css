@@ -1,1 +1,15 @@
+/* src/index.css */
 @import "tailwindcss";
+
+/* 1. 이미지 불러오듯 폰트 파일 연결하기 */
+@font-face {
+  font-family: "Jua"; /* 테일윈드에서 쓸 이름 */
+  src: url("./assets/fonts/Jua-Regular.ttf") format("opentype"); /* 파일 경로 */
+  font-weight: normal;
+  font-style: normal;
+}
+
+@theme {
+  /* 2. 테일윈드 v4 방식으로 별명 지어주기 */
+  --font-Jua: "MyFont", sans-serif;
+}

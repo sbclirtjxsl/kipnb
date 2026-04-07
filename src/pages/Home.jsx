@@ -1,5 +1,5 @@
 import React from 'react';
-import homeImg from '../assets/Home.png'; 
+import homeImg from '../assets/Home.webp'; 
 import Header from '../components/Header'; // 헤더 가져오기
 import Footer from '../components/Footer'; // 푸터 가져오기
 
@@ -12,8 +12,8 @@ const Home = () => {
         {/* 2. PEOPLE & BUILDING Section */}
         <section className="relative overflow-hidden bg-[#D2EBF8] pt-16">
           <div className="w-full text-center cursor-default relative z-10 mb-8">
-            <h1 className="text-[42px] font-bold tracking-widest mb-2 text-black font-serif">PEOPLE & BUILDING</h1>
-            <p className="text-lg font-normal tracking-widest text-gray-700 uppercase">incorporated association</p>
+            <h1 className="text-[42px] font-Jua tracking-widest mb-2 text-black">PEOPLE & BUILDING</h1>
+            <p className="text-lg font-Jua tracking-widest text-gray-700 uppercase">incorporated association</p>
           </div>
           <div className="mx-auto w-full max-w-[1883px]">
             <img 
@@ -27,7 +27,7 @@ const Home = () => {
         {/* 3. BARRIER FREE Section */}
         <section className="py-20 bg-gray-50">
           <div className="max-w-[980px] mx-auto px-4 text-center">
-            <h2 className="text-4xl font-bold mb-8">BARRIER FREE</h2>
+            <h2 className="text-4xl font-Jua mb-8">BARRIER FREE</h2>
             <p className="text-[15px] leading-loose text-gray-700 mb-10 text-left md:text-center break-keep">
               배리어 프리(Barrier-Free)란 장애인, 노인, 임산부 등 사회적 약자를 포함한 모든 사람이 일상생활과 사회 활동 전반에서 마주할 수 있는 물리적, 제도적, 심리적, 정보적 장벽들을 제거하여...
             </p>

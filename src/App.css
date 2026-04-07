@@ -1,0 +1,11 @@
+/* src/index.css */
+@import "tailwindcss";
+
+@theme {
+  /* 1. 폰트 등록하기 (CSS 변수 방식) */
+  --font-main: "Noto Sans KR", sans-serif;
+  --font-point: "Pretendard", sans-serif;
+
+  /* 2. 자주 쓰는 브랜드 색상도 여기서 바로 정할 수 있어요 */
+  --color-brand: #317F81;
+}
