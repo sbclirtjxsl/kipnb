@@ -4,9 +4,9 @@ import Footer from '../components/Footer';
 
 // 이미지 파일들이 assets 폴더에 있다고 가정합니다.
 // 실제 경로에 맞게 수정해주세요.
-import GreetingMainImg from '../assets/greeting.webp'; // 사진1의 건물 이미지
-import LogoMolit from '../assets/MOLIT_logo.webp';         // 국토교통부 로고
-import LogoChungnam from '../assets/Chungnam.webp';   // 충청남도 로고
+import GreetingMainImg from '../assets/page_image/greeting.webp'; // 사진1의 건물 이미지
+import LogoMolit from '../assets/logos/MOLIT_logo.webp';         // 국토교통부 로고
+import LogoChungnam from '../assets/logos/Chungnam.webp';   // 충청남도 로고
 
 const AA__Greeting = () => {
   return (

@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import LogoImg from '../assets/Logo.webp';
+import LogoImg from '../assets/logos/Logo.webp';
 import SearchIcon from '../assets/Search_B.svg'; // 이름 변경: Loginimg -> SearchIcon
-
+import login from '../assets/Login_B.svg';
 const menuItems = [
   { 
     title: "사람과건축 소개", 
@@ -66,10 +66,10 @@ const Header = () => {
             </Link>
 
             {/* 로그인은 우측 상단에 고정 */}
-            <div className="flex items-center text-sm font-bold text-[#317F81]">
+            <div className="flex items-center text-sm font-bold">
               <Link to="/login" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
-                <div className="w-7 h-7 bg-[#317F81] text-white rounded-full flex items-center justify-center text-[10px]">
-                  👤
+                <div className="w-7 h-7 text-white rounded-full flex items-center justify-center text-[10px]">
+                  <img src={login} alt="로그인"/>
                 </div>
                 <span>Log In</span>
               </Link>

@@ -3,9 +3,9 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 // 수정된 WebP 이미지 경로
-import BusinessMainImg from '../assets/Business.webp'; 
-import LogoMolit from '../assets/MOLIT_logo.webp';     
-import LogoChungnam from '../assets/Chungnam.webp';   
+import BusinessMainImg from '../assets/page_image/Business.webp'; 
+import LogoMolit from '../assets/logos/MOLIT_logo.webp';     
+import LogoChungnam from '../assets/logos/Chungnam.webp';   
 
 const businessData = [
   {

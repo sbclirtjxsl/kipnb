@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import LogoImg from '../assets/Logo.webp';
+import LogoImg from '../assets/logos/Logo.webp';
 
 const Soon = () => {
   const navigate = useNavigate();

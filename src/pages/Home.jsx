@@ -1,5 +1,5 @@
 import React from 'react';
-import homeImg from '../assets/Home.webp'; 
+import homeImg from '../assets/page_image/Home.webp'; 
 import Header from '../components/Header'; // 헤더 가져오기
 import Footer from '../components/Footer'; // 푸터 가져오기
 
