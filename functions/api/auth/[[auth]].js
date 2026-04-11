@@ -1,28 +1,31 @@
 import { betterAuth } from "better-auth";
 import { D1Dialect } from "kysely-d1";
 
-// 1. Better-auth 설정
 export const auth = (env) => betterAuth({
     database: {
-        dialect: new D1Dialect({ database: env.DB }),
+        dialect: new D1Dialect({
+            database: env.DB,
+        }),
         type: "sqlite",
     },
     
-    // ⭐ 클라우드플레어 환경변수를 우선 사용하고, 없으면 로컬 주소 사용
-    baseURL: env.BETTER_AUTH_URL || "http://127.0.0.1:8788",
+    // ⭐ wrangler.toml에서 URL을 가져옵니다.
+    baseURL: env.BETTER_AUTH_URL, 
     
+    // 비밀키는 클라우드플레어 대시보드(Secret)에서 가져옵니다.
     secret: env.BETTER_AUTH_SECRET,
     
-    // 소셜 로그인 설정
     socialProviders: {
         google: {
-            clientId: env.GOOGLE_CLIENT_ID,
-            clientSecret: env.GOOGLE_CLIENT_SECRET,
+            // ⭐ wrangler.toml에서 아이디를 가져옵니다.
+            clientId: env.GOOGLE_CLIENT_ID, 
+            
+            // 비밀번호는 클라우드플레어 대시보드(Secret)에서 가져옵니다.
+            clientSecret: env.GOOGLE_CLIENT_SECRET, 
         },
     },
 });
 
-// 2. 핸들러
 export async function onRequest(context) {
     const { env, request } = context;
     return auth(env).handler(request);
