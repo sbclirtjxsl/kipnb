@@ -49,4 +49,4 @@ CREATE TABLE IF NOT EXISTS "verification" (
     "expiresAt" DATETIME NOT NULL,
     "createdAt" DATETIME,
     "updatedAt" DATETIME
-);
+); 
