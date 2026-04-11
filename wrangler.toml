@@ -8,3 +8,6 @@ binding = "DB"
 database_name = "kipnb-db"
 database_id = "51ee77bb-0238-45a4-bc23-b0cc4c54ad66"
 
+[vars]
+GOOGLE_CLIENT_ID = "657606921980-enegv4hcp0fs2m1kjavq3cn9jggo64bm.apps.googleusercontent.com"
+BETTER_AUTH_URL = "kipnb.pages.dev"
