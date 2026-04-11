@@ -1,8 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import LogoImg from '../assets/logos/Logo.webp';
-import SearchIcon from '../assets/Search_B.svg'; // 이름 변경: Loginimg -> SearchIcon
+import SearchIcon from '../assets/Search_B.svg';
 import login from '../assets/Login_B.svg';
+
+// ⭐ 1. 우리가 만든 공용 인증 클라이언트 불러오기
+// (주의: Header.jsx 파일 위치에 따라 '../auth-client' 경로가 다를 수 있습니다. src 바로 아래 있다면 '../auth-client'가 맞습니다.)
+import { authClient } from '../auth-client'; 
+
 const menuItems = [
   { 
     title: "사람과건축 소개", 
@@ -55,27 +60,52 @@ const menuItems = [
 ];
 
 const Header = () => {
+  // ⭐ 2. 현재 로그인 세션(유저 정보)을 실시간으로 가져옵니다.
+  const { data: session, isPending } = authClient.useSession();
+
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-[1200px] mx-auto px-4">
         <div className="max-w-[900px] mx-auto">
-          {/* 상단: 로고와 로그인 버튼만 유지 */}
+          {/* 상단: 로고와 로그인 버튼 */}
           <div className="flex justify-between items-center py-0">
             <Link to="/" className="flex items-center">
               <img src={LogoImg} alt="사람과건축 로고" className="h-[50px] md:h-[55px] w-auto object-contain" />
             </Link>
 
-            {/* 로그인은 우측 상단에 고정 */}
+            {/* ⭐ 3. 로그인은 우측 상단에 고정 (상태에 따라 다르게 보임) */}
             <div className="flex items-center text-sm font-bold">
-              <Link to="/login" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
-                <div className="w-7 h-7 text-white rounded-full flex items-center justify-center text-[10px]">
-                  <img src={login} alt="로그인"/>
+              {isPending ? (
+                // 로딩 중일 때
+                <span className="text-gray-400 font-medium text-xs">확인 중...</span>
+              ) : session ? (
+                // 로그인 완료된 상태 (프로필 사진 + 이름 + 로그아웃)
+                <div className="flex items-center gap-2">
+                  <img src={session.user.image} alt="프로필" className="w-7 h-7 rounded-full border border-gray-200 shadow-sm" />
+                  <span className="text-gray-700">{session.user.name}님</span>
+                  <button 
+                    onClick={async () => {
+                      await authClient.signOut();
+                      window.location.reload(); // 로그아웃 후 화면 새로고침
+                    }}
+                    className="ml-3 px-3 py-1 text-xs font-medium text-gray-500 border border-gray-300 rounded-full hover:bg-gray-50 hover:text-red-500 transition-colors"
+                  >
+                    로그아웃
+                  </button>
                 </div>
-                <span>Log In</span>
-              </Link>
+              ) : (
+                // 로그인 안 된 상태 (기존 코드를 그대로 유지)
+                <Link to="/login" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
+                  <div className="w-7 h-7 text-white rounded-full flex items-center justify-center text-[10px]">
+                    <img src={login} alt="로그인"/>
+                  </div>
+                  <span>Log In</span>
+                </Link>
+              )}
             </div>
           </div>
         </div>
+        
         {/* 하단 네비게이션: 메뉴들과 Search 아이콘 */}
         <nav className="hidden md:flex justify-center items-center gap-10 text-[15.5px] font-bold relative pb-2">
           {menuItems.map((item, idx) => (
@@ -100,7 +130,7 @@ const Header = () => {
             </div>
           ))}
 
-          {/* [이동된 부분] 자료실 옆에 위치하는 Search 아이콘 */}
+          {/* 자료실 옆에 위치하는 Search 아이콘 */}
           <button className="flex items-center hover:text-[#317F81] transition-colors ml-[-10px]">
             <img src={SearchIcon} alt="search" className="w-5 h-5" />
           </button>

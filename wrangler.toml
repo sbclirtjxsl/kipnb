@@ -1,0 +1,9 @@
+name = "kipnb"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-04-10"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "kipnb-db"
+database_id = "51ee77bb-0238-45a4-bc23-b0cc4c54ad66"
