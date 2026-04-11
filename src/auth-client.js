@@ -1,7 +1,6 @@
-// src/auth-client.js
 import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({
-    // 현재 작동 중인 백엔드 주소
-    baseURL: "http://127.0.0.1:8788" 
+    // 로컬 주소 대신, 현재 접속한 브라우저의 진짜 주소를 자동으로 감지하도록 변경!
+    baseURL: window.location.origin 
 });
