@@ -118,7 +118,7 @@ const Notice = () => {
                     {/* ⭐ 잘라낸 10개의 데이터(currentPosts)만 화면에 그립니다 */}
                     {currentPosts.length > 0 ? (
                       currentPosts.map((post) => (
-                        <tr key={post.id} className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors">
+                        <tr key={post.id} onClick={() => navigate(`/board/${category}/${post.id}`)} className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors">
                           <td className="py-4 text-center text-gray-400 text-sm">{post.id}</td>
                           <td className="py-4 px-4 font-medium text-gray-800">{post.title}</td>
                           {currentBoard.showAttachment && (

@@ -11,6 +11,7 @@ import BF_Process from './pages/BF_Process';
 import BF_Fee from './pages/BF_Fee';
 import BF_Files from './pages/BF_Files';
 import LoginPage from './pages/LoginPage';
+import BoardDetail from './pages/BoardDetail';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
       <Route path="/bf-files" element={<BF_Files />} />
       <Route path="/board/:category" element={<Notice />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/board/:category/:id" element={<BoardDetail />} />
     </Routes>
   );
 }
