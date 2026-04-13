@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // ⭐ useEffect, useState 추가
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -15,11 +15,10 @@ const BoardDetail = () => {
   const navigate = useNavigate();
   const { data: session } = authClient.useSession();
 
-  // ⭐ 진짜 DB 데이터를 담을 바구니 (초기값은 비워둡니다)
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ⭐ DB에서 글 하나 불러오는 함수
+  // DB에서 글 하나 불러오는 함수
   useEffect(() => {
     const fetchPostDetail = async () => {
       try {
@@ -29,7 +28,7 @@ const BoardDetail = () => {
           setPost(data);
         } else {
           alert("존재하지 않거나 삭제된 게시글입니다.");
-          navigate(`/board/${category}`); // 에러 나면 목록으로 돌려보냄
+          navigate(`/board/${category}`); 
         }
       } catch (error) {
         console.error("게시글 로드 실패:", error);
@@ -41,7 +40,38 @@ const BoardDetail = () => {
     fetchPostDetail();
   }, [id, category, navigate]);
 
-  // 데이터를 불러오는 중일 때 보여줄 화면
+
+  // ⭐ 삭제 처리 함수 (확인창 안전장치 추가!)
+  const handleDelete = async () => {
+    // 1. 사용자에게 정말 지울 건지 물어봅니다.
+    const isConfirmed = window.confirm("정말로 이 게시글을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.");
+
+    // 2. '취소'를 누르면 여기서 함수를 끝냅니다. (아무 일도 일어나지 않음)
+    if (!isConfirmed) {
+      return; 
+    }
+
+    // 3. '확인'을 눌렀을 때만 DB 삭제 내비게이션(API) 출동!
+    try {
+      const response = await fetch(`/api/board-delete?id=${post.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        alert("성공적으로 삭제되었습니다.");
+        navigate(`/board/${category}`); // 삭제 후 게시판 목록으로 이동
+      } else {
+        const data = await response.json();
+        alert(`삭제 실패: ${data.error}`);
+      }
+    } catch (error) {
+      console.error("삭제 중 오류:", error);
+      alert("네트워크 오류가 발생했습니다.");
+    }
+  };
+
+
+  // 로딩 중 화면
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans">
@@ -54,11 +84,11 @@ const BoardDetail = () => {
     );
   }
 
-  // 글이 없을 때 (만약의 상황 대비)
+  // 만약 글이 없을 때 방어막
   if (!post) return null; 
 
-  // 권한 계산기 (작성자 본인인지, 관리자인지 확인)
-  const isAuthor = session?.user?.name === post.author_name; // DB의 이름과 비교
+  // 권한 계산
+  const isAuthor = session?.user?.name === post.author_name;
   const hasManagerRole = session?.user?.role === '관리자' || session?.user?.role === '운영진';
   const canEditOrDelete = isAuthor || hasManagerRole;
 
@@ -75,26 +105,20 @@ const BoardDetail = () => {
                 <span className="text-xs font-extrabold text-[#317F81] bg-[#eef6f6] px-2 py-1 rounded">
                   {boardNames[category] || category.toUpperCase()}
                 </span>
-                {/* 화면에 보여주는 번호는 가짜 번호 대신 실제 DB 고유번호(No.13)를 써도 무방합니다. */}
               </div>
               
-              {/* ⭐ DB에서 가져온 진짜 제목 */}
               <h1 className="text-2xl font-extrabold text-gray-900 mb-4 tracking-tight">
                 {post.title}
               </h1>
               
               <div className="flex justify-between items-center text-sm text-gray-500">
                 <div className="flex items-center gap-4">
-                  {/* ⭐ DB에서 가져온 진짜 작성자와 날짜 */}
                   <span className="font-medium text-gray-700">{post.author_name}</span>
                   <span>{new Date(post.created_at).toLocaleString()}</span>
                 </div>
               </div>
             </div>
 
-            {/* (첨부파일은 나중에 R2 연동할 때 추가할 예정이므로 잠시 숨겨둡니다) */}
-
-            {/* ⭐ DB에서 가져온 진짜 본문 내용 */}
             <div className="px-8 py-10 min-h-[300px] text-gray-800 leading-relaxed whitespace-pre-wrap">
               {post.content}
             </div>
@@ -108,12 +132,19 @@ const BoardDetail = () => {
               목록으로
             </button>
 
+            {/* 권한이 있는 사람에게만 보이는 수정/삭제 버튼 */}
             {canEditOrDelete && (
               <div className="flex gap-2">
-                <button className="px-4 py-2 border border-gray-300 text-gray-600 font-bold rounded-lg hover:bg-gray-50 transition-colors">
+                <button 
+                  onClick={() => navigate(`/board/${category}/edit/${post.id}`)}
+                  className="px-4 py-2 border border-gray-300 text-gray-600 font-bold rounded-lg hover:bg-gray-50 transition-colors"
+                >
                   수정
                 </button>
-                <button className="px-4 py-2 border border-red-200 text-red-500 font-bold rounded-lg hover:bg-red-50 transition-colors">
+                <button 
+                  onClick={handleDelete} // ⭐ 여기에 삭제 함수를 연결했습니다!
+                  className="px-4 py-2 border border-red-200 text-red-500 font-bold rounded-lg hover:bg-red-50 transition-colors"
+                >
                   삭제
                 </button>
               </div>

@@ -1,8 +1,6 @@
 export async function onRequestDelete(context) {
     const { env, request } = context;
     const { searchParams } = new URL(request.url);
-    
-    // 지울 글의 번호(id)를 가져옵니다.
     const id = searchParams.get('id');
 
     if (!id) {
@@ -10,18 +8,18 @@ export async function onRequestDelete(context) {
     }
 
     try {
-        // 지하 DB(D1)에서 해당 번호의 글을 삭제(DELETE)합니다.
+        // ⭐ 핵심 변경: DELETE(완전 삭제) 대신 UPDATE(수정)를 써서 deleted_at 빈칸에 현재 시간을 채워 넣습니다!
         const result = await env.DB.prepare(
-            "DELETE FROM board WHERE id = ?"
+            "UPDATE board SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?"
         ).bind(id).run();
 
         if (result.success) {
-            return new Response(JSON.stringify({ message: "게시글이 삭제되었습니다." }), {
+            return new Response(JSON.stringify({ message: "게시글이 휴지통으로 이동되었습니다." }), {
                 status: 200,
                 headers: { "Content-Type": "application/json" }
             });
         } else {
-            throw new Error("DB 삭제 실패");
+            throw new Error("휴지통 이동 실패");
         }
     } catch (e) {
         return new Response(JSON.stringify({ error: e.message }), { status: 500 });
