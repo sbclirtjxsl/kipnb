@@ -98,7 +98,8 @@ const BoardWrite = () => {
           
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
             <h1 className="text-2xl font-extrabold text-gray-900 mb-6 border-b pb-4">
-              {category.toUpperCase()} 글쓰기
+              {/* ⭐ 2. 단어장에서 한글 이름을 찾아서 보여주도록 수정합니다! */}
+              {boardNames[category] || '게시판'} 글쓰기
             </h1>
 
             {/* 폼(Form) 시작 */}
