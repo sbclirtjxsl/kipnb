@@ -8,18 +8,17 @@ export async function onRequestDelete(context) {
     }
 
     try {
-        // ⭐ 핵심 변경: DELETE(완전 삭제) 대신 UPDATE(수정)를 써서 deleted_at 빈칸에 현재 시간을 채워 넣습니다!
         const result = await env.DB.prepare(
-            "UPDATE board SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?"
+            "DELETE FROM board WHERE id = ?"
         ).bind(id).run();
 
         if (result.success) {
-            return new Response(JSON.stringify({ message: "게시글이 휴지통으로 이동되었습니다." }), {
+            return new Response(JSON.stringify({ message: "게시글이 삭제되었습니다." }), {
                 status: 200,
                 headers: { "Content-Type": "application/json" }
             });
         } else {
-            throw new Error("휴지통 이동 실패");
+            throw new Error("DB 삭제 실패");
         }
     } catch (e) {
         return new Response(JSON.stringify({ error: e.message }), { status: 500 });

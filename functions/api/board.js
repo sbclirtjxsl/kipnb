@@ -11,7 +11,6 @@ export async function onRequestGet(context) {
     try {
         let query, countQuery, params;
 
-        // ⭐ 핵심 변경: 모든 쿼리문에 "AND deleted_at IS NULL" 이라는 조건을 추가했습니다!
         if (category === 'archive') {
             query = `SELECT * FROM board WHERE has_file = 1 AND title LIKE ? AND deleted_at IS NULL ORDER BY id DESC LIMIT ? OFFSET ?`;
             countQuery = `SELECT COUNT(*) as total FROM board WHERE has_file = 1 AND title LIKE ? AND deleted_at IS NULL`;
