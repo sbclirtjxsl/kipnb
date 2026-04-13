@@ -4,8 +4,7 @@ import LogoImg from '../assets/logos/Logo.webp';
 import SearchIcon from '../assets/Search_B.svg';
 import login from '../assets/Login_B.svg';
 
-// ⭐ 1. 우리가 만든 공용 인증 클라이언트 불러오기
-// (주의: Header.jsx 파일 위치에 따라 '../auth-client' 경로가 다를 수 있습니다. src 바로 아래 있다면 '../auth-client'가 맞습니다.)
+// ⭐ 공용 인증 클라이언트 불러오기
 import { authClient } from '../auth-client'; 
 
 const menuItems = [
@@ -60,7 +59,6 @@ const menuItems = [
 ];
 
 const Header = () => {
-  // ⭐ 2. 현재 로그인 세션(유저 정보)을 실시간으로 가져옵니다.
   const { data: session, isPending } = authClient.useSession();
 
   return (
@@ -73,20 +71,27 @@ const Header = () => {
               <img src={LogoImg} alt="사람과건축 로고" className="h-[50px] md:h-[55px] w-auto object-contain" />
             </Link>
 
-            {/* ⭐ 3. 로그인은 우측 상단에 고정 (상태에 따라 다르게 보임) */}
+            {/* 로그인은 우측 상단에 고정 */}
             <div className="flex items-center text-sm font-bold">
               {isPending ? (
-                // 로딩 중일 때
                 <span className="text-gray-400 font-medium text-xs">확인 중...</span>
               ) : session ? (
-                // 로그인 완료된 상태 (프로필 사진 + 이름 + 로그아웃)
+                // ⭐ 로그인 완료된 상태 (직급 뱃지 + 프로필 사진 + 이름 + 로그아웃)
                 <div className="flex items-center gap-2">
+                  
+                  {/* ⭐ 여기에 직급 뱃지 코드를 추가했습니다! */}
+                  {session.user.role && (
+                    <span className="text-[11px] font-extrabold text-white bg-[#317F81] px-2 py-0.5 rounded-md">
+                      {session.user.role}
+                    </span>
+                  )}
+
                   <img src={session.user.image} alt="프로필" className="w-7 h-7 rounded-full border border-gray-200 shadow-sm" />
                   <span className="text-gray-700">{session.user.name}님</span>
                   <button 
                     onClick={async () => {
                       await authClient.signOut();
-                      window.location.reload(); // 로그아웃 후 화면 새로고침
+                      window.location.reload(); 
                     }}
                     className="ml-3 px-3 py-1 text-xs font-medium text-gray-500 border border-gray-300 rounded-full hover:bg-gray-50 hover:text-red-500 transition-colors"
                   >
@@ -94,7 +99,6 @@ const Header = () => {
                   </button>
                 </div>
               ) : (
-                // 로그인 안 된 상태 (기존 코드를 그대로 유지)
                 <Link to="/login" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
                   <div className="w-7 h-7 text-white rounded-full flex items-center justify-center text-[10px]">
                     <img src={login} alt="로그인"/>
