@@ -10,6 +10,7 @@ import BannerTalk from '../assets/banner/converstation.webp';
 import BannerNotice from '../assets/banner/Notice.webp'; 
 import BannerQnA from '../assets/banner/QnA.webp'; 
 import BannerWorkers from '../assets/banner/workers.webp'; 
+import { authClient } from '../auth-client'; 
 
 const boardSettings = {
   edu: { title: "교육/세미나", description: "진행 중인 교육 및 세미나 일정을 확인하세요.", banner: BannerTalk },
