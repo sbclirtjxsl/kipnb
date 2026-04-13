@@ -9,21 +9,25 @@ export const auth = (env) => betterAuth({
         type: "sqlite",
     },
     
-    // ⭐ wrangler.toml에서 URL을 가져옵니다.
     baseURL: env.BETTER_AUTH_URL, 
-    
-    // 비밀키는 클라우드플레어 대시보드(Secret)에서 가져옵니다.
     secret: env.BETTER_AUTH_SECRET,
     
     socialProviders: {
         google: {
-            // ⭐ wrangler.toml에서 아이디를 가져옵니다.
             clientId: env.GOOGLE_CLIENT_ID, 
-            
-            // 비밀번호는 클라우드플레어 대시보드(Secret)에서 가져옵니다.
             clientSecret: env.GOOGLE_CLIENT_SECRET, 
         },
     },
+
+    user: {
+        additionalFields: {
+            role: {
+                type: "string",
+                required: false,
+                defaultValue: "일반 회원" 
+            }
+        }
+    }
 });
 
 export async function onRequest(context) {
