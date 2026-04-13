@@ -117,17 +117,27 @@ const Notice = () => {
                   {loading ? (
                     <tr><td colSpan={5} className="py-20 text-center text-gray-400">데이터를 불러오는 중...</td></tr>
                   ) : posts.length > 0 ? (
-                    posts.map((post) => (
-                      <tr key={post.id} onClick={() => navigate(`/board/${category}/${post.id}`)} className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors">
-                        <td className="py-4 text-center text-gray-400 text-sm">{post.id}</td>
-                        <td className="py-4 px-4 font-medium text-gray-800">{post.title}</td>
-                        {currentBoard.showAttachment && (
-                          <td className="py-4 text-center text-gray-500 text-lg">{post.has_file ? "💾" : ""}</td>
-                        )}
-                        <td className="py-4 text-center text-sm text-gray-600">{post.author_name}</td>
-                        <td className="py-4 text-center text-sm text-gray-500">{new Date(post.created_at).toLocaleDateString()}</td>
-                      </tr>
-                    ))
+                    // ⭐ map 함수에 'index(순서)'를 추가로 받아옵니다.
+                    posts.map((post, index) => {
+                      
+                      // ⭐ 게시판별 가짜 번호 계산 공식! (전체 글 수 - 앞 페이지 글 수 - 현재 페이지 내 순서)
+                      const displayNumber = totalCount - ((currentPage - 1) * itemsPerPage) - index;
+
+                      return (
+                        <tr key={post.id} onClick={() => navigate(`/board/${category}/${post.id}`)} className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors">
+                          
+                          {/* ⭐ 화면에 보여주는 번호는 진짜 post.id가 아니라 계산한 displayNumber를 씁니다! */}
+                          <td className="py-4 text-center text-gray-400 text-sm font-bold">{displayNumber}</td>
+                          
+                          <td className="py-4 px-4 font-medium text-gray-800">{post.title}</td>
+                          {currentBoard.showAttachment && (
+                            <td className="py-4 text-center text-gray-500 text-lg">{post.has_file ? "💾" : ""}</td>
+                          )}
+                          <td className="py-4 text-center text-sm text-gray-600">{post.author_name}</td>
+                          <td className="py-4 text-center text-sm text-gray-500">{new Date(post.created_at).toLocaleDateString()}</td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr><td colSpan={5} className="py-20 text-center text-gray-500">등록된 게시물이 없습니다.</td></tr>
                   )}
