@@ -38,10 +38,15 @@ const Notice = () => {
   const navigate = useNavigate();
   const currentBoard = boardSettings[category] || boardSettings.notice;
 
+  const { data: session } = authClient.useSession();
   // ⭐ 상태 관리 (검색어, 현재 페이지)
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // 한 페이지당 10개씩
+
+  const isQnA = category === 'qna';
+  const hasManagerRole = session?.user?.role === '관리자' || session?.user?.role === '운영진';
+  const canWrite = isQnA ? true : hasManagerRole;
 
   // ⭐ 1. 검색어로 게시물 걸러내기 (필터링)
   const filteredPosts = dummyPosts.filter((post) =>
@@ -159,12 +164,14 @@ const Notice = () => {
 
                 {/* 글쓰기 버튼 */}
                 <div className="w-24 flex justify-end">
-                  <button 
-                    className="px-6 py-2 bg-[#317F81] text-white font-bold rounded-lg hover:bg-[#256062] transition-colors"
-                    onClick={() => navigate(`/board/${category}/write`)}
-                  >
-                    글쓰기
-                  </button>
+                  {canWrite && (
+                    <button 
+                      className="px-6 py-2 bg-[#317F81] text-white font-bold rounded-lg hover:bg-[#256062] transition-colors"
+                      onClick={() => navigate(`/board/${category}/write`)}
+                    >
+                      글쓰기
+                    </button>
+                  )}
                 </div>
               </div>
 
