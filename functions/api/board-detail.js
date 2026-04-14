@@ -8,7 +8,7 @@ export async function onRequestGet(context) {
     }
 
     try {
-        // ⭐ SELECT * 를 통해 image_url, file_url 등 모든 칸의 데이터를 다 가져옵니다!
+        // ⭐ SELECT * 를 써서 file_url을 포함한 모든 데이터를 다 가져옵니다!
         const stmt = env.DB.prepare('SELECT * FROM board WHERE id = ?').bind(id);
         const post = await stmt.first();
 

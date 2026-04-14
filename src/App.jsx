@@ -13,6 +13,7 @@ import BF_Files from './pages/BF_Files';
 import LoginPage from './pages/LoginPage';
 import BoardDetail from './pages/BoardDetail';
 import BoardWrite from './pages/BoardWrite';
+import BoardEdit from './pages/BoardEdit';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/board/:category/:id" element={<BoardDetail />} />
       <Route path="/board/:category/write" element={<BoardWrite />} />
+      <Route path="/board/:category/edit/:id" element={<BoardEdit />} />
     </Routes>
   );
 }
