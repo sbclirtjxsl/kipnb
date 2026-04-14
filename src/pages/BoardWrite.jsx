@@ -19,9 +19,10 @@ const BoardWrite = () => {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false); 
 
-  // ⭐ 여러 장의 사진과 미리보기를 담을 '배열(Array)' 바구니로 변경!
-  const [selectedFiles, setSelectedFiles] = useState([]);
+  // ⭐ 사진용 바구니와 '다중' 자료용 바구니!
+  const [selectedImages, setSelectedImages] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
+  const [attachedFiles, setAttachedFiles] = useState([]); // 여러 자료를 담을 배열
 
   const isQnA = category === 'qna';
   const hasManagerRole = session?.user?.role === '관리자' || session?.user?.role === '운영진';
@@ -38,19 +39,14 @@ const BoardWrite = () => {
     );
   }
 
-  // ⭐ 여러 파일을 동시에 WebP로 변환해 주는 마법 함수!
-  const handleFileChange = async (e) => {
-    // 사용자가 선택한 여러 파일을 배열로 변환
+  // 1. 사진 첨부 (다중 변환)
+  const handleImageChange = async (e) => {
     const files = Array.from(e.target.files); 
     if (files.length === 0) return;
 
-    // 이미지 파일만 걸러내기
     const validFiles = files.filter(f => f.type.startsWith("image/"));
-    if (validFiles.length !== files.length) {
-      alert("이미지 파일만 업로드 가능합니다.");
-    }
+    if (validFiles.length !== files.length) alert("이미지 파일만 업로드 가능합니다.");
 
-    // 각 사진을 WebP로 변환하는 작업 (동시 진행)
     const webpPromises = validFiles.map(file => {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -66,9 +62,7 @@ const BoardWrite = () => {
             ctx.drawImage(img, 0, 0);
 
             canvas.toBlob((blob) => {
-              const webpFile = new File([blob], file.name.split('.')[0] + ".webp", {
-                type: "image/webp",
-              });
+              const webpFile = new File([blob], file.name.split('.')[0] + ".webp", { type: "image/webp" });
               resolve({ file: webpFile, preview: URL.createObjectURL(webpFile) });
             }, "image/webp", 0.8);
           };
@@ -76,10 +70,32 @@ const BoardWrite = () => {
       });
     });
 
-    // 모든 사진 변환이 끝날 때까지 기다렸다가 바구니에 담기
     const results = await Promise.all(webpPromises);
-    setSelectedFiles(results.map(r => r.file));
+    setSelectedImages(results.map(r => r.file));
     setPreviewUrls(results.map(r => r.preview));
+  };
+
+  // 2. 자료 첨부 (여러 파일 지원)
+  const handleDocumentChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) {
+      setAttachedFiles([]);
+      return;
+    }
+
+    const allowedExts = ['zip', 'pdf', 'hwp', 'ppt', 'pptx', 'xls', 'xlsx'];
+    const validFiles = [];
+
+    for (const file of files) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (!allowedExts.includes(ext)) {
+        alert(`${file.name}은(는) 지원하지 않는 파일 형식입니다.`);
+      } else {
+        validFiles.push(file);
+      }
+    }
+    
+    setAttachedFiles(validFiles); // 검사 통과한 파일들만 바구니에 담기
   };
 
   const handleSubmit = async (e) => {
@@ -88,29 +104,38 @@ const BoardWrite = () => {
     setIsSubmitting(true);
 
     try {
-      let uploadedUrls = []; // R2에 올라간 여러 주소를 담을 바구니
+      let uploadedImageUrls = [];
+      let uploadedFileUrls = []; // 여러 자료 주소를 담을 배열
 
-      // ⭐ 사진이 여러 장이라면 하나씩 차례대로 R2 창고로 전송!
-      if (selectedFiles.length > 0) {
-        const uploadPromises = selectedFiles.map(async (file) => {
+      // 1. 사진들 R2 업로드
+      if (selectedImages.length > 0) {
+        const uploadPromises = selectedImages.map(async (file) => {
           const formData = new FormData();
           formData.append("file", file);
-          const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
-          if (uploadRes.ok) {
-            const data = await uploadRes.json();
-            return data.url;
-          }
+          const res = await fetch('/api/upload', { method: 'POST', body: formData });
+          if (res.ok) return (await res.json()).url;
           return null;
         });
-
-        // 모든 업로드가 끝날 때까지 대기
         const results = await Promise.all(uploadPromises);
-        uploadedUrls = results.filter(url => url !== null); // 실패한 건 빼고 주소만 모으기
+        uploadedImageUrls = results.filter(url => url !== null); 
       }
 
-      // ⭐ 여러 주소를 하나의 문자열(JSON)로 묶어서 DB로 전송!
-      // 예: '["주소1.webp", "주소2.webp"]' 형태로 저장됩니다.
-      const finalImageUrlString = uploadedUrls.length > 0 ? JSON.stringify(uploadedUrls) : "";
+      // 2. 여러 일반 자료(파일) R2 업로드
+      if (attachedFiles.length > 0) {
+        const filePromises = attachedFiles.map(async (file) => {
+          const formData = new FormData();
+          formData.append("file", file);
+          const res = await fetch('/api/upload', { method: 'POST', body: formData });
+          if (res.ok) return (await res.json()).url;
+          return null;
+        });
+        const results = await Promise.all(filePromises);
+        uploadedFileUrls = results.filter(url => url !== null);
+      }
+
+      // DB 저장 요청!
+      const finalImageUrlString = uploadedImageUrls.length > 0 ? JSON.stringify(uploadedImageUrls) : "";
+      const finalFileUrlString = uploadedFileUrls.length > 0 ? JSON.stringify(uploadedFileUrls) : "";
 
       const response = await fetch('/api/board-write', {
         method: 'POST',
@@ -120,7 +145,8 @@ const BoardWrite = () => {
           author_name: session.user.name,
           author_email: session.user.email,
           image_url: finalImageUrlString, 
-          has_file: 0, // 🟢 사진은 '자료'가 아니므로 무조건 0으로 고정합니다!
+          file_url: finalFileUrlString, 
+          has_file: uploadedFileUrls.length > 0 ? 1 : 0, 
         }),
       });
 
@@ -153,32 +179,45 @@ const BoardWrite = () => {
                 <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#317F81] outline-none" />
               </div>
 
-              <div>
-                {/* ⭐ multiple 속성을 추가해서 여러 장을 드래그해서 선택할 수 있게 했습니다! */}
-                <label className="block text-sm font-bold text-gray-700 mb-2">사진 첨부 (여러 장 선택 가능)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple 
-                  onChange={handleFileChange}
-                  className="w-full px-4 py-2 border rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-[#eef6f6] file:text-[#317F81] hover:file:bg-[#deeaea] cursor-pointer"
-                />
-                
-                {/* 여러 장의 사진 미리보기를 바둑판 배열로 보여줍니다. */}
+              {/* 📷 1. 사진 첨부 구역 */}
+              <div className="p-4 bg-gray-50 rounded-xl border">
+                <label className="block text-sm font-bold text-gray-700 mb-2">📷 본문 사진 첨부 (여러 장 가능, 자동 변환)</label>
+                <input type="file" accept="image/*" multiple onChange={handleImageChange} className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-white file:text-[#317F81] file:shadow-sm cursor-pointer" />
                 {previewUrls.length > 0 && (
-                  <div className="mt-4 p-4 border rounded-xl bg-gray-50 flex gap-4 flex-wrap">
+                  <div className="mt-4 flex gap-4 flex-wrap">
                     {previewUrls.map((url, idx) => (
-                      <div key={idx} className="relative">
-                        <img src={url} alt={`미리보기 ${idx+1}`} className="h-[120px] rounded-lg shadow-sm object-cover border" />
-                        <div className="absolute top-1 left-1 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full">{idx + 1}</div>
-                      </div>
+                      <img key={idx} src={url} alt={`미리보기`} className="h-[80px] rounded shadow-sm border" />
                     ))}
                   </div>
                 )}
               </div>
 
+              {/* 📁 2. 자료 첨부 구역 (다중 업로드 지원) */}
+              <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+                <label className="block text-sm font-bold text-gray-700 mb-2">📁 다운로드용 자료 첨부 (여러 개 선택 가능)</label>
+                <p className="text-xs text-gray-500 mb-3">지원 형식: zip, pdf, hwp, ppt, xlsx 등</p>
+                <input 
+                  type="file" 
+                  accept=".zip,.pdf,.hwp,.ppt,.pptx,.xls,.xlsx" 
+                  multiple // ⭐ 여러 장 선택 가능하도록 추가!
+                  onChange={handleDocumentChange} 
+                  className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-white file:text-blue-600 file:shadow-sm cursor-pointer" 
+                />
+                
+                {/* 선택된 여러 자료 파일의 이름들을 리스트로 보여줍니다 */}
+                {attachedFiles.length > 0 && (
+                  <ul className="mt-3 flex flex-col gap-1">
+                    {attachedFiles.map((file, idx) => (
+                      <li key={idx} className="text-sm text-blue-700 font-bold flex items-center gap-2">
+                        <span>✔</span> {file.name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">내용</label>
+                <label className="label-style">내용</label>
                 <textarea value={content} onChange={(e) => setContent(e.target.value)} required className="w-full px-4 py-3 border rounded-lg h-64 focus:ring-2 focus:ring-[#317F81] outline-none"></textarea>
               </div>
 

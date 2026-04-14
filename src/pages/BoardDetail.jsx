@@ -23,8 +23,7 @@ const BoardDetail = () => {
       try {
         const response = await fetch(`/api/board-detail?id=${id}`);
         if (response.ok) {
-          const data = await response.json();
-          setPost(data);
+          setPost(await response.json());
         } else {
           navigate(`/board/${category}`); 
         }
@@ -59,20 +58,18 @@ const BoardDetail = () => {
   const hasManagerRole = session?.user?.role === '관리자' || session?.user?.role === '운영진';
   const canEditOrDelete = isAuthor || hasManagerRole;
 
-  // ⭐ DB에 저장된 주소를 사진 배열로 푸는 마법!
+  // DB에 저장된 사진 주소 배열로 풀기
   let imageUrls = [];
   if (post.image_url) {
-    try {
-      // 새로운 다중 사진 (JSON 형식)일 경우
-      if (post.image_url.startsWith('[')) {
-        imageUrls = JSON.parse(post.image_url);
-      } else {
-        // 과거에 1장만 올렸던 단순 텍스트 주소일 경우
-        imageUrls = [post.image_url];
-      }
-    } catch (e) {
-      imageUrls = [post.image_url];
-    }
+    try { imageUrls = post.image_url.startsWith('[') ? JSON.parse(post.image_url) : [post.image_url]; } 
+    catch (e) { imageUrls = [post.image_url]; }
+  }
+
+  // ⭐ DB에 저장된 여러 일반 자료(파일) 주소 배열로 풀기!
+  let fileUrls = [];
+  if (post.file_url) {
+    try { fileUrls = post.file_url.startsWith('[') ? JSON.parse(post.file_url) : [post.file_url]; } 
+    catch (e) { fileUrls = [post.file_url]; }
   }
 
   return (
@@ -92,20 +89,52 @@ const BoardDetail = () => {
             </div>
 
             <div className="px-8 py-10 min-h-[300px] text-gray-800 leading-relaxed whitespace-pre-wrap">
-              
-              {/* ⭐ 배열에 담긴 사진들을 차례대로 세로로 출력합니다! */}
+              {/* 사진들 출력 */}
               {imageUrls.map((url, index) => (
                 <div key={index} className="mb-8 flex justify-center">
-                  <img 
-                    src={url} 
-                    alt={`첨부이미지 ${index + 1}`} 
-                    className="max-w-full max-h-[700px] rounded-xl shadow-sm border border-gray-200 object-contain"
-                  />
+                  <img src={url} alt={`첨부이미지`} className="max-w-full max-h-[700px] rounded-xl shadow-sm border border-gray-200 object-contain" />
                 </div>
               ))}
-
               {post.content}
             </div>
+
+            {/* ⭐ 첨부 파일(자료)이 여러 개일 때 목록으로 띄워주기 */}
+            {fileUrls.length > 0 && (
+              <div className="px-8 py-6 bg-gray-50 border-t border-gray-100">
+                <h3 className="text-sm font-bold text-gray-600 mb-4 flex items-center gap-2">
+                  📎 첨부파일 ({fileUrls.length}개)
+                </h3>
+                <div className="flex flex-col gap-3">
+                  {fileUrls.map((url, idx) => {
+                    // 원본 파일 이름 추출하는 로직 (타임스탬프 떼어내기)
+                    const originalName = decodeURIComponent(url.split('/').pop().split('-').slice(1).join('-')) || `첨부파일_${idx + 1}`;
+                    const ext = originalName.split('.').pop().toUpperCase();
+                    
+                    return (
+                      <div key={idx} className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:border-[#317F81] transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-[#eef6f6] rounded-lg flex items-center justify-center text-[#317F81]">
+                            <span className="font-bold text-xs">{ext}</span>
+                          </div>
+                          <span className="text-sm font-medium text-gray-700 truncate max-w-[400px]">
+                            {originalName}
+                          </span>
+                        </div>
+                        <a 
+                          href={url} 
+                          download={originalName}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-4 py-2 bg-[#317F81] text-white text-sm font-bold rounded-lg hover:bg-[#256062] transition-colors"
+                        >
+                          다운로드
+                        </a>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mt-6 flex justify-between items-center">
