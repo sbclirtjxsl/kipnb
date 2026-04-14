@@ -26,7 +26,7 @@ const BoardWrite = () => {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false); 
 
-  // ⭐ 1. 이미지 파일과 미리보기 주소를 담을 바구니 추가!
+  // ⭐ 사진 파일과 미리보기 주소를 담을 바구니
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
@@ -46,24 +46,22 @@ const BoardWrite = () => {
     );
   }
 
-  // ⭐ 2. 파일을 선택하면 자동으로 WebP로 변환해 주는 마법의 함수
+  // ⭐ 파일을 선택하면 자동으로 WebP로 변환해 주는 함수
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     
-    // 사용자가 취소를 눌러서 파일을 선택하지 않았을 때
     if (!file) {
       setSelectedFile(null);
       setPreviewUrl(null);
       return;
     }
 
-    // 이미지 파일이 아닌 걸 올리려고 할 때 방어!
     if (!file.type.startsWith("image/")) {
       alert("이미지 파일(JPG, PNG 등)만 업로드 가능합니다.");
       return;
     }
 
-    // Canvas를 이용한 WebP 자동 변환 시작!
+    // Canvas를 이용한 WebP 자동 변환!
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (event) => {
@@ -76,14 +74,13 @@ const BoardWrite = () => {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
 
-        // 품질 0.8(80%)의 WebP로 압축해서 뽑아냅니다.
         canvas.toBlob((blob) => {
           const webpFile = new File([blob], file.name.split('.')[0] + ".webp", {
             type: "image/webp",
           });
           
-          setSelectedFile(webpFile); // 변환된 WebP 파일 바구니에 담기
-          setPreviewUrl(URL.createObjectURL(webpFile)); // 미리보기용 주소 만들기
+          setSelectedFile(webpFile); 
+          setPreviewUrl(URL.createObjectURL(webpFile)); 
         }, "image/webp", 0.8);
       };
     };
@@ -99,14 +96,13 @@ const BoardWrite = () => {
 
     setIsSubmitting(true);
     try {
-      let fileUrl = ""; // 서버에 저장된 사진 주소를 받을 변수
+      let fileUrl = ""; 
 
-      // ⭐ 3. 만약 사진을 첨부했다면? DB에 글을 쓰기 전에 사진부터 R2 금고에 올립니다!
+      // ⭐ 사진이 첨부되었다면 R2로 먼저 전송!
       if (selectedFile) {
         const formData = new FormData();
         formData.append("file", selectedFile);
 
-        // 'upload'라는 이름의 사진 전용 엘리베이터(API) 호출
         const uploadRes = await fetch('/api/upload', {
           method: 'POST',
           body: formData,
@@ -114,15 +110,15 @@ const BoardWrite = () => {
 
         if (uploadRes.ok) {
           const uploadData = await uploadRes.json();
-          fileUrl = uploadData.url; // 성공하면 R2에서 사진 주소를 돌려줍니다.
+          fileUrl = uploadData.url; 
         } else {
-          alert("사진 업로드에 실패했습니다. 다시 시도해 주세요.");
+          alert("사진 업로드에 실패했습니다.");
           setIsSubmitting(false);
-          return; // 사진 업로드 실패하면 글 등록도 멈춤!
+          return; 
         }
       }
 
-      // 🚀 4. 기존 글쓰기 API 호출 (사진 주소도 함께 보냅니다!)
+      // ⭐ 글 내용과 사진 주소를 한 번에 DB로 전송!
       const response = await fetch('/api/board-write', {
         method: 'POST',
         headers: {
@@ -134,8 +130,8 @@ const BoardWrite = () => {
           content: content,
           author_name: session.user.name,
           author_email: session.user.email,
-          image_url: fileUrl, // ⭐ DB에 저장할 사진 주소 추가!
-          has_file: fileUrl ? 1 : 0, // ⭐ 사진이 있으면 1, 없으면 0
+          image_url: fileUrl, 
+          has_file: fileUrl ? 1 : 0, 
         }),
       });
 
@@ -179,9 +175,9 @@ const BoardWrite = () => {
                 />
               </div>
 
-              {/* ⭐ 5. 사진 첨부 UI 추가! */}
+              {/* ⭐ 사진 첨부 영역이 드디어 화면에 나타납니다! */}
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">대표 사진 첨부 (PNG/JPG ➔ 자동 WebP 변환)</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">대표 사진 첨부 (자동 WebP 변환)</label>
                 <input
                   type="file"
                   accept="image/*"
@@ -189,10 +185,10 @@ const BoardWrite = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#eef6f6] file:text-[#317F81] hover:file:bg-[#deeaea] transition-colors cursor-pointer"
                 />
                 
-                {/* 사진을 올리면 짠! 하고 나타나는 미리보기 화면 */}
+                {/* 사진을 올리면 나타나는 미리보기 */}
                 {previewUrl && (
                   <div className="mt-4 border rounded-xl p-2 bg-gray-50 inline-block">
-                    <p className="text-xs text-gray-500 mb-2 font-bold">📷 미리보기 (WebP 변환 완료)</p>
+                    <p className="text-xs text-gray-500 mb-2 font-bold">📷 미리보기</p>
                     <img src={previewUrl} alt="미리보기" className="max-h-[200px] rounded-lg shadow-sm" />
                   </div>
                 )}
