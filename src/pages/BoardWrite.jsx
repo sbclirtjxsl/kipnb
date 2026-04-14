@@ -120,7 +120,7 @@ const BoardWrite = () => {
           author_name: session.user.name,
           author_email: session.user.email,
           image_url: finalImageUrlString, 
-          has_file: uploadedUrls.length > 0 ? 1 : 0, 
+          has_file: 0, // 🟢 사진은 '자료'가 아니므로 무조건 0으로 고정합니다!
         }),
       });
 
