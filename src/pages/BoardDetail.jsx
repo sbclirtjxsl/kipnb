@@ -43,15 +43,12 @@ const BoardDetail = () => {
 
   // ⭐ 삭제 처리 함수 (확인창 안전장치 추가!)
   const handleDelete = async () => {
-    // 1. 사용자에게 정말 지울 건지 물어봅니다.
     const isConfirmed = window.confirm("정말로 이 게시글을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.");
 
-    // 2. '취소'를 누르면 여기서 함수를 끝냅니다. (아무 일도 일어나지 않음)
     if (!isConfirmed) {
       return; 
     }
 
-    // 3. '확인'을 눌렀을 때만 DB 삭제 내비게이션(API) 출동!
     try {
       const response = await fetch(`/api/board-delete?id=${post.id}`, {
         method: 'DELETE',
@@ -59,7 +56,7 @@ const BoardDetail = () => {
 
       if (response.ok) {
         alert("성공적으로 삭제되었습니다.");
-        navigate(`/board/${category}`); // 삭제 후 게시판 목록으로 이동
+        navigate(`/board/${category}`);
       } else {
         const data = await response.json();
         alert(`삭제 실패: ${data.error}`);
@@ -120,6 +117,19 @@ const BoardDetail = () => {
             </div>
 
             <div className="px-8 py-10 min-h-[300px] text-gray-800 leading-relaxed whitespace-pre-wrap">
+              
+              {/* ⭐ 사진이 존재할 경우에만 화면에 보여주도록 추가된 부분! */}
+              {post.image_url && (
+                <div className="mb-8 flex justify-center">
+                  <img 
+                    src={post.image_url} 
+                    alt="첨부된 이미지" 
+                    className="max-w-full max-h-[600px] rounded-xl shadow-sm border border-gray-200 object-contain"
+                  />
+                </div>
+              )}
+
+              {/* 글 내용 */}
               {post.content}
             </div>
           </div>
@@ -132,7 +142,6 @@ const BoardDetail = () => {
               목록으로
             </button>
 
-            {/* 권한이 있는 사람에게만 보이는 수정/삭제 버튼 */}
             {canEditOrDelete && (
               <div className="flex gap-2">
                 <button 
@@ -142,7 +151,7 @@ const BoardDetail = () => {
                   수정
                 </button>
                 <button 
-                  onClick={handleDelete} // ⭐ 여기에 삭제 함수를 연결했습니다!
+                  onClick={handleDelete}
                   className="px-4 py-2 border border-red-200 text-red-500 font-bold rounded-lg hover:bg-red-50 transition-colors"
                 >
                   삭제
