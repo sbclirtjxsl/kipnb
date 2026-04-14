@@ -14,4 +14,4 @@ BETTER_AUTH_URL = "https://kipnb.pages.dev"
 
 [[r2_buckets]]
 binding = "MY_R2"
-bucket_name = "kipnb-스토리지"
+bucket_name = "kipnb-storage"
