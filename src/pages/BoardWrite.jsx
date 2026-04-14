@@ -19,10 +19,9 @@ const BoardWrite = () => {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false); 
 
-  // ⭐ 사진용 바구니와 '다중' 자료용 바구니!
   const [selectedImages, setSelectedImages] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
-  const [attachedFiles, setAttachedFiles] = useState([]); // 여러 자료를 담을 배열
+  const [attachedFiles, setAttachedFiles] = useState([]); 
 
   const isQnA = category === 'qna';
   const hasManagerRole = session?.user?.role === '관리자' || session?.user?.role === '운영진';
@@ -71,17 +70,22 @@ const BoardWrite = () => {
     });
 
     const results = await Promise.all(webpPromises);
-    setSelectedImages(results.map(r => r.file));
-    setPreviewUrls(results.map(r => r.preview));
+    // 기존에 선택된 사진에 이어붙이기
+    setSelectedImages(prev => [...prev, ...results.map(r => r.file)]);
+    setPreviewUrls(prev => [...prev, ...results.map(r => r.preview)]);
+    e.target.value = ''; // 입력창 초기화 (같은 파일 다시 선택 가능하도록)
+  };
+
+  // ⭐ 사진 개별 삭제 기능
+  const handleRemoveImage = (indexToRemove) => {
+    setSelectedImages(prev => prev.filter((_, index) => index !== indexToRemove));
+    setPreviewUrls(prev => prev.filter((_, index) => index !== indexToRemove));
   };
 
   // 2. 자료 첨부 (여러 파일 지원)
   const handleDocumentChange = (e) => {
     const files = Array.from(e.target.files);
-    if (files.length === 0) {
-      setAttachedFiles([]);
-      return;
-    }
+    if (files.length === 0) return;
 
     const allowedExts = ['zip', 'pdf', 'hwp', 'ppt', 'pptx', 'xls', 'xlsx'];
     const validFiles = [];
@@ -95,7 +99,14 @@ const BoardWrite = () => {
       }
     }
     
-    setAttachedFiles(validFiles); // 검사 통과한 파일들만 바구니에 담기
+    // 기존 파일에 이어붙이기
+    setAttachedFiles(prev => [...prev, ...validFiles]);
+    e.target.value = ''; // 입력창 초기화
+  };
+
+  // ⭐ 자료 개별 삭제 기능
+  const handleRemoveFile = (indexToRemove) => {
+    setAttachedFiles(prev => prev.filter((_, index) => index !== indexToRemove));
   };
 
   const handleSubmit = async (e) => {
@@ -105,7 +116,7 @@ const BoardWrite = () => {
 
     try {
       let uploadedImageUrls = [];
-      let uploadedFileUrls = []; // 여러 자료 주소를 담을 배열
+      let uploadedFileUrls = []; 
 
       // 1. 사진들 R2 업로드
       if (selectedImages.length > 0) {
@@ -133,7 +144,6 @@ const BoardWrite = () => {
         uploadedFileUrls = results.filter(url => url !== null);
       }
 
-      // DB 저장 요청!
       const finalImageUrlString = uploadedImageUrls.length > 0 ? JSON.stringify(uploadedImageUrls) : "";
       const finalFileUrlString = uploadedFileUrls.length > 0 ? JSON.stringify(uploadedFileUrls) : "";
 
@@ -183,33 +193,47 @@ const BoardWrite = () => {
               <div className="p-4 bg-gray-50 rounded-xl border">
                 <label className="block text-sm font-bold text-gray-700 mb-2">📷 본문 사진 첨부 (여러 장 가능, 자동 변환)</label>
                 <input type="file" accept="image/*" multiple onChange={handleImageChange} className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-white file:text-[#317F81] file:shadow-sm cursor-pointer" />
+                
                 {previewUrls.length > 0 && (
                   <div className="mt-4 flex gap-4 flex-wrap">
                     {previewUrls.map((url, idx) => (
-                      <img key={idx} src={url} alt={`미리보기`} className="h-[80px] rounded shadow-sm border" />
+                      <div key={idx} className="relative inline-block">
+                        <img src={url} alt={`미리보기`} className="h-[80px] rounded shadow-sm border" />
+                        {/* ⭐ 사진 삭제 버튼 */}
+                        <button 
+                          type="button" 
+                          onClick={() => handleRemoveImage(idx)}
+                          className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-md transition-colors"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* 📁 2. 자료 첨부 구역 (다중 업로드 지원) */}
+              {/* 📁 2. 자료 첨부 구역 */}
               <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100">
                 <label className="block text-sm font-bold text-gray-700 mb-2">📁 다운로드용 자료 첨부 (여러 개 선택 가능)</label>
                 <p className="text-xs text-gray-500 mb-3">지원 형식: zip, pdf, hwp, ppt, xlsx 등</p>
-                <input 
-                  type="file" 
-                  accept=".zip,.pdf,.hwp,.ppt,.pptx,.xls,.xlsx" 
-                  multiple // ⭐ 여러 장 선택 가능하도록 추가!
-                  onChange={handleDocumentChange} 
-                  className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-white file:text-blue-600 file:shadow-sm cursor-pointer" 
-                />
+                <input type="file" accept=".zip,.pdf,.hwp,.ppt,.pptx,.xls,.xlsx" multiple onChange={handleDocumentChange} className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-white file:text-blue-600 file:shadow-sm cursor-pointer" />
                 
-                {/* 선택된 여러 자료 파일의 이름들을 리스트로 보여줍니다 */}
                 {attachedFiles.length > 0 && (
-                  <ul className="mt-3 flex flex-col gap-1">
+                  <ul className="mt-3 flex flex-col gap-2">
                     {attachedFiles.map((file, idx) => (
-                      <li key={idx} className="text-sm text-blue-700 font-bold flex items-center gap-2">
-                        <span>✔</span> {file.name}
+                      <li key={idx} className="text-sm text-gray-700 bg-white p-3 rounded-lg border border-blue-100 flex items-center justify-between shadow-sm">
+                        <div className="flex items-center gap-2 font-medium">
+                          <span className="text-blue-500">📎</span> {file.name}
+                        </div>
+                        {/* ⭐ 자료 삭제 버튼 */}
+                        <button 
+                          type="button" 
+                          onClick={() => handleRemoveFile(idx)}
+                          className="text-red-500 hover:text-red-700 text-xs font-bold px-3 py-1 bg-red-50 rounded-md transition-colors"
+                        >
+                          삭제
+                        </button>
                       </li>
                     ))}
                   </ul>
@@ -217,7 +241,7 @@ const BoardWrite = () => {
               </div>
 
               <div>
-                <label className="label-style">내용</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">내용</label>
                 <textarea value={content} onChange={(e) => setContent(e.target.value)} required className="w-full px-4 py-3 border rounded-lg h-64 focus:ring-2 focus:ring-[#317F81] outline-none"></textarea>
               </div>
 
