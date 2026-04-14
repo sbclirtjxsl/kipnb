@@ -17,23 +17,23 @@ const boardNames = {
   archive: "자료실",
 };
 
-
 const BoardWrite = () => {
   const { category } = useParams();
   const navigate = useNavigate();
   const { data: session } = authClient.useSession();
 
-  // 사용자가 입력할 제목과 내용을 담을 바구니
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false); // 저장 중인지 확인하는 버튼 상태
+  const [isSubmitting, setIsSubmitting] = useState(false); 
 
-  // ⭐ 권한 체크 (혹시나 주소창 치고 몰래 들어오는 사람 방지!)
+  // ⭐ 1. 이미지 파일과 미리보기 주소를 담을 바구니 추가!
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+
   const isQnA = category === 'qna';
   const hasManagerRole = session?.user?.role === '관리자' || session?.user?.role === '운영진';
   const canWrite = isQnA || hasManagerRole;
 
-  // 권한이 없으면 쫓아냅니다.
   if (!session || !canWrite) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -46,11 +46,52 @@ const BoardWrite = () => {
     );
   }
 
-  // ⭐ '등록하기' 버튼을 누르면 실행되는 마법의 함수!
-  const handleSubmit = async (e) => {
-    e.preventDefault(); // 새로고침 방지
+  // ⭐ 2. 파일을 선택하면 자동으로 WebP로 변환해 주는 마법의 함수
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
     
-    // 빈칸 검사
+    // 사용자가 취소를 눌러서 파일을 선택하지 않았을 때
+    if (!file) {
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      return;
+    }
+
+    // 이미지 파일이 아닌 걸 올리려고 할 때 방어!
+    if (!file.type.startsWith("image/")) {
+      alert("이미지 파일(JPG, PNG 등)만 업로드 가능합니다.");
+      return;
+    }
+
+    // Canvas를 이용한 WebP 자동 변환 시작!
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+
+        // 품질 0.8(80%)의 WebP로 압축해서 뽑아냅니다.
+        canvas.toBlob((blob) => {
+          const webpFile = new File([blob], file.name.split('.')[0] + ".webp", {
+            type: "image/webp",
+          });
+          
+          setSelectedFile(webpFile); // 변환된 WebP 파일 바구니에 담기
+          setPreviewUrl(URL.createObjectURL(webpFile)); // 미리보기용 주소 만들기
+        }, "image/webp", 0.8);
+      };
+    };
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault(); 
+    
     if (!title.trim() || !content.trim()) {
       alert("제목과 내용을 모두 입력해 주세요.");
       return;
@@ -58,7 +99,30 @@ const BoardWrite = () => {
 
     setIsSubmitting(true);
     try {
-      // 🚀 방금 만든 내비게이션(API)으로 택배 쏘기!
+      let fileUrl = ""; // 서버에 저장된 사진 주소를 받을 변수
+
+      // ⭐ 3. 만약 사진을 첨부했다면? DB에 글을 쓰기 전에 사진부터 R2 금고에 올립니다!
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        // 'upload'라는 이름의 사진 전용 엘리베이터(API) 호출
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          fileUrl = uploadData.url; // 성공하면 R2에서 사진 주소를 돌려줍니다.
+        } else {
+          alert("사진 업로드에 실패했습니다. 다시 시도해 주세요.");
+          setIsSubmitting(false);
+          return; // 사진 업로드 실패하면 글 등록도 멈춤!
+        }
+      }
+
+      // 🚀 4. 기존 글쓰기 API 호출 (사진 주소도 함께 보냅니다!)
       const response = await fetch('/api/board-write', {
         method: 'POST',
         headers: {
@@ -70,14 +134,14 @@ const BoardWrite = () => {
           content: content,
           author_name: session.user.name,
           author_email: session.user.email,
-          has_file: 0, // 지금은 파일 첨부 전이라 무조건 0으로 둡니다!
+          image_url: fileUrl, // ⭐ DB에 저장할 사진 주소 추가!
+          has_file: fileUrl ? 1 : 0, // ⭐ 사진이 있으면 1, 없으면 0
         }),
       });
 
-      // 내비게이션이 "저장 성공!" 이라고 답변을 주면?
       if (response.ok) {
         alert("성공적으로 등록되었습니다!");
-        navigate(`/board/${category}`); // 게시판 목록으로 이동
+        navigate(`/board/${category}`); 
       } else {
         const errorData = await response.json();
         alert(`등록 실패: ${errorData.error}`);
@@ -98,14 +162,11 @@ const BoardWrite = () => {
           
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
             <h1 className="text-2xl font-extrabold text-gray-900 mb-6 border-b pb-4">
-              {/* ⭐ 2. 단어장에서 한글 이름을 찾아서 보여주도록 수정합니다! */}
               {boardNames[category] || '게시판'} 글쓰기
             </h1>
 
-            {/* 폼(Form) 시작 */}
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
               
-              {/* 1. 제목 입력창 */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">제목</label>
                 <input
@@ -118,7 +179,25 @@ const BoardWrite = () => {
                 />
               </div>
 
-              {/* 2. 내용 입력창 */}
+              {/* ⭐ 5. 사진 첨부 UI 추가! */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">대표 사진 첨부 (PNG/JPG ➔ 자동 WebP 변환)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#eef6f6] file:text-[#317F81] hover:file:bg-[#deeaea] transition-colors cursor-pointer"
+                />
+                
+                {/* 사진을 올리면 짠! 하고 나타나는 미리보기 화면 */}
+                {previewUrl && (
+                  <div className="mt-4 border rounded-xl p-2 bg-gray-50 inline-block">
+                    <p className="text-xs text-gray-500 mb-2 font-bold">📷 미리보기 (WebP 변환 완료)</p>
+                    <img src={previewUrl} alt="미리보기" className="max-h-[200px] rounded-lg shadow-sm" />
+                  </div>
+                )}
+              </div>
+
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">내용</label>
                 <textarea
@@ -130,7 +209,6 @@ const BoardWrite = () => {
                 ></textarea>
               </div>
 
-              {/* 3. 취소 & 등록 버튼 */}
               <div className="flex justify-end gap-3 mt-4">
                 <button
                   type="button"
@@ -141,7 +219,7 @@ const BoardWrite = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting} // 저장 중일 때는 버튼 비활성화 (따닥 방지!)
+                  disabled={isSubmitting}
                   className={`px-8 py-3 font-bold text-white rounded-lg transition-colors ${
                     isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-[#317F81] hover:bg-[#256062]"
                   }`}
@@ -151,8 +229,6 @@ const BoardWrite = () => {
               </div>
 
             </form>
-            {/* 폼(Form) 끝 */}
-
           </div>
         </div>
       </main>

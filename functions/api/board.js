@@ -12,12 +12,12 @@ export async function onRequestGet(context) {
         let query, countQuery, params;
 
         if (category === 'archive') {
-            query = `SELECT * FROM board WHERE has_file = 1 AND title LIKE ? AND deleted_at IS NULL ORDER BY id DESC LIMIT ? OFFSET ?`;
-            countQuery = `SELECT COUNT(*) as total FROM board WHERE has_file = 1 AND title LIKE ? AND deleted_at IS NULL`;
+            query = `SELECT * FROM board WHERE has_file = 1 AND title LIKE ? ORDER BY id DESC LIMIT ? OFFSET ?`;
+            countQuery = `SELECT COUNT(*) as total FROM board WHERE has_file = 1 AND title LIKE ?`;
             params = [`%${search}%`];
         } else {
-            query = `SELECT * FROM board WHERE category = ? AND title LIKE ? AND deleted_at IS NULL ORDER BY id DESC LIMIT ? OFFSET ?`;
-            countQuery = `SELECT COUNT(*) as total FROM board WHERE category = ? AND title LIKE ? AND deleted_at IS NULL`;
+            query = `SELECT * FROM board WHERE category = ? AND title LIKE ? ORDER BY id DESC LIMIT ? OFFSET ?`;
+            countQuery = `SELECT COUNT(*) as total FROM board WHERE category = ? AND title LIKE ?`;
             params = [category, `%${search}%`];
         }
 
