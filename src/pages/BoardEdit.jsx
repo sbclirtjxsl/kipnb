@@ -168,9 +168,9 @@ const BoardEdit = () => {
         }),
       });
 
-      if (response.ok) {
+    if (response.ok) {
         alert("성공적으로 수정되었습니다!");
-        navigate(`/board/${category}/detail/${id}`); 
+        navigate(`/board/${category}/${id}`); // 🟢 수정: /detail/ 삭제!
       } else {
         alert("수정 실패");
       }
