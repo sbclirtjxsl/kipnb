@@ -25,12 +25,13 @@ const LoginPage = () => {
       textColor: 'text-gray-600',
       icon: 'G',
       border: 'border border-gray-200',
-      // ⭐ 3. 주소창 이동 대신, 공식 로그인 함수 사용!
       action: async () => {
+        // ⭐ 1. 구글로 넘어가기 전에, 브라우저 종료 시 사라지는 '임시 출입증' 발급!
+        document.cookie = "app_session=active; path=/;"; 
+        
         await authClient.signIn.social({
             provider: "google",
-            callbackURL: "/", // 로그인 성공 후 메인 화면으로 돌아오기
-            rememberMe: false, 
+            callbackURL: "/", 
         });
       },
     },

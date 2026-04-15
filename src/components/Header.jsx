@@ -24,11 +24,24 @@ const Header = () => {
   const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
 
+  // ⭐ [추가됨] 문지기 배치: 페이지가 켜질 때마다 임시 출입증을 검사합니다.
+  useEffect(() => {
+    // 1. better-auth는 로그인 상태라고 넘겨주었지만...
+    if (session?.user) {
+      // 2. 브라우저의 '임시 출입증(app_session)'이 없다면? (창을 껐다 켰다는 확실한 증거!)
+      if (!document.cookie.includes('app_session=active')) {
+        // 3. 문지기가 강제로 로그아웃 API를 쏘고 새로고침 시켜버림
+        authClient.signOut().then(() => {
+          window.location.reload(); 
+        });
+      }
+    }
+  }, [session]);
+
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [popularPosts, setPopularPosts] = useState([]); // ⭐ 인기글 저장 바구니
+  const [popularPosts, setPopularPosts] = useState([]); 
 
-  // ⭐ 검색창이 열릴 때 데이터베이스에서 인기글을 가져옵니다.
   useEffect(() => {
     if (isSearchOpen && popularPosts.length === 0) {
       fetch('/api/popular')
@@ -36,7 +49,7 @@ const Header = () => {
         .then(data => setPopularPosts(data || []))
         .catch(err => console.error(err));
       
-      document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
+      document.body.style.overflow = 'hidden'; 
     } else if (!isSearchOpen) {
       document.body.style.overflow = 'unset';
     }
@@ -113,7 +126,6 @@ const Header = () => {
         </div>
       </header>
 
-      {/* ⭐ 1. 뒷배경 어둡게 (클릭 시 닫힘) */}
       {isSearchOpen && (
         <div 
           className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm transition-opacity"
@@ -121,13 +133,11 @@ const Header = () => {
         />
       )}
 
-      {/* ⭐ 2. 핀터레스트 스타일 반쪽짜리 모달창 */}
       <div 
         className={`fixed top-20 left-1/2 -translate-x-1/2 w-[95%] max-w-[800px] bg-white rounded-3xl shadow-2xl z-50 overflow-hidden transition-all duration-300 ease-out origin-top ${
           isSearchOpen ? 'opacity-100 scale-y-100 translate-y-0' : 'opacity-0 scale-y-95 -translate-y-4 pointer-events-none'
         }`}
       >
-        {/* 모달창 내부 검색 입력 구역 */}
         <div className="p-4 md:p-6 border-b border-gray-100">
           <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-gray-100 rounded-full px-5 py-3 hover:bg-gray-200 focus-within:bg-white focus-within:border-[#317F81] focus-within:ring-2 focus-within:ring-[#317F81]/20 transition-all border border-transparent">
             <img src={SearchIcon} alt="search" className="w-6 h-6 opacity-50 mr-3" />
@@ -145,7 +155,6 @@ const Header = () => {
           </form>
         </div>
 
-        {/* 인기 검색어 (조회수 높은 글) 추천 구역 */}
         <div className="p-6 md:p-8 bg-gray-50/50">
           <h3 className="text-sm font-extrabold text-gray-800 mb-5">사람과건축 인기 게시글 🔥</h3>
           
