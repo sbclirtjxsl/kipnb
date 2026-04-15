@@ -21,7 +21,22 @@ const BoardDetail = () => {
   useEffect(() => {
     const fetchPostDetail = async () => {
       try {
-        const response = await fetch(`/api/board-detail?id=${id}`);
+        setLoading(true); 
+
+        // ⭐ 1. 내 브라우저(로컬스토리지)에 이 글을 읽었다는 도장이 있는지 확인!
+        const viewedKey = `viewed_post_${category}_${id}`;
+        const hasViewed = localStorage.getItem(viewedKey);
+
+        // ⭐ 2. 기본 요청 주소
+        let fetchUrl = `/api/board-detail?id=${id}`;
+
+        // ⭐ 3. 도장이 없다면? 조회수를 올리라고 신호를 붙이고, 내 브라우저에 도장을 찍음!
+        if (!hasViewed) {
+          fetchUrl += '&increment=true';
+          localStorage.setItem(viewedKey, 'true'); 
+        }
+
+        const response = await fetch(fetchUrl);
         if (response.ok) {
           setPost(await response.json());
         } else {
@@ -34,7 +49,7 @@ const BoardDetail = () => {
       }
     };
     fetchPostDetail();
-  }, [id, category, navigate]);
+  }, [id, category, navigate]); 
 
   const handleDelete = async () => {
     if (!window.confirm("정말로 이 게시글을 삭제하시겠습니까?")) return; 
@@ -64,14 +79,11 @@ const BoardDetail = () => {
     catch (e) { imageUrls = [post.image_url]; }
   }
 
-  // ⭐ 파일 주소 배열 파싱
   let fileUrls = [];
   if (post.file_url) {
     try { fileUrls = post.file_url.startsWith('[') ? JSON.parse(post.file_url) : [post.file_url]; } 
     catch (e) { fileUrls = [post.file_url]; }
   }
-
-  // 파일 주소가 빈 문자열("")인 경우 배열에서 제거하는 안전장치
   fileUrls = fileUrls.filter(url => url && url.trim() !== "");
 
   return (
@@ -84,9 +96,12 @@ const BoardDetail = () => {
             <div className="px-8 py-6 border-b border-gray-100">
               <span className="text-xs font-extrabold text-[#317F81] bg-[#eef6f6] px-2 py-1 rounded">{boardNames[category]}</span>
               <h1 className="text-2xl font-extrabold mt-3 mb-4">{post.title}</h1>
-              <div className="text-sm text-gray-500 flex gap-4">
+              <div className="text-sm text-gray-500 flex gap-4 items-center">
                 <span className="font-medium text-gray-700">{post.author_name}</span>
                 <span>{new Date(post.created_at).toLocaleString()}</span>
+                <span className="flex items-center gap-1 text-gray-400 before:content-['|'] before:mr-3 before:text-gray-300">
+                  👀 조회 {post.views || 0}
+                </span>
               </div>
             </div>
 
@@ -96,11 +111,9 @@ const BoardDetail = () => {
                   <img src={url} alt={`첨부이미지`} className="max-w-full max-h-[700px] rounded-xl shadow-sm border border-gray-200 object-contain" />
                 </div>
               ))}
-              {/* 리액트에서 HTML 태그를 안전하게 디자인으로 바꿔주는 마법의 속성입니다 */}
               {post.content}
             </div>
 
-            {/* ⭐ 명확하고 큰 다운로드 영역 */}
             {fileUrls.length > 0 && (
               <div className="px-8 py-6 bg-blue-50 border-t border-blue-100">
                 <h3 className="text-sm font-extrabold text-blue-900 mb-4 flex items-center gap-2">
@@ -110,35 +123,41 @@ const BoardDetail = () => {
                   {fileUrls.map((url, idx) => {
                     const originalName = decodeURIComponent(url.split('/').pop().split('-').slice(1).join('-')) || `첨부파일_${idx + 1}`;
                     const ext = originalName.split('.').pop().toUpperCase();
-                    
                     return (
                       <div key={idx} className="flex flex-wrap items-center justify-between bg-white p-4 rounded-xl border border-blue-200 shadow-sm hover:border-blue-400 hover:shadow transition-all gap-4">
                         <div className="flex items-center gap-3 overflow-hidden">
-                          <div className="min-w-10 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-700">
-                            <span className="font-bold text-[10px]">{ext}</span>
-                          </div>
-                          <span className="text-sm font-bold text-gray-700 truncate">
-                            {originalName}
-                          </span>
+                          <div className="min-w-10 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-700"><span className="font-bold text-[10px]">{ext}</span></div>
+                          <span className="text-sm font-bold text-gray-700 truncate">{originalName}</span>
                         </div>
-                        {/* 확실하게 동작하는 다운로드 링크 (새 창 열기 보장) */}
-                        <a 
-                          href={url} 
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="whitespace-nowrap px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-2"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                          </svg>
-                          내려받기
-                        </a>
+                        <a href={url} target="_blank" rel="noopener noreferrer" className="whitespace-nowrap px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-2">내려받기</a>
                       </div>
                     );
                   })}
                 </div>
               </div>
             )}
+
+            <div className="border-t border-gray-100 bg-gray-50/50">
+              {post.nextPost && (
+                <div 
+                  onClick={() => navigate(`/board/${category}/${post.nextPost.id}`)}
+                  className="flex items-center px-8 py-4 border-b border-gray-100 cursor-pointer hover:bg-white transition-colors group"
+                >
+                  <span className="text-sm font-extrabold text-[#317F81] w-20">▲ 다음글</span>
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-black">{post.nextPost.title}</span>
+                </div>
+              )}
+              {post.prevPost && (
+                <div 
+                  onClick={() => navigate(`/board/${category}/${post.prevPost.id}`)}
+                  className="flex items-center px-8 py-4 cursor-pointer hover:bg-white transition-colors group"
+                >
+                  <span className="text-sm font-extrabold text-gray-400 w-20">▼ 이전글</span>
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-black">{post.prevPost.title}</span>
+                </div>
+              )}
+            </div>
+
           </div>
 
           <div className="mt-6 flex justify-between items-center">
