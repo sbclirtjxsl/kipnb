@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react'; // ⭐ useEffect 추가
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { authClient } from '../auth-client'; 
 
-// 배너 이미지 생략 (기존 코드와 동일)
 import BannerAd from '../assets/banner/Advertising.webp'; 
 import BannerArchive from '../assets/banner/Archive.webp'; 
 import BannerBook from '../assets/banner/Book.webp'; 
@@ -14,16 +13,16 @@ import BannerQnA from '../assets/banner/QnA.webp';
 import BannerWorkers from '../assets/banner/workers.webp'; 
 
 const boardSettings = {
-  edu: { title: "교육/세미나", description: "...", banner: BannerTalk },
-  publish: { title: "논문/출판", description: "...", showAttachment: true, banner: BannerBook },
-  pr: { title: "홍보", description: "...", banner: BannerAd },
-  manufacture: { title: "제조업체 정보", description: "...", banner: BannerNotice },
-  construction: { title: "시공업체 정보", description: "...", banner: BannerNotice },
-  consulting: { title: "컨설팅업체 정보", description: "...", banner: BannerNotice },
-  forms: { title: "인증 관련 서식", description: "...", showAttachment: true, banner: BannerNotice },
-  notice: { title: "공지사항", description: "...", banner: BannerNotice },
-  qna: { title: "문의상담", description: "...", banner: BannerQnA },
-  archive: { title: "자료실", description: "...", showAttachment: true, banner: BannerArchive },
+  edu: { title: "교육/세미나", description: "관련 교육 및 세미나 일정을 안내합니다.", banner: BannerTalk },
+  publish: { title: "논문/출판", description: "연구 논문 및 출판 자료입니다.", banner: BannerBook },
+  pr: { title: "홍보", description: "기관의 홍보 자료를 확인하세요.", banner: BannerAd },
+  manufacture: { title: "제조업체 정보", description: "BF 인증 관련 제조업체 정보입니다.", banner: BannerNotice },
+  construction: { title: "시공업체 정보", description: "BF 인증 관련 시공업체 정보입니다.", banner: BannerNotice },
+  consulting: { title: "컨설팅업체 정보", description: "BF 인증 관련 컨설팅업체 정보입니다.", banner: BannerNotice },
+  forms: { title: "인증 관련 서식", description: "인증에 필요한 서식 자료실입니다.", banner: BannerNotice },
+  notice: { title: "공지사항", description: "사람과건축의 새로운 소식을 알려드립니다.", banner: BannerNotice },
+  qna: { title: "문의상담", description: "궁금하신 점을 자유롭게 남겨주세요.", banner: BannerQnA },
+  archive: { title: "자료실", description: "각종 유용한 자료를 내려받으실 수 있습니다.", banner: BannerArchive },
 };
 
 const Notice = () => {
@@ -32,19 +31,16 @@ const Notice = () => {
   const currentBoard = boardSettings[category] || boardSettings.notice;
   const { data: session } = authClient.useSession();
 
-  // ⭐ 진짜 데이터를 저장할 바구니들
-  const [posts, setPosts] = useState([]);      // 게시글 목록
-  const [totalCount, setTotalCount] = useState(0); // 전체 글 개수
-  const [loading, setLoading] = useState(true);   // 로딩 상태
+  const [posts, setPosts] = useState([]);      
+  const [totalCount, setTotalCount] = useState(0); 
+  const [loading, setLoading] = useState(true);   
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // ⭐ 데이터 불러오는 함수 (API 호출)
   const loadPosts = async () => {
     setLoading(true);
     try {
-      // 위에서 만든 board.js API에 요청을 보냅니다.
       const url = `/api/board?category=${category}&page=${currentPage}&search=${searchTerm}`;
       const response = await fetch(url);
       const data = await response.json();
@@ -58,7 +54,6 @@ const Notice = () => {
     }
   };
 
-  // ⭐ 카테고리, 페이지, 검색어가 바뀔 때마다 다시 불러오기
   useEffect(() => {
     loadPosts();
   }, [category, currentPage, searchTerm]);
@@ -70,7 +65,6 @@ const Notice = () => {
     setCurrentPage(1); 
   };
 
-  // 권한 체크
   const isQnA = category === 'qna';
   const hasManagerRole = session?.user?.role === '관리자' || session?.user?.role === '운영진';
   const canWrite = isQnA ? true : hasManagerRole;
@@ -106,40 +100,46 @@ const Notice = () => {
               <table className="w-full border-t-2 border-gray-800">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200 text-sm font-bold text-gray-700">
-                    <th className="py-4 w-20 text-center">번호</th>
+                    <th className="py-4 w-16 text-center">번호</th>
                     <th className="py-4 px-4 text-left">제목</th>
-                    {currentBoard.showAttachment && <th className="py-4 w-16 text-center">첨부</th>}
+                    {/* ⭐ 조건 없애고 모든 게시판에 첨부 열 표시 */}
+                    <th className="py-4 w-20 text-center">첨부</th>
                     <th className="py-4 w-24 text-center">작성자</th>
                     <th className="py-4 w-28 text-center">날짜</th>
+                    {/* ⭐ 조회수 열 추가 */}
+                    <th className="py-4 w-16 text-center">조회</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={5} className="py-20 text-center text-gray-400">데이터를 불러오는 중...</td></tr>
+                    <tr><td colSpan={6} className="py-20 text-center text-gray-400">데이터를 불러오는 중...</td></tr>
                   ) : posts.length > 0 ? (
-                    // ⭐ map 함수에 'index(순서)'를 추가로 받아옵니다.
                     posts.map((post, index) => {
-                      
-                      // ⭐ 게시판별 가짜 번호 계산 공식! (전체 글 수 - 앞 페이지 글 수 - 현재 페이지 내 순서)
                       const displayNumber = totalCount - ((currentPage - 1) * itemsPerPage) - index;
+                      
+                      // 사진이 포함되어 있는지 확인 (빈 문자열이거나 빈 배열이 아닐 때)
+                      const hasImage = post.image_url && post.image_url !== "" && post.image_url !== "[]" && post.image_url !== '""';
 
                       return (
                         <tr key={post.id} onClick={() => navigate(`/board/${category}/${post.id}`)} className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors">
-                          
-                          {/* ⭐ 화면에 보여주는 번호는 진짜 post.id가 아니라 계산한 displayNumber를 씁니다! */}
                           <td className="py-4 text-center text-gray-400 text-sm font-bold">{displayNumber}</td>
-                          
                           <td className="py-4 px-4 font-medium text-gray-800">{post.title}</td>
-                          {currentBoard.showAttachment && (
-                            <td className="py-4 text-center text-gray-500 text-lg">{post.has_file ? "💾" : ""}</td>
-                          )}
+                          
+                          {/* ⭐ 파일(💾)과 사진(🖼️) 아이콘을 나란히 표시 */}
+                          <td className="py-4 text-center text-lg flex items-center justify-center gap-1">
+                            {post.has_file === 1 && <span title="첨부파일">💾</span>}
+                            {hasImage && <span title="사진 포함">🖼️</span>}
+                          </td>
+                          
                           <td className="py-4 text-center text-sm text-gray-600">{post.author_name}</td>
                           <td className="py-4 text-center text-sm text-gray-500">{new Date(post.created_at).toLocaleDateString()}</td>
+                          {/* ⭐ 조회수 표시 */}
+                          <td className="py-4 text-center text-sm text-gray-500">{post.views || 0}</td>
                         </tr>
                       );
                     })
                   ) : (
-                    <tr><td colSpan={5} className="py-20 text-center text-gray-500">등록된 게시물이 없습니다.</td></tr>
+                    <tr><td colSpan={6} className="py-20 text-center text-gray-500">등록된 게시물이 없습니다.</td></tr>
                   )}
                 </tbody>
               </table>
