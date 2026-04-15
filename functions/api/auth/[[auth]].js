@@ -34,7 +34,7 @@ export const auth = (env) => betterAuth({
         cookies: {
             session_token: { // 버전 1.6+ 기준 (또는 sessionToken)
                 attributes: {
-                    maxAge: undefined // 수명을 없애면 브라우저 창을 닫을 때 쿠키가 즉시 파기됩니다.
+                    maxAge: null 
                 }
             }
         }
