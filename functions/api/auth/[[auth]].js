@@ -27,6 +27,17 @@ export const auth = (env) => betterAuth({
                 defaultValue: "일반 회원" 
             }
         }
+    },
+
+    // ⭐ 브라우저 종료 시 자동 로그아웃(세션 쿠키) 설정 추가!
+    advanced: {
+        cookies: {
+            session_token: { // 버전 1.6+ 기준 (또는 sessionToken)
+                attributes: {
+                    maxAge: undefined // 수명을 없애면 브라우저 창을 닫을 때 쿠키가 즉시 파기됩니다.
+                }
+            }
+        }
     }
 });
 
