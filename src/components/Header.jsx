@@ -3,60 +3,22 @@ import { Link, useNavigate } from 'react-router-dom';
 import LogoImg from '../assets/logos/Logo.webp';
 import SearchIcon from '../assets/Search_B.svg';
 import login from '../assets/Login_B.svg';
-
-// ⭐ 공용 인증 클라이언트 불러오기
 import { authClient } from '../auth-client'; 
 
 const menuItems = [
-  { 
-    title: "사람과건축 소개", 
-    sub: [
-      { name: "인사말", path: "/greeting" },
-      { name: "사업분야", path: "/business" },
-      { name: "업무담당자 안내", path: "/Soon" },
-      { name: "오시는 길", path: "/location" }
-    ] 
-  },
-  { 
-    title: "연구 및 공익사업", 
-    sub: [
-      { name: "교육/세미나", path: "/board/edu" },
-      { name: "논문/출판", path: "/board/publish" },
-      { name: "홍보", path: "/board/pr" }
-    ] 
-  },
-  { 
-    title: "BF관련 업체정보", 
-    sub: [
-      { name: "제조", path: "/board/manufacture" },
-      { name: "시공", path: "/board/construction" },
-      { name: "컨설팅", path: "/board/consulting" }
-    ] 
-  },
-  { 
-    title: "장애물 없는 생활환경 인증", 
-    sub: [
-      { name: "BF 인증 개요", path: "/bf-info" },
-      { name: "BF인증 종류및절차", path: "/bf-process" },
-      { name: "인증수수료", path: "/bf-fee" },
-      { name: "인증 신청 첨부물", path: "/bf-files" },
-      { name: "인증 관련 서식", path: "/board/forms" }
-    ] 
-  },
-  { 
-    title: "게시판", 
-    sub: [
-      { name: "공지사항", path: "/board/notice" },
-      { name: "문의상담", path: "/board/qna" }
-    ] 
-  },
-  { 
-    title: "자료실", 
-    sub: [
-      { name: "자료실", path: "/board/archive" }
-    ] 
-  },
+  { title: "사람과건축 소개", sub: [{ name: "인사말", path: "/greeting" }, { name: "사업분야", path: "/business" }, { name: "업무담당자 안내", path: "/Soon" }, { name: "오시는 길", path: "/location" }] },
+  { title: "연구 및 공익사업", sub: [{ name: "교육/세미나", path: "/board/edu" }, { name: "논문/출판", path: "/board/publish" }, { name: "홍보", path: "/board/pr" }] },
+  { title: "BF관련 업체정보", sub: [{ name: "제조", path: "/board/manufacture" }, { name: "시공", path: "/board/construction" }, { name: "컨설팅", path: "/board/consulting" }] },
+  { title: "장애물 없는 생활환경 인증", sub: [{ name: "BF 인증 개요", path: "/bf-info" }, { name: "BF인증 종류및절차", path: "/bf-process" }, { name: "인증수수료", path: "/bf-fee" }, { name: "인증 신청 첨부물", path: "/bf-files" }, { name: "인증 관련 서식", path: "/board/forms" }] },
+  { title: "게시판", sub: [{ name: "공지사항", path: "/board/notice" }, { name: "문의상담", path: "/board/qna" }] },
+  { title: "자료실", sub: [{ name: "자료실", path: "/board/archive" }] },
 ];
+
+const boardNames = {
+  edu: "교육/세미나", publish: "논문/출판", pr: "홍보",
+  manufacture: "제조업체 정보", construction: "시공업체 정보", consulting: "컨설팅업체 정보",
+  forms: "관련 서식", notice: "공지사항", qna: "문의상담", archive: "자료실",
+};
 
 const Header = () => {
   const { data: session, isPending } = authClient.useSession();
