@@ -3,8 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { authClient } from '../auth-client';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 
 const boardNames = {
   edu: "교육/세미나", publish: "논문/출판", pr: "홍보",
@@ -268,14 +266,9 @@ const BoardEdit = () => {
                 )}
               </div>
 
-              <div className="pb-12"> {/* 에디터 툴바가 차지할 공간을 위해 아래 여백(pb-12)을 줍니다 */}
+              <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">내용</label>
-                <ReactQuill 
-                  theme="snow" 
-                  value={content} 
-                  onChange={setContent} // 일반 텍스트와 다르게 e.target.value가 아닌 HTML 전체를 바로 넘겨줍니다!
-                  className="h-64"
-                />
+                <textarea value={content} onChange={(e) => setContent(e.target.value)} required className="w-full px-4 py-3 border rounded-lg h-64 focus:ring-2 focus:ring-[#317F81] outline-none"></textarea>
               </div>
 
               <div className="flex justify-end gap-3 mt-4">

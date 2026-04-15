@@ -97,10 +97,7 @@ const BoardDetail = () => {
                 </div>
               ))}
               {/* 리액트에서 HTML 태그를 안전하게 디자인으로 바꿔주는 마법의 속성입니다 */}
-              <div 
-                className="quill-content prose max-w-none text-gray-800 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: post.content }} 
-              />
+              {post.content}
             </div>
 
             {/* ⭐ 명확하고 큰 다운로드 영역 */}
