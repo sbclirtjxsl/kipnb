@@ -30,6 +30,7 @@ const LoginPage = () => {
         await authClient.signIn.social({
             provider: "google",
             callbackURL: "/", // 로그인 성공 후 메인 화면으로 돌아오기
+            rememberMe: false, 
         });
       },
     },
