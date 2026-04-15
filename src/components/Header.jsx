@@ -75,19 +75,20 @@ const Header = () => {
             <div className="flex items-center text-sm font-bold">
               {isPending ? (
                 <span className="text-gray-400 font-medium text-xs">확인 중...</span>
-              ) : session ? (
+              ) : session?.user ? (  /* ⭐ 1. session 뒤에 ?.user 추가 */
                 // ⭐ 로그인 완료된 상태 (직급 뱃지 + 프로필 사진 + 이름 + 로그아웃)
                 <div className="flex items-center gap-2">
                   
-                  {/* ⭐ 여기에 직급 뱃지 코드를 추가했습니다! */}
-                  {session.user.role && (
+                  {/* ⭐ 2. 물음표 방어막 씌우기 */}
+                  {session?.user?.role && (
                     <span className="text-[11px] font-extrabold text-white bg-[#317F81] px-2 py-0.5 rounded-md">
                       {session.user.role}
                     </span>
                   )}
 
-                  <img src={session.user.image} alt="프로필" className="w-7 h-7 rounded-full border border-gray-200 shadow-sm" />
-                  <span className="text-gray-700">{session.user.name}님</span>
+                  {/* ⭐ 3. 이름과 사진에도 물음표 방어막 씌우기 */}
+                  <img src={session?.user?.image} alt="프로필" className="w-7 h-7 rounded-full border border-gray-200 shadow-sm" />
+                  <span className="text-gray-700">{session?.user?.name}님</span>
                   <button 
                     onClick={async () => {
                       await authClient.signOut();
