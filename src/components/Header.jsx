@@ -58,25 +58,24 @@ const menuItems = [
   },
 ];
 
-const quickLinks = [
-  { name: "BF 인증 절차", path: "/bf-process" },
-  { name: "자료실", path: "/board/archive" },
-  { name: "인증 관련 서식", path: "/board/forms" },
-  { name: "문의상담", path: "/board/qna" }
-];
-
 const Header = () => {
   const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
+  const [popularPosts, setPopularPosts] = useState([]); // ⭐ 인기글 저장 바구니
 
-  // ⭐ 검색창이 열리면 뒤쪽 화면 스크롤을 막아주는 센스!
+  // ⭐ 검색창이 열릴 때 데이터베이스에서 인기글을 가져옵니다.
   useEffect(() => {
-    if (isSearchOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
+    if (isSearchOpen && popularPosts.length === 0) {
+      fetch('/api/popular')
+        .then(res => res.json())
+        .then(data => setPopularPosts(data || []))
+        .catch(err => console.error(err));
+      
+      document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
+    } else if (!isSearchOpen) {
       document.body.style.overflow = 'unset';
     }
     return () => { document.body.style.overflow = 'unset'; };
@@ -92,8 +91,7 @@ const Header = () => {
 
   return (
     <>
-      {/* 기존 헤더 영역 */}
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm relative">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="max-w-[900px] mx-auto">
             <div className="flex justify-between items-center py-0">
@@ -146,67 +144,73 @@ const Header = () => {
               </div>
             ))}
 
-            {/* ⭐ 헤더의 돋보기 버튼 (클릭 시 오버레이 열림) */}
-            <button 
-              onClick={() => setIsSearchOpen(true)} 
-              className="flex items-center hover:text-[#317F81] transition-colors ml-[-10px] p-1"
-            >
+            <button onClick={() => setIsSearchOpen(true)} className="flex items-center hover:text-[#317F81] transition-colors ml-[-10px] p-1">
               <img src={SearchIcon} alt="search" className="w-5 h-5" />
             </button>
           </nav>
         </div>
       </header>
 
-      {/* ⭐ 애플 스타일 풀스크린 검색 오버레이 */}
+      {/* ⭐ 1. 뒷배경 어둡게 (클릭 시 닫힘) */}
+      {isSearchOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm transition-opacity"
+          onClick={() => setIsSearchOpen(false)}
+        />
+      )}
+
+      {/* ⭐ 2. 핀터레스트 스타일 반쪽짜리 모달창 */}
       <div 
-        className={`fixed inset-0 z-50 bg-white/95 backdrop-blur-md transition-all duration-300 ${
-          isSearchOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+        className={`fixed top-20 left-1/2 -translate-x-1/2 w-[95%] max-w-[800px] bg-white rounded-3xl shadow-2xl z-50 overflow-hidden transition-all duration-300 ease-out origin-top ${
+          isSearchOpen ? 'opacity-100 scale-y-100 translate-y-0' : 'opacity-0 scale-y-95 -translate-y-4 pointer-events-none'
         }`}
       >
-        <div className="max-w-[800px] mx-auto px-6 pt-24 md:pt-32 relative">
-          
-          {/* 닫기 버튼 */}
-          <button 
-            onClick={() => setIsSearchOpen(false)} 
-            className="absolute top-8 right-6 text-gray-400 hover:text-black font-medium text-sm px-4 py-2 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            ✕ 닫기
-          </button>
-
-          {/* 거대한 검색 입력창 */}
-          <form onSubmit={handleSearchSubmit} className="relative border-b-2 border-gray-200 pb-4 md:pb-6">
-            <img src={SearchIcon} alt="search" className="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 opacity-40" />
+        {/* 모달창 내부 검색 입력 구역 */}
+        <div className="p-4 md:p-6 border-b border-gray-100">
+          <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-gray-100 rounded-full px-5 py-3 hover:bg-gray-200 focus-within:bg-white focus-within:border-[#317F81] focus-within:ring-2 focus-within:ring-[#317F81]/20 transition-all border border-transparent">
+            <img src={SearchIcon} alt="search" className="w-6 h-6 opacity-50 mr-3" />
             <input
               type="text"
-              autoFocus={isSearchOpen} // 열릴 때 자동으로 커서 깜빡임
+              autoFocus={isSearchOpen}
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
-              placeholder="사람과건축 검색하기"
-              className="w-full text-3xl md:text-5xl font-extrabold bg-transparent outline-none pl-12 md:pl-16 text-gray-900 placeholder-gray-300"
+              placeholder="무엇을 찾고 싶으신가요?"
+              className="w-full text-lg bg-transparent outline-none text-gray-900 font-medium placeholder-gray-400"
             />
+            <button type="button" onClick={() => setIsSearchOpen(false)} className="ml-3 text-gray-400 hover:text-gray-800 p-1">
+              ✕
+            </button>
           </form>
+        </div>
 
-          {/* 빠른 링크 목록 */}
-          <div className="mt-12 md:mt-16">
-            <h3 className="text-xs md:text-sm font-bold text-gray-400 mb-6 uppercase tracking-wider">빠른 링크</h3>
-            <ul className="space-y-4 md:space-y-6">
-              {quickLinks.map((link, idx) => (
-                <li key={idx}>
-                  <button 
-                    onClick={() => { 
-                      setIsSearchOpen(false); 
-                      navigate(link.path); 
-                    }} 
-                    className="text-lg md:text-xl font-semibold text-gray-700 hover:text-[#317F81] flex items-center gap-3 transition-colors group"
-                  >
-                    <span className="text-gray-300 group-hover:text-[#317F81] transition-colors">→</span> 
-                    {link.name}
-                  </button>
-                </li>
+        {/* 인기 검색어 (조회수 높은 글) 추천 구역 */}
+        <div className="p-6 md:p-8 bg-gray-50/50">
+          <h3 className="text-sm font-extrabold text-gray-800 mb-5">사람과건축 인기 게시글 🔥</h3>
+          
+          {popularPosts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {popularPosts.map((post) => (
+                <div 
+                  key={post.id}
+                  onClick={() => {
+                    setIsSearchOpen(false);
+                    navigate(`/board/${post.category}/${post.id}`);
+                  }}
+                  className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 shadow-sm hover:border-[#317F81] hover:shadow-md cursor-pointer transition-all group"
+                >
+                  <div className="flex-shrink-0 w-10 h-10 bg-[#eef6f6] text-[#317F81] rounded-lg flex items-center justify-center font-bold text-xs">
+                    {boardNames[post.category] ? boardNames[post.category].substring(0, 2) : '게시'}
+                  </div>
+                  <div className="flex-grow min-w-0">
+                    <p className="text-sm font-bold text-gray-700 truncate group-hover:text-[#317F81] transition-colors">{post.title}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">👀 조회수 {post.views}회</p>
+                  </div>
+                </div>
               ))}
-            </ul>
-          </div>
-
+            </div>
+          ) : (
+            <div className="text-center py-6 text-sm text-gray-400">인기 게시글을 불러오고 있습니다...</div>
+          )}
         </div>
       </div>
     </>
