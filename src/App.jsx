@@ -14,6 +14,7 @@ import LoginPage from './pages/LoginPage';
 import BoardDetail from './pages/BoardDetail';
 import BoardWrite from './pages/BoardWrite';
 import BoardEdit from './pages/BoardEdit';
+import SearchResults from './pages/SearchResults';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
       <Route path="/board/:category/:id" element={<BoardDetail />} />
       <Route path="/board/:category/write" element={<BoardWrite />} />
       <Route path="/board/:category/edit/:id" element={<BoardEdit />} />
+      <Route path="/search" element={<SearchResults />} />
     </Routes>
   );
 }
