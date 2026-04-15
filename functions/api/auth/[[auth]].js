@@ -32,7 +32,7 @@ export const auth = (env) => betterAuth({
     // ⭐ 브라우저 종료 시 자동 로그아웃(세션 쿠키) 설정 추가!
     advanced: {
         cookies: {
-            session_token: { // 버전 1.6+ 기준 (또는 sessionToken)
+            sessionToken: { // 버전 1.6+ 기준 (또는 sessionToken)
                 attributes: {
                     maxAge: null 
                 }
