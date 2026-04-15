@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import LogoImg from '../assets/logos/Logo.webp';
 import SearchIcon from '../assets/Search_B.svg';
 import login from '../assets/Login_B.svg';
