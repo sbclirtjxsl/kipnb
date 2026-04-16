@@ -110,7 +110,7 @@ const Notice = () => {
                     <th className="py-4 px-4 text-left">제목</th>
                     {/* ⭐ 조건 없애고 모든 게시판에 첨부 열 표시 */}
                     <th className="py-4 w-20 text-center">첨부</th>
-                    <th className="py-4 w-24 text-center">작성자</th>
+                    {/* <th className="py-4 w-24 text-center">작성자</th> */}
                     <th className="py-4 w-28 text-center">날짜</th>
                     {/* ⭐ 조회수 열 추가 */}
                     <th className="py-4 w-16 text-center">조회</th>
