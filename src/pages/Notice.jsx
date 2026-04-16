@@ -73,13 +73,18 @@ const Notice = () => {
   const canWrite = isQnA ? true : hasManagerRole;
 
   return (
-    <div className="min-h-screen bg-white flex flex-col font-sans">
+    // ⭐ 전체 배경 다크모드 대응 (채도 없는 어두운 회색)
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
       <Header />
       <main className="flex-grow">
         <section className="max-w-[900px] mx-auto pt-4 pb-4 px-4 text-center">
-          <h2 className="text-3xl font-extrabold text-gray-950 mb-2 tracking-tight">{currentBoard.title}</h2>
-          <p className="text-gray-500 text-sm font-medium mb-2">{currentBoard.description}</p>
-          <div className="w-full h-[180px] rounded-3xl overflow-hidden shadow-md ">
+          <h2 className="text-3xl font-extrabold text-gray-950 dark:text-white mb-2 tracking-tight transition-colors">
+            {currentBoard.title}
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2 transition-colors">
+            {currentBoard.description}
+          </p>
+          <div className="w-full h-[180px] rounded-3xl overflow-hidden shadow-md dark:shadow-none border border-transparent dark:border-gray-800 transition-colors">
             <img src={currentBoard.banner} alt={currentBoard.title} className="w-full h-full object-cover" />
           </div>
         </section>
@@ -87,22 +92,24 @@ const Notice = () => {
         <section className="py-2">
           <div className="max-w-[900px] mx-auto px-4">
             <div className="flex justify-between items-center mb-4">
-              <div className="text-sm text-gray-500 font-medium">
-                총 <span className="text-[#317F81] font-bold">{totalCount}</span>건
+              <div className="text-sm text-gray-500 dark:text-gray-400 font-medium transition-colors">
+                총 <span className="text-[#317F81] dark:text-[#4fd1d5] font-bold">{totalCount}</span>건
               </div>
+              {/* ⭐ 검색창 다크모드 대응 */}
               <input
                 type="text"
                 placeholder="제목으로 검색..."
                 value={searchTerm}
                 onChange={handleSearchChange}
-                className="w-64 px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#317F81]"
+                className="w-64 px-4 py-2 text-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:outline-none focus:border-[#317F81] dark:focus:border-[#4fd1d5] transition-colors"
               />
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full border-t-2 border-gray-800">
+              {/* ⭐ 테이블 전체 테두리 다크모드 대응 */}
+              <table className="w-full border-t-2 border-gray-800 dark:border-gray-600 transition-colors">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200 text-sm font-bold text-gray-700">
+                  <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 text-sm font-bold text-gray-700 dark:text-gray-300 transition-colors">
                     <th className="py-4 w-16 text-center">번호</th>
                     <th className="py-4 px-4 text-left">제목</th>
                     <th className="py-4 w-20 text-center">첨부</th>
@@ -113,34 +120,38 @@ const Notice = () => {
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={6} className="py-20 text-center text-gray-400">데이터를 불러오는 중...</td></tr>
+                    <tr><td colSpan={6} className="py-20 text-center text-gray-400 dark:text-gray-500">데이터를 불러오는 중...</td></tr>
                   ) : posts.length > 0 ? (
                     posts.map((post, index) => {
                       const displayNumber = totalCount - ((currentPage - 1) * itemsPerPage) - index;
                       const hasImage = post.image_url && post.image_url !== "" && post.image_url !== "[]" && post.image_url !== '""';
 
                       return (
-                        <tr key={post.id} onClick={() => navigate(`/board/${category}/${post.id}`)} className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors">
-                          <td className="py-4 text-center text-gray-400 text-sm font-bold">{displayNumber}</td>
-                          <td className="py-4 px-4 font-medium text-gray-800">{post.title}</td>
+                        <tr 
+                          key={post.id} 
+                          onClick={() => navigate(`/board/${category}/${post.id}`)} 
+                          // ⭐ 테이블 행 호버 및 테두리 다크모드 대응
+                          className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
+                        >
+                          <td className="py-4 text-center text-gray-400 dark:text-gray-500 text-sm font-bold">{displayNumber}</td>
+                          <td className="py-4 px-4 font-medium text-gray-800 dark:text-gray-200">{post.title}</td>
                           
                           <td className="py-4 text-center text-lg flex items-center justify-center gap-1">
                             {post.has_file === 1 && <span title="첨부파일">💾</span>}
                             {hasImage && <span title="사진 포함">🖼️</span>}
                           </td>
                           
-                          {/* ⭐ 핵심: isQnA가 참이면 실제 이름, 아니면 '관리자' 출력 */}
-                          <td className="py-4 text-center text-sm text-gray-600">
+                          <td className="py-4 text-center text-sm text-gray-600 dark:text-gray-400">
                             {isQnA ? post.author_name : '관리자'}
                           </td>
 
-                          <td className="py-4 text-center text-sm text-gray-500">{new Date(post.created_at).toLocaleDateString()}</td>
-                          <td className="py-4 text-center text-sm text-gray-500">{post.views || 0}</td>
+                          <td className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">{new Date(post.created_at).toLocaleDateString()}</td>
+                          <td className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">{post.views || 0}</td>
                         </tr>
                       );
                     })
                   ) : (
-                    <tr><td colSpan={6} className="py-20 text-center text-gray-500">등록된 게시물이 없습니다.</td></tr>
+                    <tr><td colSpan={6} className="py-20 text-center text-gray-500 dark:text-gray-400">등록된 게시물이 없습니다.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -153,8 +164,11 @@ const Notice = () => {
                   <button
                     key={pageNum}
                     onClick={() => setCurrentPage(pageNum)}
+                    // ⭐ 페이지네이션 버튼 다크모드 대응
                     className={`w-8 h-8 flex items-center justify-center rounded-md text-sm font-bold transition-colors ${
-                      currentPage === pageNum ? "bg-[#317F81] text-white" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                      currentPage === pageNum 
+                        ? "bg-[#317F81] text-white dark:bg-[#4fd1d5] dark:text-gray-900" 
+                        : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                     }`}
                   >
                     {pageNum}
