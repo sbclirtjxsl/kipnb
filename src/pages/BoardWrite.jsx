@@ -33,9 +33,9 @@ const BoardWrite = () => {
 
   if (!session || !canWrite) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">접근 권한이 없습니다.</h2>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">접근 권한이 없습니다.</h2>
           <button onClick={() => navigate(-1)} className="px-4 py-2 bg-[#317F81] text-white rounded-md mt-4">돌아가기</button>
         </div>
       </div>
@@ -171,12 +171,14 @@ const BoardWrite = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans">
+    // ⭐ 전체 배경 다크모드 대응
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
       <Header />
       <main className="flex-grow py-10">
         <div className="max-w-[800px] mx-auto px-4">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-            <h1 className="text-2xl font-extrabold mb-6 border-b pb-4">
+          {/* ⭐ 폼 컨테이너 다크모드 대응 */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 transition-colors duration-300">
+            <h1 className="text-2xl font-extrabold mb-6 border-b border-gray-200 dark:border-gray-700 pb-4 text-gray-900 dark:text-white">
               {boardNames[category] || '게시판'} 글쓰기
             </h1>
 
@@ -184,14 +186,21 @@ const BoardWrite = () => {
               
               {/* 1. 제목 */}
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">제목</label>
-                <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#317F81] outline-none" />
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">제목</label>
+                {/* ⭐ 입력칸 다크모드 대응 (어두운 배경 + 흰 글씨) */}
+                <input 
+                  type="text" 
+                  value={title} 
+                  onChange={(e) => setTitle(e.target.value)} 
+                  required 
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#317F81] dark:focus:ring-[#4fd1d5] outline-none transition-colors" 
+                />
               </div>
 
               {/* 2. 날짜 (관리자 전용) */}
               {isAdmin && (
-                <div className="p-4 bg-white rounded-lg border border-gray-300">
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors">
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
                     👑 [관리자 전용] 과거/미래 작성 일자 지정 (선택)
                   </label>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -200,31 +209,42 @@ const BoardWrite = () => {
                       value={customDate}
                       onChange={(e) => setCustomDate(e.target.value)}
                       onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                      className="px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 outline-none focus:border-[#317F81] focus:ring-2 focus:ring-[#317F81]/20 transition-all cursor-pointer"
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-[#317F81]/50 cursor-pointer transition-colors"
                     />
-                    <span className="text-xs text-gray-500">
-                      ※ 달력을 비워두시면 <strong className="text-red-500 underline">오늘 날짜</strong>로 자동 등록됩니다.
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      ※ 달력을 비워두시면 <strong className="text-red-500 dark:text-red-400 underline">오늘 날짜</strong>로 자동 등록됩니다.
                     </span>
                   </div>
                 </div>
               )}
 
-              {/* 3. 내용 */}
+              {/* 3. 내용 (순서 변경됨) */}
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">내용</label>
-                <textarea value={content} onChange={(e) => setContent(e.target.value)} required className="w-full px-4 py-3 border border-gray-300 rounded-lg h-64 focus:ring-2 focus:ring-[#317F81] outline-none"></textarea>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">내용</label>
+                <textarea 
+                  value={content} 
+                  onChange={(e) => setContent(e.target.value)} 
+                  required 
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg h-64 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#317F81] dark:focus:ring-[#4fd1d5] outline-none transition-colors"
+                ></textarea>
               </div>
 
-              {/* 4. 사진 첨부 */}
-              <div className="p-4 bg-white rounded-lg border border-gray-300">
-                <label className="block text-sm font-bold text-gray-700 mb-2">📷 본문 사진 첨부 (여러 장 가능, 자동 변환)</label>
-                <input type="file" accept="image/*" multiple onChange={handleImageChange} className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border border-gray-300 file:bg-gray-50 file:text-gray-700 file:font-medium hover:file:bg-gray-100 cursor-pointer" />
+              {/* 4. 사진 첨부 (순서 변경됨) */}
+              <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors">
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">📷 본문 사진 첨부 (여러 장 가능, 자동 변환)</label>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  multiple 
+                  onChange={handleImageChange} 
+                  className="w-full text-sm text-gray-700 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:border-gray-300 dark:file:border-gray-600 file:bg-gray-50 dark:file:bg-gray-700 file:text-gray-700 dark:file:text-gray-200 file:font-medium hover:file:bg-gray-100 dark:hover:file:bg-gray-600 cursor-pointer transition-colors" 
+                />
                 
                 {previewUrls.length > 0 && (
                   <div className="mt-4 flex gap-4 flex-wrap">
                     {previewUrls.map((url, idx) => (
                       <div key={idx} className="relative inline-block">
-                        <img src={url} alt={`미리보기`} className="h-[80px] rounded shadow-sm border border-gray-200" />
+                        <img src={url} alt={`미리보기`} className="h-[80px] rounded shadow-sm border border-gray-200 dark:border-gray-700" />
                         <button 
                           type="button" 
                           onClick={() => handleRemoveImage(idx)}
@@ -239,22 +259,28 @@ const BoardWrite = () => {
               </div>
 
               {/* 5. 자료 첨부 */}
-              <div className="p-4 bg-white rounded-lg border border-gray-300">
-                <label className="block text-sm font-bold text-gray-700 mb-2">📁 다운로드용 자료 첨부 (여러 개 선택 가능)</label>
-                <p className="text-xs text-gray-500 mb-3">지원 형식: zip, pdf, hwp, ppt, xlsx 등</p>
-                <input type="file" accept=".zip,.pdf,.hwp,.ppt,.pptx,.xls,.xlsx" multiple onChange={handleDocumentChange} className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border border-gray-300 file:bg-gray-50 file:text-gray-700 file:font-medium hover:file:bg-gray-100 cursor-pointer" />
+              <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors">
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">📁 다운로드용 자료 첨부 (여러 개 선택 가능)</label>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">지원 형식: zip, pdf, hwp, ppt, xlsx 등</p>
+                <input 
+                  type="file" 
+                  accept=".zip,.pdf,.hwp,.ppt,.pptx,.xls,.xlsx" 
+                  multiple 
+                  onChange={handleDocumentChange} 
+                  className="w-full text-sm text-gray-700 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:border-gray-300 dark:file:border-gray-600 file:bg-gray-50 dark:file:bg-gray-700 file:text-gray-700 dark:file:text-gray-200 file:font-medium hover:file:bg-gray-100 dark:hover:file:bg-gray-600 cursor-pointer transition-colors" 
+                />
                 
                 {attachedFiles.length > 0 && (
                   <ul className="mt-3 flex flex-col gap-2">
                     {attachedFiles.map((file, idx) => (
-                      <li key={idx} className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center justify-between">
+                      <li key={idx} className="text-sm text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600 flex items-center justify-between transition-colors">
                         <div className="flex items-center gap-2 font-medium">
-                          <span className="text-gray-500">📎</span> {file.name}
+                          <span className="text-gray-500 dark:text-gray-400">📎</span> {file.name}
                         </div>
                         <button 
                           type="button" 
                           onClick={() => handleRemoveFile(idx)}
-                          className="text-red-500 hover:text-red-700 text-xs font-bold px-3 py-1 bg-red-100 rounded-md transition-colors"
+                          className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-xs font-bold px-3 py-1 bg-red-100 dark:bg-red-900/30 rounded-md transition-colors"
                         >
                           삭제
                         </button>
@@ -264,10 +290,20 @@ const BoardWrite = () => {
                 )}
               </div>
 
-              {/* 버튼 구역 */}
+              {/* 하단 버튼 구역 */}
               <div className="flex justify-end gap-3 mt-4">
-                <button type="button" onClick={() => navigate(-1)} className="px-6 py-3 font-bold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">취소</button>
-                <button type="submit" disabled={isSubmitting} className={`px-8 py-3 font-bold text-white rounded-lg ${isSubmitting ? "bg-gray-400" : "bg-[#317F81]"}`}>
+                <button 
+                  type="button" 
+                  onClick={() => navigate(-1)} 
+                  className="px-6 py-3 font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >
+                  취소
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting} 
+                  className={`px-8 py-3 font-bold text-white rounded-lg transition-colors ${isSubmitting ? "bg-gray-400 dark:bg-gray-600" : "bg-[#317F81] hover:bg-[#256062]"}`}
+                >
                   {isSubmitting ? "등록 중..." : "등록하기"}
                 </button>
               </div>
