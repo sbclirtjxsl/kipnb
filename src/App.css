@@ -1,6 +1,8 @@
 /* src/index.css */
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   /* 1. 폰트 등록하기 (CSS 변수 방식) */
   --font-main: "Noto Sans KR", sans-serif;
