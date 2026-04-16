@@ -11,18 +11,18 @@ const boardNames = {
 };
 
 const BoardWrite = () => {
-  const { data: session } = authClient.useSession();
-  
-  // 2. 관리자(또는 운영진)인지 확인
-  const isAdmin = session?.user?.role === '관리자' || session?.user?.role === '운영진';
-  
-  // 3. 관리자가 임의로 지정할 날짜를 담을 공간 (기본값은 빈 칸 '')
-  const [customDate, setCustomDate] = useState('');
-  
   const { category } = useParams();
   const navigate = useNavigate();
-  const { data: session } = authClient.useSession();
 
+  // ⭐ 세션 정보는 한 번만 선언합니다!
+  const { data: session } = authClient.useSession();
+  
+  // 관리자(또는 운영진)인지 확인
+  const isAdmin = session?.user?.role === '관리자' || session?.user?.role === '운영진';
+  
+  // 관리자가 임의로 지정할 날짜를 담을 공간
+  const [customDate, setCustomDate] = useState('');
+  
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false); 
@@ -78,13 +78,11 @@ const BoardWrite = () => {
     });
 
     const results = await Promise.all(webpPromises);
-    // 기존에 선택된 사진에 이어붙이기
     setSelectedImages(prev => [...prev, ...results.map(r => r.file)]);
     setPreviewUrls(prev => [...prev, ...results.map(r => r.preview)]);
-    e.target.value = ''; // 입력창 초기화 (같은 파일 다시 선택 가능하도록)
+    e.target.value = ''; 
   };
 
-  // ⭐ 사진 개별 삭제 기능
   const handleRemoveImage = (indexToRemove) => {
     setSelectedImages(prev => prev.filter((_, index) => index !== indexToRemove));
     setPreviewUrls(prev => prev.filter((_, index) => index !== indexToRemove));
@@ -107,12 +105,10 @@ const BoardWrite = () => {
       }
     }
     
-    // 기존 파일에 이어붙이기
     setAttachedFiles(prev => [...prev, ...validFiles]);
-    e.target.value = ''; // 입력창 초기화
+    e.target.value = ''; 
   };
 
-  // ⭐ 자료 개별 삭제 기능
   const handleRemoveFile = (indexToRemove) => {
     setAttachedFiles(prev => prev.filter((_, index) => index !== indexToRemove));
   };
@@ -126,7 +122,6 @@ const BoardWrite = () => {
       let uploadedImageUrls = [];
       let uploadedFileUrls = []; 
 
-      // 1. 사진들 R2 업로드
       if (selectedImages.length > 0) {
         const uploadPromises = selectedImages.map(async (file) => {
           const formData = new FormData();
@@ -139,7 +134,6 @@ const BoardWrite = () => {
         uploadedImageUrls = results.filter(url => url !== null); 
       }
 
-      // 2. 여러 일반 자료(파일) R2 업로드
       if (attachedFiles.length > 0) {
         const filePromises = attachedFiles.map(async (file) => {
           const formData = new FormData();
@@ -165,6 +159,8 @@ const BoardWrite = () => {
           image_url: finalImageUrlString, 
           file_url: finalFileUrlString, 
           has_file: uploadedFileUrls.length > 0 ? 1 : 0, 
+          // ⭐ 커스텀 날짜를 ISO 형식으로 변환하여 함께 보냅니다.
+          custom_date: customDate ? new Date(customDate).toISOString() : null,
         }),
       });
 
@@ -197,8 +193,28 @@ const BoardWrite = () => {
                 <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#317F81] outline-none" />
               </div>
 
+              {/* ⭐ 관리자 전용 작성일 지정 구역 (테두리 추가 완료) */}
+              {isAdmin && (
+                <div className="p-4 bg-yellow-50/50 rounded-xl border border-yellow-200 shadow-sm">
+                  <label className="block text-sm font-bold text-yellow-900 mb-2">
+                    👑 [관리자 전용] 과거/미래 작성 일자 지정 (선택)
+                  </label>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <input
+                      type="datetime-local"
+                      value={customDate}
+                      onChange={(e) => setCustomDate(e.target.value)}
+                      className="px-4 py-2 border border-yellow-300 rounded-lg text-sm bg-white text-gray-900 outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 transition-all"
+                    />
+                    <span className="text-xs text-yellow-700">
+                      ※ 달력을 비워두시면 <strong className="text-red-500 underline">현재 작성하는 시간</strong>으로 자동 등록됩니다.
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* 📷 1. 사진 첨부 구역 */}
-              <div className="p-4 bg-gray-50 rounded-xl border">
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                 <label className="block text-sm font-bold text-gray-700 mb-2">📷 본문 사진 첨부 (여러 장 가능, 자동 변환)</label>
                 <input type="file" accept="image/*" multiple onChange={handleImageChange} className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-white file:text-[#317F81] file:shadow-sm cursor-pointer" />
                 
@@ -207,7 +223,6 @@ const BoardWrite = () => {
                     {previewUrls.map((url, idx) => (
                       <div key={idx} className="relative inline-block">
                         <img src={url} alt={`미리보기`} className="h-[80px] rounded shadow-sm border" />
-                        {/* ⭐ 사진 삭제 버튼 */}
                         <button 
                           type="button" 
                           onClick={() => handleRemoveImage(idx)}
@@ -221,7 +236,7 @@ const BoardWrite = () => {
                 )}
               </div>
 
-              {/* 📁 2. 자료 첨부 구역 */}
+              {/* 📁 2. 자료 첨부 구역 (테두리 추가 완료) */}
               <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100">
                 <label className="block text-sm font-bold text-gray-700 mb-2">📁 다운로드용 자료 첨부 (여러 개 선택 가능)</label>
                 <p className="text-xs text-gray-500 mb-3">지원 형식: zip, pdf, hwp, ppt, xlsx 등</p>
@@ -234,7 +249,6 @@ const BoardWrite = () => {
                         <div className="flex items-center gap-2 font-medium">
                           <span className="text-blue-500">📎</span> {file.name}
                         </div>
-                        {/* ⭐ 자료 삭제 버튼 */}
                         <button 
                           type="button" 
                           onClick={() => handleRemoveFile(idx)}
