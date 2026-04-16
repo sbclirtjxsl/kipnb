@@ -13,18 +13,21 @@ const boardNames = {
 const BoardEdit = () => {
   const { category, id } = useParams();
   const navigate = useNavigate();
+  
+  // 세션 정보 및 관리자 확인
   const { data: session } = authClient.useSession();
+  const isAdmin = session?.user?.role === '관리자' || session?.user?.role === '운영진';
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  // ⭐ 임의 지정 날짜 (기존 작성일을 담거나 새로 바꿀 날짜)
+  const [customDate, setCustomDate] = useState('');
+  
   const [isSubmitting, setIsSubmitting] = useState(false); 
   const [loading, setLoading] = useState(true);
 
-  // 기존에 올려둔 파일 주소들을 담을 바구니
   const [existingImages, setExistingImages] = useState([]);
   const [existingFiles, setExistingFiles] = useState([]);
-
-  // 새로 추가할 파일들을 담을 바구니
   const [newImages, setNewImages] = useState([]);
   const [newPreviewUrls, setNewPreviewUrls] = useState([]);
   const [newFiles, setNewFiles] = useState([]);
@@ -39,12 +42,19 @@ const BoardEdit = () => {
           setTitle(data.title);
           setContent(data.content);
           
-          // 기존 사진 주소 파싱
+          // ⭐ 기존 작성일(created_at)이 있다면 달력 폼(datetime-local)에 맞게 변환해서 꽂아줍니다!
+          if (data.created_at) {
+            const dateObj = new Date(data.created_at);
+            // 한국 시간(KST) 보정 (UTC + 9시간)
+            dateObj.setHours(dateObj.getHours() + 9);
+            // 'YYYY-MM-DDTHH:mm' 형태로 잘라서 달력 초기값으로 세팅
+            setCustomDate(dateObj.toISOString().slice(0, 16));
+          }
+          
           if (data.image_url) {
             try { setExistingImages(data.image_url.startsWith('[') ? JSON.parse(data.image_url) : [data.image_url]); } 
             catch(e) { setExistingImages([data.image_url]); }
           }
-          // 기존 자료 주소 파싱
           if (data.file_url) {
             try { setExistingFiles(data.file_url.startsWith('[') ? JSON.parse(data.file_url) : [data.file_url]); } 
             catch(e) { setExistingFiles([data.file_url]); }
@@ -62,16 +72,13 @@ const BoardEdit = () => {
     fetchPost();
   }, [id, navigate]);
 
-  // 기존 사진 삭제 버튼
   const handleRemoveExistingImage = (idx) => {
     setExistingImages(prev => prev.filter((_, i) => i !== idx));
   };
-  // 기존 자료 삭제 버튼
   const handleRemoveExistingFile = (idx) => {
     setExistingFiles(prev => prev.filter((_, i) => i !== idx));
   };
 
-  // 새로 추가하는 사진 (WebP 변환)
   const handleNewImageChange = async (e) => {
     const files = Array.from(e.target.files); 
     if (files.length === 0) return;
@@ -104,12 +111,12 @@ const BoardEdit = () => {
     setNewPreviewUrls(prev => [...prev, ...results.map(r => r.preview)]);
     e.target.value = ''; 
   };
+
   const handleRemoveNewImage = (idx) => {
     setNewImages(prev => prev.filter((_, i) => i !== idx));
     setNewPreviewUrls(prev => prev.filter((_, i) => i !== idx));
   };
 
-  // 새로 추가하는 자료
   const handleNewDocumentChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
@@ -129,7 +136,6 @@ const BoardEdit = () => {
       let uploadedNewImageUrls = [];
       let uploadedNewFileUrls = []; 
 
-      // 1. 새 사진들 R2 업로드
       if (newImages.length > 0) {
         const uploadPromises = newImages.map(async (file) => {
           const formData = new FormData();
@@ -141,7 +147,6 @@ const BoardEdit = () => {
         uploadedNewImageUrls = (await Promise.all(uploadPromises)).filter(url => url !== null); 
       }
 
-      // 2. 새 자료들 R2 업로드
       if (newFiles.length > 0) {
         const filePromises = newFiles.map(async (file) => {
           const formData = new FormData();
@@ -153,24 +158,31 @@ const BoardEdit = () => {
         uploadedNewFileUrls = (await Promise.all(filePromises)).filter(url => url !== null);
       }
 
-      // 최종 주소 합치기 (남겨둔 기존 주소 + 방금 올린 새 주소)
       const finalImages = [...existingImages, ...uploadedNewImageUrls];
       const finalFiles = [...existingFiles, ...uploadedNewFileUrls];
 
+      // ⭐ 서버로 보낼 데이터 묶음 (수정일 땐 작성일 조작 데이터도 포함)
+      const payload = {
+        id, 
+        category, 
+        title, 
+        content,
+        image_url: finalImages.length > 0 ? JSON.stringify(finalImages) : "", 
+        file_url: finalFiles.length > 0 ? JSON.stringify(finalFiles) : "", 
+        has_file: finalFiles.length > 0 ? 1 : 0, 
+        // ⭐ 핵심: 날짜를 선택했으면 ISO 문자로 변환해서 보냅니다.
+        custom_date: customDate ? new Date(customDate).toISOString() : null,
+      };
+
       const response = await fetch('/api/board-update', {
-        method: 'POST', // 수정은 board-update로 보냅니다!
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id, category, title, content,
-          image_url: finalImages.length > 0 ? JSON.stringify(finalImages) : "", 
-          file_url: finalFiles.length > 0 ? JSON.stringify(finalFiles) : "", 
-          has_file: finalFiles.length > 0 ? 1 : 0, 
-        }),
+        body: JSON.stringify(payload),
       });
 
-    if (response.ok) {
+      if (response.ok) {
         alert("성공적으로 수정되었습니다!");
-        navigate(`/board/${category}/${id}`); // 🟢 수정: /detail/ 삭제!
+        navigate(`/board/${category}/${id}`); 
       } else {
         alert("수정 실패");
       }
@@ -194,16 +206,37 @@ const BoardEdit = () => {
             </h1>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+              
+              {/* 제목 입력칸 */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">제목</label>
                 <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#317F81] outline-none" />
               </div>
 
+              {/* ⭐ 관리자 전용 작성일 지정 구역 (제목 바로 아래 배치) */}
+              {isAdmin && (
+                <div className="p-4 bg-yellow-50/50 rounded-xl border border-yellow-100 shadow-sm">
+                  <label className="block text-sm font-bold text-yellow-900 mb-2">
+                    👑 [관리자 전용] 과거/미래 작성 일자 수정
+                  </label>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <input
+                      type="datetime-local"
+                      value={customDate}
+                      onChange={(e) => setCustomDate(e.target.value)}
+                      className="px-4 py-2 border border-yellow-300 rounded-lg text-sm bg-white text-gray-900 outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 transition-all"
+                    />
+                    <span className="text-xs text-yellow-700">
+                      ※ 원하시는 날짜로 변경하시면 해당 날짜로 게시판에 재정렬됩니다.
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* 📷 1. 사진 첨부 구역 */}
               <div className="p-4 bg-gray-50 rounded-xl border">
                 <label className="block text-sm font-bold text-gray-700 mb-2">📷 사진 수정</label>
                 
-                {/* 기존에 올렸던 사진들 */}
                 {existingImages.length > 0 && (
                   <div className="mb-4">
                     <p className="text-xs text-gray-500 mb-2">기존 사진</p>
@@ -220,7 +253,6 @@ const BoardEdit = () => {
 
                 <input type="file" accept="image/*" multiple onChange={handleNewImageChange} className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-white file:text-[#317F81] file:shadow-sm cursor-pointer" />
                 
-                {/* 방금 새로 추가한 사진 미리보기 */}
                 {newPreviewUrls.length > 0 && (
                   <div className="mt-4 flex gap-4 flex-wrap">
                     {newPreviewUrls.map((url, idx) => (
@@ -237,7 +269,6 @@ const BoardEdit = () => {
               <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100">
                 <label className="block text-sm font-bold text-gray-700 mb-2">📁 다운로드 자료 수정</label>
                 
-                {/* 기존 자료들 */}
                 {existingFiles.length > 0 && (
                   <ul className="mb-4 flex flex-col gap-1">
                     {existingFiles.map((url, idx) => {
