@@ -172,7 +172,7 @@ const BoardWrite = () => {
 
   return (
     // ⭐ 전체 배경 다크모드 대응
-    <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
+    <div className="min-h-screen bg-[#2a2a2a] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
       <Header />
       <main className="flex-grow py-10">
         <div className="max-w-[800px] mx-auto px-4">

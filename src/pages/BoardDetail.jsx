@@ -63,7 +63,7 @@ const BoardDetail = () => {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center text-gray-500">불러오는 중...</div>;
+  if (loading) return <div className="min-h-screen bg-[#2a2a2a] flex items-center justify-center text-gray-500">불러오는 중...</div>;
   if (!post) return null; 
 
   const isAuthor = session?.user?.name === post.author_name;
@@ -88,8 +88,8 @@ const BoardDetail = () => {
   fileUrls = fileUrls.filter(url => url && url.trim() !== "");
 
   return (
-    // ⭐ 바깥 배경을 밝은 회색(#f8f9fa)으로 고정하여 종이 같은 느낌 부여
-    <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans transition-colors duration-300">
+    // ⭐ 바깥 배경을 밝은 회색(#2a2a2a)으로 고정하여 종이 같은 느낌 부여
+    <div className="min-h-screen bg-[#2a2a2a] flex flex-col font-sans transition-colors duration-300">
       <Header />
       <main className="flex-grow py-10">
         <div className="max-w-[900px] mx-auto px-4">

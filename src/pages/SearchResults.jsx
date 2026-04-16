@@ -35,7 +35,7 @@ const SearchResults = () => {
   }, [query]);
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#2a2a2a] flex flex-col font-sans">
       <Header />
       <main className="flex-grow py-12">
         <div className="max-w-[900px] mx-auto px-4">

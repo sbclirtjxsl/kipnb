@@ -110,7 +110,7 @@ const BoardEdit = () => {
   if (loading) return <div className="min-h-screen flex justify-center items-center">불러오는 중...</div>;
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#2a2a2a] flex flex-col font-sans">
       <Header />
       <main className="flex-grow py-10">
         <div className="max-w-[800px] mx-auto px-4">
