@@ -79,7 +79,7 @@ const Notice = () => {
         <section className="max-w-[900px] mx-auto pt-4 pb-4 px-4 text-center">
           <h2 className="text-3xl font-extrabold text-gray-950 mb-2 tracking-tight">{currentBoard.title}</h2>
           <p className="text-gray-500 text-sm font-medium mb-2">{currentBoard.description}</p>
-          <div className="w-full h-[180px] rounded-3xl overflow-hidden shadow-md border-4 border-white">
+          <div className="w-full h-[180px] rounded-3xl overflow-hidden shadow-md ">
             <img src={currentBoard.banner} alt={currentBoard.title} className="w-full h-full object-cover" />
           </div>
         </section>
