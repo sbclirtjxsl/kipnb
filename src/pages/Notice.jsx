@@ -11,14 +11,20 @@ import BannerTalk from '../assets/banner/converstation.webp';
 import BannerNotice from '../assets/banner/Notice.webp'; 
 import BannerQnA from '../assets/banner/QnA.webp'; 
 import BannerWorkers from '../assets/banner/workers.webp'; 
+import BannerManufacturing from '../assets/banner/Manufacturing.webp'; 
+import BannerConstruction from '../assets/banner/Construction.webp'; 
+import BannerConsulting from '../assets/banner/Consulting.webp'; 
+
+
+
 
 const boardSettings = {
   edu: { title: "교육/세미나", description: "관련 교육 및 세미나 일정을 안내합니다.", banner: BannerTalk },
   publish: { title: "논문/출판", description: "연구 논문 및 출판 자료입니다.", banner: BannerBook },
   pr: { title: "홍보", description: "기관의 홍보 자료를 확인하세요.", banner: BannerAd },
-  manufacture: { title: "제조업체 정보", description: "BF 인증 관련 제조업체 정보입니다.", banner: BannerNotice },
-  construction: { title: "시공업체 정보", description: "BF 인증 관련 시공업체 정보입니다.", banner: BannerNotice },
-  consulting: { title: "컨설팅업체 정보", description: "BF 인증 관련 컨설팅업체 정보입니다.", banner: BannerNotice },
+  manufacture: { title: "제조업체 정보", description: "BF 인증 관련 제조업체 정보입니다.", banner: BannerManufacturing },
+  construction: { title: "시공업체 정보", description: "BF 인증 관련 시공업체 정보입니다.", banner: BannerConstruction },
+  consulting: { title: "컨설팅업체 정보", description: "BF 인증 관련 컨설팅업체 정보입니다.", banner: BannerConsulting },
   forms: { title: "인증 관련 서식", description: "인증에 필요한 서식 자료실입니다.", banner: BannerNotice },
   notice: { title: "공지사항", description: "사람과건축의 새로운 소식을 알려드립니다.", banner: BannerNotice },
   qna: { title: "문의상담", description: "궁금하신 점을 자유롭게 남겨주세요.", banner: BannerQnA },
