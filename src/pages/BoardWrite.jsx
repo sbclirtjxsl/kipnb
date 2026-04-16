@@ -11,19 +11,20 @@ const boardNames = {
 };
 
 const BoardWrite = () => {
-  const { category } = useParams();
-  const navigate = useNavigate();
-  
-  // 1. 세션 정보 가져오기 (중복 제거 완료!)
   const { data: session } = authClient.useSession();
   
   // 2. 관리자(또는 운영진)인지 확인
   const isAdmin = session?.user?.role === '관리자' || session?.user?.role === '운영진';
   
-  // 3. 상태 관리 (제목, 내용, 파일, 관리자용 날짜 등)
+  // 3. 관리자가 임의로 지정할 날짜를 담을 공간 (기본값은 빈 칸 '')
+  const [customDate, setCustomDate] = useState('');
+  
+  const { category } = useParams();
+  const navigate = useNavigate();
+  const { data: session } = authClient.useSession();
+
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [customDate, setCustomDate] = useState(''); // ⭐ 관리자 임의 지정 날짜
   const [isSubmitting, setIsSubmitting] = useState(false); 
 
   const [selectedImages, setSelectedImages] = useState([]);
@@ -31,9 +32,9 @@ const BoardWrite = () => {
   const [attachedFiles, setAttachedFiles] = useState([]); 
 
   const isQnA = category === 'qna';
-  const canWrite = isQnA || isAdmin;
+  const hasManagerRole = session?.user?.role === '관리자' || session?.user?.role === '운영진';
+  const canWrite = isQnA || hasManagerRole;
 
-  // 권한 없는 사용자 차단
   if (!session || !canWrite) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -45,7 +46,7 @@ const BoardWrite = () => {
     );
   }
 
-  // 사진 첨부 (다중 변환)
+  // 1. 사진 첨부 (다중 변환)
   const handleImageChange = async (e) => {
     const files = Array.from(e.target.files); 
     if (files.length === 0) return;
@@ -77,17 +78,19 @@ const BoardWrite = () => {
     });
 
     const results = await Promise.all(webpPromises);
+    // 기존에 선택된 사진에 이어붙이기
     setSelectedImages(prev => [...prev, ...results.map(r => r.file)]);
     setPreviewUrls(prev => [...prev, ...results.map(r => r.preview)]);
-    e.target.value = ''; 
+    e.target.value = ''; // 입력창 초기화 (같은 파일 다시 선택 가능하도록)
   };
 
+  // ⭐ 사진 개별 삭제 기능
   const handleRemoveImage = (indexToRemove) => {
     setSelectedImages(prev => prev.filter((_, index) => index !== indexToRemove));
     setPreviewUrls(prev => prev.filter((_, index) => index !== indexToRemove));
   };
 
-  // 자료 첨부
+  // 2. 자료 첨부 (여러 파일 지원)
   const handleDocumentChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
@@ -104,15 +107,16 @@ const BoardWrite = () => {
       }
     }
     
+    // 기존 파일에 이어붙이기
     setAttachedFiles(prev => [...prev, ...validFiles]);
-    e.target.value = ''; 
+    e.target.value = ''; // 입력창 초기화
   };
 
+  // ⭐ 자료 개별 삭제 기능
   const handleRemoveFile = (indexToRemove) => {
     setAttachedFiles(prev => prev.filter((_, index) => index !== indexToRemove));
   };
 
-  // 🚀 최종 전송 함수
   const handleSubmit = async (e) => {
     e.preventDefault(); 
     if (!title.trim() || !content.trim()) return alert("제목과 내용을 모두 입력해 주세요.");
@@ -151,24 +155,17 @@ const BoardWrite = () => {
       const finalImageUrlString = uploadedImageUrls.length > 0 ? JSON.stringify(uploadedImageUrls) : "";
       const finalFileUrlString = uploadedFileUrls.length > 0 ? JSON.stringify(uploadedFileUrls) : "";
 
-      // ⭐ 서버로 보낼 데이터 묶음
-      const payload = {
-        category, 
-        title, 
-        content,
-        author_name: session.user.name,
-        author_email: session.user.email,
-        image_url: finalImageUrlString, 
-        file_url: finalFileUrlString, 
-        has_file: uploadedFileUrls.length > 0 ? 1 : 0, 
-        // ⭐ 핵심: 날짜를 선택했으면 ISO 문자로 변환해서 보내고, 안 골랐으면 null로 보냄!
-        custom_date: customDate ? new Date(customDate).toISOString() : null,
-      };
-
       const response = await fetch('/api/board-write', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          category, title, content,
+          author_name: session.user.name,
+          author_email: session.user.email,
+          image_url: finalImageUrlString, 
+          file_url: finalFileUrlString, 
+          has_file: uploadedFileUrls.length > 0 ? 1 : 0, 
+        }),
       });
 
       if (response.ok) {
@@ -195,32 +192,10 @@ const BoardWrite = () => {
             </h1>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-              
-              {/* 제목 입력칸 */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">제목</label>
                 <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#317F81] outline-none" />
               </div>
-
-              {/* ⭐ 관리자 전용 작성일 지정 구역 (제목 바로 아래 배치) */}
-              {isAdmin && (
-                <div className="p-4 bg-yellow-50/50 rounded-xl border border-yellow-100 shadow-sm">
-                  <label className="block text-sm font-bold text-yellow-900 mb-2">
-                    👑 [관리자 전용] 과거/미래 작성 일자 지정 (선택)
-                  </label>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                    <input
-                      type="datetime-local"
-                      value={customDate}
-                      onChange={(e) => setCustomDate(e.target.value)}
-                      className="px-4 py-2 border border-yellow-300 rounded-lg text-sm bg-white text-gray-900 outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 transition-all"
-                    />
-                    <span className="text-xs text-yellow-700">
-                      ※ 달력을 비워두시면 <strong className="text-red-500 underline">현재 작성하는 시간</strong>으로 자동 등록됩니다.
-                    </span>
-                  </div>
-                </div>
-              )}
 
               {/* 📷 1. 사진 첨부 구역 */}
               <div className="p-4 bg-gray-50 rounded-xl border">
@@ -232,6 +207,7 @@ const BoardWrite = () => {
                     {previewUrls.map((url, idx) => (
                       <div key={idx} className="relative inline-block">
                         <img src={url} alt={`미리보기`} className="h-[80px] rounded shadow-sm border" />
+                        {/* ⭐ 사진 삭제 버튼 */}
                         <button 
                           type="button" 
                           onClick={() => handleRemoveImage(idx)}
@@ -258,6 +234,7 @@ const BoardWrite = () => {
                         <div className="flex items-center gap-2 font-medium">
                           <span className="text-blue-500">📎</span> {file.name}
                         </div>
+                        {/* ⭐ 자료 삭제 버튼 */}
                         <button 
                           type="button" 
                           onClick={() => handleRemoveFile(idx)}
@@ -271,7 +248,6 @@ const BoardWrite = () => {
                 )}
               </div>
 
-              {/* 내용 입력칸 (추후 Quill 에디터로 변경 가능) */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">내용</label>
                 <textarea value={content} onChange={(e) => setContent(e.target.value)} required className="w-full px-4 py-3 border rounded-lg h-64 focus:ring-2 focus:ring-[#317F81] outline-none"></textarea>
