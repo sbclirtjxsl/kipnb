@@ -14,13 +14,9 @@ const BoardWrite = () => {
   const { category } = useParams();
   const navigate = useNavigate();
 
-  // ⭐ 세션 정보는 한 번만 선언합니다!
   const { data: session } = authClient.useSession();
-  
-  // 관리자(또는 운영진)인지 확인
   const isAdmin = session?.user?.role === '관리자' || session?.user?.role === '운영진';
   
-  // 관리자가 임의로 지정할 날짜를 담을 공간
   const [customDate, setCustomDate] = useState('');
   
   const [title, setTitle] = useState('');
@@ -46,7 +42,6 @@ const BoardWrite = () => {
     );
   }
 
-  // 1. 사진 첨부 (다중 변환)
   const handleImageChange = async (e) => {
     const files = Array.from(e.target.files); 
     if (files.length === 0) return;
@@ -88,7 +83,6 @@ const BoardWrite = () => {
     setPreviewUrls(prev => prev.filter((_, index) => index !== indexToRemove));
   };
 
-  // 2. 자료 첨부 (여러 파일 지원)
   const handleDocumentChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
@@ -159,7 +153,6 @@ const BoardWrite = () => {
           image_url: finalImageUrlString, 
           file_url: finalFileUrlString, 
           has_file: uploadedFileUrls.length > 0 ? 1 : 0, 
-          // ⭐ 커스텀 날짜를 ISO 형식으로 변환하여 함께 보냅니다.
           custom_date: customDate ? new Date(customDate).toISOString() : null,
         }),
       });
@@ -193,7 +186,7 @@ const BoardWrite = () => {
                 <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#317F81] outline-none" />
               </div>
 
-              {/* ⭐ 관리자 전용 작성일 지정 구역 (테두리 추가 완료) */}
+              {/* ⭐ 시간 뺀 달력 & 클릭 시 펼쳐짐 적용 */}
               {isAdmin && (
                 <div className="p-4 bg-yellow-50/50 rounded-xl border border-yellow-200 shadow-sm">
                   <label className="block text-sm font-bold text-yellow-900 mb-2">
@@ -201,19 +194,19 @@ const BoardWrite = () => {
                   </label>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                     <input
-                      type="datetime-local"
+                      type="date"
                       value={customDate}
                       onChange={(e) => setCustomDate(e.target.value)}
-                      className="px-4 py-2 border border-yellow-300 rounded-lg text-sm bg-white text-gray-900 outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 transition-all"
+                      onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                      className="px-4 py-2 border border-yellow-300 rounded-lg text-sm bg-white text-gray-900 outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 transition-all cursor-pointer"
                     />
                     <span className="text-xs text-yellow-700">
-                      ※ 달력을 비워두시면 <strong className="text-red-500 underline">현재 작성하는 시간</strong>으로 자동 등록됩니다.
+                      ※ 달력을 비워두시면 <strong className="text-red-500 underline">오늘 날짜</strong>로 자동 등록됩니다.
                     </span>
                   </div>
                 </div>
               )}
 
-              {/* 📷 1. 사진 첨부 구역 */}
               <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
                 <label className="block text-sm font-bold text-gray-700 mb-2">📷 본문 사진 첨부 (여러 장 가능, 자동 변환)</label>
                 <input type="file" accept="image/*" multiple onChange={handleImageChange} className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-white file:text-[#317F81] file:shadow-sm cursor-pointer" />
@@ -236,7 +229,6 @@ const BoardWrite = () => {
                 )}
               </div>
 
-              {/* 📁 2. 자료 첨부 구역 (테두리 추가 완료) */}
               <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100">
                 <label className="block text-sm font-bold text-gray-700 mb-2">📁 다운로드용 자료 첨부 (여러 개 선택 가능)</label>
                 <p className="text-xs text-gray-500 mb-3">지원 형식: zip, pdf, hwp, ppt, xlsx 등</p>
