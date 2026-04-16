@@ -15,9 +15,6 @@ import BannerManufacturing from '../assets/banner/Manufacturing.webp';
 import BannerConstruction from '../assets/banner/Construction.webp'; 
 import BannerConsulting from '../assets/banner/Consulting.webp'; 
 
-
-
-
 const boardSettings = {
   edu: { title: "교육/세미나", description: "관련 교육 및 세미나 일정을 안내합니다.", banner: BannerTalk },
   publish: { title: "논문/출판", description: "연구 논문 및 출판 자료입니다.", banner: BannerBook },
@@ -108,11 +105,9 @@ const Notice = () => {
                   <tr className="bg-gray-50 border-b border-gray-200 text-sm font-bold text-gray-700">
                     <th className="py-4 w-16 text-center">번호</th>
                     <th className="py-4 px-4 text-left">제목</th>
-                    {/* ⭐ 조건 없애고 모든 게시판에 첨부 열 표시 */}
                     <th className="py-4 w-20 text-center">첨부</th>
-                    {/* <th className="py-4 w-24 text-center">작성자</th> */}
+                    <th className="py-4 w-24 text-center">작성자</th>
                     <th className="py-4 w-28 text-center">날짜</th>
-                    {/* ⭐ 조회수 열 추가 */}
                     <th className="py-4 w-16 text-center">조회</th>
                   </tr>
                 </thead>
@@ -122,8 +117,6 @@ const Notice = () => {
                   ) : posts.length > 0 ? (
                     posts.map((post, index) => {
                       const displayNumber = totalCount - ((currentPage - 1) * itemsPerPage) - index;
-                      
-                      // 사진이 포함되어 있는지 확인 (빈 문자열이거나 빈 배열이 아닐 때)
                       const hasImage = post.image_url && post.image_url !== "" && post.image_url !== "[]" && post.image_url !== '""';
 
                       return (
@@ -131,15 +124,17 @@ const Notice = () => {
                           <td className="py-4 text-center text-gray-400 text-sm font-bold">{displayNumber}</td>
                           <td className="py-4 px-4 font-medium text-gray-800">{post.title}</td>
                           
-                          {/* ⭐ 파일(💾)과 사진(🖼️) 아이콘을 나란히 표시 */}
                           <td className="py-4 text-center text-lg flex items-center justify-center gap-1">
                             {post.has_file === 1 && <span title="첨부파일">💾</span>}
                             {hasImage && <span title="사진 포함">🖼️</span>}
                           </td>
                           
-                          <td className="py-4 text-center text-sm text-gray-600">{post.author_name}</td>
+                          {/* ⭐ 핵심: isQnA가 참이면 실제 이름, 아니면 '관리자' 출력 */}
+                          <td className="py-4 text-center text-sm text-gray-600">
+                            {isQnA ? post.author_name : '관리자'}
+                          </td>
+
                           <td className="py-4 text-center text-sm text-gray-500">{new Date(post.created_at).toLocaleDateString()}</td>
-                          {/* ⭐ 조회수 표시 */}
                           <td className="py-4 text-center text-sm text-gray-500">{post.views || 0}</td>
                         </tr>
                       );
