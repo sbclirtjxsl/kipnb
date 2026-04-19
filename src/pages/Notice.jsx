@@ -74,7 +74,7 @@ const Notice = () => {
 
   return (
     // ⭐ 전체 배경 다크모드 대응 (채도 없는 어두운 회색)
-    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
+    <div className="min-h-screen bg-main flex flex-col font-sans transition-colors duration-300">
       <Header />
       <main className="flex-grow">
         <section className="max-w-[900px] mx-auto pt-4 pb-4 px-4 text-center">
@@ -101,7 +101,7 @@ const Notice = () => {
                 placeholder="제목으로 검색..."
                 value={searchTerm}
                 onChange={handleSearchChange}
-                className="w-64 px-4 py-2 text-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:outline-none focus:border-[#317F81] dark:focus:border-[#4fd1d5] transition-colors"
+                className="w-64 px-4 py-2 text-sm border border-gray-300 dark:border-gray-700 bg-main txt-main placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:outline-none focus:border-[#317F81] dark:focus:border-[#4fd1d5] transition-colors"
               />
             </div>
 
@@ -109,7 +109,7 @@ const Notice = () => {
               {/* ⭐ 테이블 전체 테두리 다크모드 대응 */}
               <table className="w-full border-t-2 border-gray-800 dark:border-gray-600 transition-colors">
                 <thead>
-                  <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 text-sm font-bold text-gray-700 dark:text-gray-300 transition-colors">
+                  <tr className="bg-main border-b border-gray-200 dark:border-gray-700 text-sm font-bold text-gray-700 dark:text-gray-300 transition-colors">
                     <th className="py-4 w-16 text-center">번호</th>
                     <th className="py-4 px-4 text-left">제목</th>
                     <th className="py-4 w-20 text-center">첨부</th>
@@ -167,8 +167,8 @@ const Notice = () => {
                     // ⭐ 페이지네이션 버튼 다크모드 대응
                     className={`w-8 h-8 flex items-center justify-center rounded-md text-sm font-bold transition-colors ${
                       currentPage === pageNum 
-                        ? "bg-[#317F81] text-white dark:bg-[#4fd1d5] dark:text-gray-900" 
-                        : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        ? "bg-main txt-main" 
+                        : "bg-main txt-main border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                     }`}
                   >
                     {pageNum}

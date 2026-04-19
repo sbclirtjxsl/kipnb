@@ -12,9 +12,9 @@ const AD_Location = () => {
 
       <main>
         {/* 서브 페이지 헤더 */}
-        <section className="bg-card border-b border-gray-200 py-16">
-          <div className="max-w-[1200px] mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold txt-main mb-4">오시는 길</h2>
+        <section className=" bg-main bg-card py-16">
+          <div className="max-w-[1200px] mx-auto px-2 text-center">
+            <h2 className="text-3xl font-bold txt-main mb-2">오시는 길</h2>
             <div className="text-[13px] txt-main flex justify-center gap-2">
               <span>Home</span>
               <span className="txt-main">&gt;</span>
@@ -31,7 +31,7 @@ const AD_Location = () => {
             
             {/* 1. 지도 영역 */}
             <div className="mb-12">
-              <div className="w-full h-[450px] bg-gray-100 rounded-xl overflow-hidden border border-gray-200 shadow-sm relative">
+              <div className="w-full h-[450px] bg-main rounded-xl overflow-hidden border shadow-sm relative">
                 {/* 참고: 실제 네이버 지도 API를 연동하거나, 
                   네이버 지도에서 '공유 > HTML 태그 복사'를 통해 아래 div를 교체할 수 있습니다. 
                 */}
