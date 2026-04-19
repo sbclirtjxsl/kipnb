@@ -6,7 +6,6 @@ import login from '../assets/Login_B.svg';
 import { authClient } from '../auth-client'; 
 
 const menuItems = [
-  // ... 기존과 동일
   { title: "사람과건축 소개", sub: [{ name: "인사말", path: "/greeting" }, { name: "사업분야", path: "/business" }, { name: "업무담당자 안내", path: "/Soon" }, { name: "오시는 길", path: "/location" }] },
   { title: "연구 및 공익사업", sub: [{ name: "교육/세미나", path: "/board/edu" }, { name: "논문/출판", path: "/board/publish" }, { name: "홍보", path: "/board/pr" }] },
   { title: "BF관련 업체정보", sub: [{ name: "제조", path: "/board/manufacture" }, { name: "시공", path: "/board/construction" }, { name: "컨설팅", path: "/board/consulting" }] },
@@ -16,7 +15,6 @@ const menuItems = [
 ];
 
 const boardNames = {
-  // ... 기존과 동일
   edu: "교육/세미나", publish: "논문/출판", pr: "홍보",
   manufacture: "제조업체 정보", construction: "시공업체 정보", consulting: "컨설팅업체 정보",
   forms: "관련 서식", notice: "공지사항", qna: "문의상담", archive: "자료실",
@@ -30,7 +28,7 @@ const Header = () => {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [popularPosts, setPopularPosts] = useState([]); 
 
-  // ⭐ 추가: 현재 열려있는 드롭다운 메뉴의 인덱스 상태
+  // 현재 열려있는 드롭다운 메뉴의 인덱스 상태
   const [openMenuIndex, setOpenMenuIndex] = useState(null);
 
   useEffect(() => {
@@ -57,7 +55,7 @@ const Header = () => {
     return () => { document.body.style.overflow = 'unset'; };
   }, [isSearchOpen]);
 
-  // ⭐ 추가: 태블릿 등에서 드롭다운 외부 영역 터치 시 메뉴 닫기
+  // 외부 영역 터치(클릭) 시 메뉴 닫기
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (!e.target.closest('.nav-menu-item')) {
@@ -85,14 +83,12 @@ const Header = () => {
       <header className="sticky top-0 z-40 bg-head border-b border-gray-200 dark:border-gray-700 shadow-sm dark:shadow-md relative transition-colors duration-300">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="max-w-[900px] mx-auto">
-            {/* 로그인, 로고 영역은 동일하므로 생략 없이 유지 */}
             <div className="flex justify-between items-center py-0">
               <Link to="/" className="flex items-center">
                 <img src={LogoImg} alt="사람과건축 로고" className="h-[50px] md:h-[55px] w-auto object-contain dark:invert transition-all duration-300" />
               </Link>
 
               <div className="flex items-center text-sm font-bold">
-                {/* 로그인 상태 렌더링 (기존 동일) */}
                 {isPending ? (
                   <span className="text-gray-400 font-medium text-xs">확인 중...</span>
                 ) : session?.user ? (
@@ -131,9 +127,6 @@ const Header = () => {
               >
                 <button 
                   onClick={() => setOpenMenuIndex(openMenuIndex === idx ? null : idx)}
-                {/* ⭐ 수정: 클릭 이벤트 추가 */}
-                <button 
-                  onClick={() => setOpenMenuIndex(openMenuIndex === idx ? null : idx)}
                   className={`py-3 transition-colors duration-200 ${
                     openMenuIndex === idx 
                       ? "text-[#317F81] dark:text-[#4fd1d5]" 
@@ -143,7 +136,6 @@ const Header = () => {
                   {item.title}
                 </button>
                 
-                {/* ⭐ 수정: group-hover 대신 state를 기반으로 Tailwind 클래스 적용 */}
                 <div className={`absolute top-full left-1/2 -translate-x-1/2 transition-all duration-300 min-w-[180px] bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl rounded-lg py-3 z-[100] ${
                   openMenuIndex === idx 
                     ? "visible opacity-100 translate-y-0" 
@@ -154,7 +146,7 @@ const Header = () => {
                       <Link 
                         key={subIdx} 
                         to={subItem.path} 
-                        onClick={() => setOpenMenuIndex(null)} /* 링크 클릭 시 메뉴 닫기 */
+                        onClick={() => setOpenMenuIndex(null)}
                         className="px-5 py-2 hover:bg-[#f0f9f9] dark:hover:bg-gray-700 hover:text-[#317F81] dark:hover:text-[#4fd1d5] text-center text-sm text-gray-600 dark:text-gray-300 font-medium odd:bg-gray-50 dark:odd:bg-gray-800/50 transition-colors"
                       >
                         {subItem.name}
@@ -172,14 +164,64 @@ const Header = () => {
         </div>
       </header>
 
-      {/* 모달 등 하단 영역 기존 코드 유지 (생략) */}
       {isSearchOpen && (
         <div 
           className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity"
           onClick={() => setIsSearchOpen(false)}
         />
       )}
-      {/* ...검색창 컴포넌트 동일... */}
+
+      <div 
+        className={`fixed top-20 left-1/2 -translate-x-1/2 w-[95%] max-w-[800px] bg-head rounded-3xl shadow-2xl z-50 overflow-hidden transition-all duration-300 ease-out origin-top border border-gray-200 dark:border-gray-700 ${
+          isSearchOpen ? 'opacity-100 scale-y-100 translate-y-0' : 'opacity-0 scale-y-95 -translate-y-4 pointer-events-none'
+        }`}
+      >
+        <div className="p-4 md:p-6 border-b border-gray-100 dark:border-gray-800">
+          <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-5 py-3 hover:bg-gray-200 dark:hover:bg-gray-700 focus-within:bg-white dark:focus-within:bg-gray-900 focus-within:border-[#317F81] dark:focus-within:border-[#4fd1d5] focus-within:ring-2 focus-within:ring-[#317F81]/20 transition-all border border-transparent">
+            <img src={SearchIcon} alt="search" className="w-6 h-6 opacity-50 mr-3 dark:invert" />
+            <input
+              type="text"
+              autoFocus={isSearchOpen}
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="무엇을 찾고 싶으신가요?"
+              className="w-full text-lg bg-transparent outline-none text-gray-900 dark:text-gray-100 font-medium placeholder-gray-400 dark:placeholder-gray-500"
+            />
+            <button type="button" onClick={() => setIsSearchOpen(false)} className="ml-3 text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 p-1 transition-colors">
+              ✕
+            </button>
+          </form>
+        </div>
+
+        <div className="p-6 md:p-8 bg-gray-50/50 dark:bg-gray-800/30">
+          <h3 className="text-sm font-extrabold text-gray-800 dark:text-gray-200 mb-5">사람과건축 인기 게시글 🔥</h3>
+          
+          {popularPosts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {popularPosts.map((post) => (
+                <div 
+                  key={post.id}
+                  onClick={() => {
+                    setIsSearchOpen(false);
+                    navigate(`/board/${post.category}/${post.id}`);
+                  }}
+                  className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm hover:border-[#317F81] dark:hover:border-[#4fd1d5] hover:shadow-md cursor-pointer transition-all group"
+                >
+                  <div className="flex-shrink-0 w-10 h-10 bg-[#eef6f6] dark:bg-gray-700 text-[#317F81] dark:text-[#4fd1d5] rounded-lg flex items-center justify-center font-bold text-xs transition-colors">
+                    {boardNames[post.category] ? boardNames[post.category].substring(0, 2) : '게시'}
+                  </div>
+                  <div className="flex-grow min-w-0">
+                    <p className="text-sm font-bold text-gray-700 dark:text-gray-200 truncate group-hover:text-[#317F81] dark:group-hover:text-[#4fd1d5] transition-colors">{post.title}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">👀 조회수 {post.views}회</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6 text-sm text-gray-400 dark:text-gray-500">인기 게시글을 불러오고 있습니다...</div>
+          )}
+        </div>
+      </div>
     </>
   );
 };
