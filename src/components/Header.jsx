@@ -123,13 +123,14 @@ const Header = () => {
           
           <nav className="hidden md:flex justify-center items-center gap-10 text-[15.5px] font-bold relative pb-2">
             {menuItems.map((item, idx) => (
-              {/* ⭐ 수정: class에 nav-menu-item 추가, 마우스 이벤트 추가 */}
               <div 
                 key={idx} 
                 className="relative nav-menu-item"
                 onMouseEnter={() => setOpenMenuIndex(idx)}
                 onMouseLeave={() => setOpenMenuIndex(null)}
               >
+                <button 
+                  onClick={() => setOpenMenuIndex(openMenuIndex === idx ? null : idx)}
                 {/* ⭐ 수정: 클릭 이벤트 추가 */}
                 <button 
                   onClick={() => setOpenMenuIndex(openMenuIndex === idx ? null : idx)}
