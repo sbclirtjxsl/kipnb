@@ -7,20 +7,20 @@ const AD_Location = () => {
   const mapUrl = "https://map.naver.com/v5/search/%EC%B2%AD%EC%88%985%EB%A1%9C%209/address/14154768.2921403,4408962.7689035,15,14154768.2921403,4408962.7689035,15,14154768.2921403,4408962.7689035,15";
 
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-800">
+    <div className="min-h-screen bg-main font-sans txt-main">
       <Header />
 
       <main>
         {/* 서브 페이지 헤더 */}
-        <section className="bg-gray-50 border-b border-gray-200 py-16">
+        <section className="bg-card border-b border-gray-200 py-16">
           <div className="max-w-[1200px] mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">오시는 길</h2>
-            <div className="text-[13px] text-gray-500 flex justify-center gap-2">
+            <h2 className="text-3xl font-bold txt-main mb-4">오시는 길</h2>
+            <div className="text-[13px] txt-main flex justify-center gap-2">
               <span>Home</span>
-              <span className="text-gray-300">&gt;</span>
+              <span className="txt-main">&gt;</span>
               <span>사람과건축 소개</span>
-              <span className="text-gray-300">&gt;</span>
-              <span className="font-bold text-[#317F81]">오시는 길</span>
+              <span className="txt-main">&gt;</span>
+              <span className="font-bold txt-main">오시는 길</span>
             </div>
           </div>
         </section>
@@ -84,21 +84,21 @@ const AD_Location = () => {
             {/* 3. 교통수단별 안내 */}
             <div className="border-t border-gray-100 pt-12 space-y-10">
               <div>
-                <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm">🚌</span>
+                <h4 className="text-xl font-bold txt-main mb-4 flex items-center gap-2">
+                  <span className="w-8 h-8 bg-blue-100 txt-main rounded-full flex items-center justify-center text-sm">🚌</span>
                   버스 이용 시
                 </h4>
-                <p className="text-gray-600 ml-10 break-keep">
+                <p className="txt-main ml-10 break-keep">
                   청수지구 우미린아파트 또는 청수동 가온중학교 정류장 하차 후 도보 약 5분 소요
                 </p>
               </div>
 
               <div>
-                <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <h4 className="text-xl font-bold txt-main mb-4 flex items-center gap-2">
                   <span className="w-8 h-8 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-sm">🚗</span>
                   자가용 이용 시
                 </h4>
-                <p className="text-gray-600 ml-10 break-keep">
+                <p className="txt-main ml-10 break-keep">
                   천안 IC 진출 후 청수 행정타운 방면으로 약 15분 이동 <br />
                   * 건물 내 지하주차장 이용이 가능합니다.
                 </p>

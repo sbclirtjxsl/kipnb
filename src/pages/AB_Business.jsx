@@ -62,15 +62,15 @@ const businessData = [
 
 const AB_Business = () => {
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-800 overflow-x-hidden">
+    <div className="min-h-screen bg-main font-sans txt-main overflow-x-hidden">
       <Header />
 
       <main className="relative">
         {/* 서브 페이지 헤더 */}
         <section className="py-12 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">사업분야</h2>
-          <div className="text-[13px] text-gray-400 flex justify-center gap-2">
-            <span>사람과건축 소개</span> <span>&gt;</span> <span className="font-medium text-gray-600">사업분야</span>
+          <h2 className="text-3xl font-bold txt-main mb-2">사업분야</h2>
+          <div className="text-[13px] txt-main flex justify-center gap-2">
+            <span>사람과건축 소개</span> <span>&gt;</span> <span className="font-medium txt-main">사업분야</span>
           </div>
         </section>
 
@@ -94,7 +94,7 @@ const AB_Business = () => {
         {/* 사업 리스트 (타임라인 스타일) */}
         <section className="pb-24 relative z-10">
           <div className="max-w-[900px] mx-auto px-6">
-            <p className="text-center text-[15px] text-gray-600 mb-16 break-keep leading-relaxed">
+            <p className="text-center text-[15px] txt-main mb-16 break-keep leading-relaxed">
               사단법인 사람과 건축은 다음과 같은 사업과 활동을 통해 목적을 달성하고자 합니다.
             </p>
 
@@ -109,7 +109,7 @@ const AB_Business = () => {
                     <span className="inline-flex items-center justify-center border border-gray-300 rounded-full min-w-[24px] h-[24px] text-xs font-bold mt-0.5">
                       {item.id}
                     </span>
-                    <h4 className="text-[17px] font-bold text-gray-800 leading-snug">
+                    <h4 className="text-[17px] font-bold txt-main leading-snug">
                       {item.title}
                     </h4>
                   </div>
@@ -117,7 +117,7 @@ const AB_Business = () => {
                   {/* 서브 리스트 */}
                   <ul className="space-y-2 ml-1">
                     {item.subItems.map((sub, sIdx) => (
-                      <li key={sIdx} className="text-[14px] text-gray-600 leading-relaxed break-keep pl-4 -indent-4">
+                      <li key={sIdx} className="text-[14px] txt-main leading-relaxed break-keep pl-4 -indent-4">
                         {sub}
                       </li>
                     ))}
@@ -126,7 +126,7 @@ const AB_Business = () => {
               ))}
             </div>
 
-            <p className="mt-24 text-center text-[15px] text-gray-500 leading-relaxed break-keep">
+            <p className="mt-24 text-center text-[15px] txt-main leading-relaxed break-keep">
               사단법인 사람과 건축은 다양한 분야의 전문가들과 함께 협력할 것이며, 건축 환경의 중요성을 대중에게 알리고,<br className="hidden md:block" />
               건축 환경의 미래를 위한 비전을 제시할 것입니다.
             </p>
@@ -136,7 +136,7 @@ const AB_Business = () => {
         {/* 하단 로고 영역 */}
         <div className="border-t border-gray-100 py-10">
           <div className="max-w-[1200px] mx-auto px-4 flex flex-wrap justify-center items-center gap-8 md:gap-16">
-              <div className="text-lg font-bold text-gray-400 tracking-tighter">PEOPLE & BUILDING</div>
+              <div className="text-lg font-bold txt-main tracking-tighter">PEOPLE & BUILDING</div>
               <img src={LogoMolit} alt="국토교통부" className="h-8 md:h-10 w-auto opacity-80" />
               <img src={LogoChungnam} alt="충청남도" className="h-8 md:h-10 w-auto opacity-80" />
           </div>
