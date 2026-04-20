@@ -67,10 +67,10 @@ const AB_Business = () => {
 
       <main className="relative">
         {/* 서브 페이지 헤더 */}
-        <section className="py-12 text-center">
+        <section className="py-6 text-center">
           <h2 className="text-3xl font-bold txt-main mb-2">사업분야</h2>
-          <div className="text-[13px] txt-main flex justify-center gap-2">
-            <span>사람과건축 소개</span> <span>&gt;</span> <span className="font-medium txt-main">사업분야</span>
+          <div className="text-sm txt-50 flex justify-center gap-2">
+            <span>사람과건축 소개</span> <span>&gt;</span> <span className="font-bold text-gray-500">사업분야</span>
           </div>
         </section>
 

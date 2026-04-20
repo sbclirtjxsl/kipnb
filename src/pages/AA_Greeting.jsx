@@ -14,21 +14,21 @@ const AA__Greeting = () => {
 
       <main>
         {/* 1. 서브 페이지 헤더 (타이틀 영역) - 사진 1 스타일로 슬림하게 수정 */}
-        <section className="py-12"> {/* 배경색 제거, 패딩 축소 */}
+        <section className="py-6"> {/* 배경색 제거, 패딩 축소 */}
           <div className="max-w-[1200px] mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-4">인사말</h2>
+            <h2 className="text-3xl font-bold mb-2">인사말</h2>
             
             {/* 브레드크럼 디자인 수정: separator 제거, 색상 통일 */}
-            <div className="text-sm text-gray-500 flex justify-center gap-1">
+            <div className=" text-sm txt-50 flex justify-center gap-1">
               <span>사람과건축 소개</span>
               <span>&gt;</span>
-              <span className="text-gray-500">인사말</span> {/* 색상 강조 제거 */}
+              <span className="text-gray-500 font-bold">인사말</span> {/* 색상 강조 제거 */}
             </div>
           </div>
         </section>
 
         {/* 2. 본문 영역 - 세로 1단 구조로 전면 수정 */}
-        <section className="pb-20">
+        <section className="pb-1">
           <div className="max-w-[1000px] mx-auto px-4">
             
             {/* [추가] 상단 메인 이미지 영역 (사진 1처럼 와이드하게) */}
@@ -56,9 +56,9 @@ const AA__Greeting = () => {
             </div>
 
             {/* [추가] 하단 유관기관 로고 영역 */}
-            <div className="mt-16 pt-10 border-t border-gray-100 flex justify-center items-center gap-10">
-              <img src={LogoMolit} alt="국토교통부" className="h-10 w-auto opacity-90" />
-              <img src={LogoChungnam} alt="충청남도" className="h-10 w-auto opacity-90" />
+            <div className="mt-8 pt-1 border-t border-gray-100 flex justify-center items-center gap-10">
+              <img src={LogoMolit} alt="국토교통부" className="h-12 w-auto opacity-90" />
+              <img src={LogoChungnam} alt="충청남도" className="h-12 w-auto opacity-90" />
             </div>
 
           </div>

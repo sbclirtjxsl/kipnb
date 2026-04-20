@@ -10,8 +10,17 @@ const LoginPage = () => {
       color: 'bg-[#03C75A]',
       textColor: 'text-white',
       icon: 'N',
-      action: () => console.log('Naver Login'),
+      action: async () => {
+        // 구글과 동일하게 세션 체크용 쿠키 생성
+        document.cookie = "app_session=active; path=/;"; 
+        
+        await authClient.signIn.social({
+          provider: "naver",
+          callbackURL: "/", // 로그인 완료 후 돌아올 프론트엔드 경로
+        });
+      },
     },
+
     {
       name: '카카오',
       color: 'bg-[#FEE500]',

@@ -77,11 +77,11 @@ const Notice = () => {
     <div className="min-h-screen bg-main flex flex-col font-sans transition-colors duration-300">
       <Header />
       <main className="flex-grow">
-        <section className="max-w-[900px] mx-auto pt-4 pb-4 px-4 text-center">
+        <section className="max-w-[900px] mx-auto pt-6 pb-4 px-4 text-center">
           <h2 className="text-3xl font-extrabold text-gray-950 dark:text-white mb-2 tracking-tight transition-colors">
             {currentBoard.title}
           </h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2 transition-colors">
+          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-6 transition-colors">
             {currentBoard.description}
           </p>
           <div className="w-full h-[180px] rounded-3xl overflow-hidden shadow-md dark:shadow-none border border-transparent dark:border-gray-800 transition-colors">
@@ -89,7 +89,7 @@ const Notice = () => {
           </div>
         </section>
 
-        <section className="py-2">
+        <section className="py-6">
           <div className="max-w-[900px] mx-auto px-4">
             <div className="flex justify-between items-center mb-4">
               <div className="text-sm text-gray-500 dark:text-gray-400 font-medium transition-colors">

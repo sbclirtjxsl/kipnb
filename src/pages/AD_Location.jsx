@@ -12,21 +12,19 @@ const AD_Location = () => {
 
       <main>
         {/* 서브 페이지 헤더 */}
-        <section className=" bg-main bg-card py-16">
+        <section className=" bg-main bg-card py-6">
           <div className="max-w-[1200px] mx-auto px-2 text-center">
             <h2 className="text-3xl font-bold txt-main mb-2">오시는 길</h2>
-            <div className="text-[13px] txt-main flex justify-center gap-2">
-              <span>Home</span>
-              <span className="txt-main">&gt;</span>
+            <div className="text-sm txt-50 flex justify-center gap-2">
               <span>사람과건축 소개</span>
-              <span className="txt-main">&gt;</span>
-              <span className="font-bold txt-main">오시는 길</span>
+              <span className="text-sm">&gt;</span>
+              <span className="font-bold text-sm text-gray-500">오시는 길</span>
             </div>
           </div>
         </section>
 
         {/* 본문 영역 */}
-        <section className="py-20">
+        <section className="py-6">
           <div className="max-w-[1000px] mx-auto px-4">
             
             {/* 1. 지도 영역 */}

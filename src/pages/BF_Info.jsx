@@ -9,7 +9,7 @@ const BF_Info = () => {
 
       <main>
         {/* 서브 페이지 헤더 */}
-        <section className="bg-main border-b border-gray-200 py-16">
+        <section className="bg-main border-b border-gray-200 py-6">
           <div className="max-w-[1200px] mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold txt-main mb-4">BF인증 개요</h2>
             <div className="text-[13px] txt-main flex justify-center gap-2">

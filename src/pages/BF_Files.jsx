@@ -26,7 +26,7 @@ const BF_Files = () => {
 
       <main>
         {/* 서브 페이지 헤더 */}
-        <section className="bg-main border-b border-gray-200 py-16">
+        <section className="bg-main border-b border-gray-200 py-6">
           <div className="max-w-[1200px] mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">인증 신청 첨부물</h2>
             <div className="text-[13px] text-gray-500 flex justify-center gap-2">
