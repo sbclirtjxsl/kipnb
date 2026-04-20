@@ -75,7 +75,7 @@ const AB_Business = () => {
         </section>
 
         {/* 상단 메인 이미지 - 상하 크롭 적용 */}
-        <div className="max-w-[2400px] mx-auto px-4 mb-20">
+        <div className="max-w-[1000px] mx-auto px-4 mb-20">
           <div className="w-full h-[450px] md:h-[150px] rounded-lg shadow-sm overflow-hidden">
             <img 
               src={BusinessMainImg} 
