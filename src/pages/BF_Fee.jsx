@@ -12,19 +12,19 @@ const feeData = [
 
 const BF_Fee = () => {
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-800">
+    <div className="min-h-screen bg-main font-sans txt-main">
       <Header />
 
       <main>
         {/* 서브 페이지 헤더 */}
-        <section className="bg-gray-50 border-b border-gray-200 py-16">
+        <section className="bg-main border-b border-gray-200 py-16">
           <div className="max-w-[1200px] mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">인증 수수료</h2>
-            <div className="text-[13px] text-gray-500 flex justify-center gap-2">
+            <h2 className="text-3xl font-bold txt-main mb-4">인증 수수료</h2>
+            <div className="text-[13px] txt-main flex justify-center gap-2">
               <span>Home</span>
-              <span className="text-gray-300">&gt;</span>
+              <span className="txt-main">&gt;</span>
               <span>장애물 없는 생활환경 인증</span>
-              <span className="text-gray-300">&gt;</span>
+              <span className="txt-main">&gt;</span>
               <span className="font-bold text-[#317F81]">인증 수수료</span>
             </div>
           </div>
@@ -51,7 +51,7 @@ const BF_Fee = () => {
               </h3>
               <div className="overflow-x-auto shadow-sm border border-gray-200 rounded-xl">
                 <table className="w-full text-center">
-                  <thead className="bg-gray-50 border-b border-gray-200 text-sm font-bold text-gray-600">
+                  <thead className="bg-main border-b border-gray-200 text-sm font-bold text-gray-600">
                     <tr>
                       <th className="px-6 py-5 border-r border-gray-200">건축물 연면적</th>
                       <th className="px-6 py-5 border-r border-gray-200 text-blue-600">예비인증</th>
@@ -61,11 +61,11 @@ const BF_Fee = () => {
                   </thead>
                   <tbody className="text-[15px] divide-y divide-gray-200">
                     {feeData.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-5 font-semibold bg-gray-50 border-r border-gray-200">{item.category}</td>
+                      <tr key={idx} className="hover:bg-main transition-colors">
+                        <td className="px-6 py-5 font-semibold bg-main border-r border-gray-200">{item.category}</td>
                         <td className="px-6 py-5 border-r border-gray-200">{item.prev}원</td>
                         <td className="px-6 py-5 border-r border-gray-200">{item.main}원</td>
-                        <td className="px-6 py-5 font-bold text-gray-900 bg-gray-50/50">{item.total}{item.total !== "-" && "원"}</td>
+                        <td className="px-6 py-5 font-bold text-gray-900 bg-main/50">{item.total}{item.total !== "-" && "원"}</td>
                       </tr>
                     ))}
                   </tbody>

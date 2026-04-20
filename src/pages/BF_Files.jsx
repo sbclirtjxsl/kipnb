@@ -21,12 +21,12 @@ const BF_Files = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-800">
+    <div className="min-h-screen bg-main font-sans text-gray-800">
       <Header />
 
       <main>
         {/* 서브 페이지 헤더 */}
-        <section className="bg-gray-50 border-b border-gray-200 py-16">
+        <section className="bg-main border-b border-gray-200 py-16">
           <div className="max-w-[1200px] mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">인증 신청 첨부물</h2>
             <div className="text-[13px] text-gray-500 flex justify-center gap-2">
@@ -56,7 +56,7 @@ const BF_Files = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-20">
               
               {/* 예비인증 서류 */}
-              <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div className="bg-main border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                 <div className="bg-blue-600 px-6 py-4 text-white font-bold text-lg">
                   📘 예비인증 제출 서류
                 </div>
@@ -73,7 +73,7 @@ const BF_Files = () => {
               </div>
 
               {/* 본인증 서류 */}
-              <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div className="bg-main border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                 <div className="bg-[#317F81] px-6 py-4 text-white font-bold text-lg">
                   🏢 본인증 제출 서류
                 </div>
@@ -92,7 +92,7 @@ const BF_Files = () => {
             </div>
 
             {/* 추가 안내 사항 */}
-            <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 mb-16">
+            <div className="bg-main p-8 rounded-2xl border border-gray-100 mb-16">
               <h4 className="font-bold text-lg mb-6 flex items-center gap-2">
                 <span className="text-yellow-500">💡</span> 유의사항 및 준비 팁
               </h4>
@@ -117,7 +117,7 @@ const BF_Files = () => {
               <button className="px-10 py-4 bg-[#317F81] text-white font-bold rounded-lg hover:bg-[#256062] transition-all shadow-md">
                 인증 신청 서식 다운로드
               </button>
-              <button className="px-10 py-4 border border-gray-300 text-gray-600 font-bold rounded-lg hover:bg-gray-50 transition-all">
+              <button className="px-10 py-4 border border-gray-300 text-gray-600 font-bold rounded-lg hover:bg-main transition-all">
                 온라인 신청 바로가기
               </button>
             </div>

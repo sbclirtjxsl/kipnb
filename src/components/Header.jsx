@@ -80,7 +80,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-head border-b border-gray-200 dark:border-gray-700 shadow-sm dark:shadow-md relative transition-colors duration-300">
+      <header className="sticky top-0 z-40 bg-main border-b border-gray-200 dark:border-gray-700 shadow-sm dark:shadow-md relative transition-colors duration-300">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="max-w-[900px] mx-auto">
             <div className="flex justify-between items-center py-0">
@@ -94,7 +94,7 @@ const Header = () => {
                 ) : session?.user ? (
                   <div className="flex items-center gap-2">
                     {session?.user?.role && (
-                      <span className="text-[11px] font-extrabold text-white bg-[#317F81] px-2 py-0.5 rounded-md">{session.user.role}</span>
+                      <span className="text-[11px] font-extrabold text-white bg-main px-2 py-0.5 rounded-md">{session.user.role}</span>
                     )}
                     <img src={session?.user?.image} alt="프로필" className="w-7 h-7 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm" />
                     <span className="text-gray-700 dark:text-gray-200">{session?.user?.name}님</span>
@@ -136,7 +136,7 @@ const Header = () => {
                   {item.title}
                 </button>
                 
-                <div className={`absolute top-full left-1/2 -translate-x-1/2 transition-all duration-300 min-w-[180px] bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl rounded-lg py-3 z-[100] ${
+                <div className={`absolute top-full left-1/2 -translate-x-1/2 transition-all duration-300 min-w-[180px] bg-main border border-gray-100 dark:border-gray-700 shadow-xl rounded-lg py-3 z-[100] ${
                   openMenuIndex === idx 
                     ? "visible opacity-100 translate-y-0" 
                     : "invisible opacity-0 translate-y-2 pointer-events-none"
@@ -147,7 +147,7 @@ const Header = () => {
                         key={subIdx} 
                         to={subItem.path} 
                         onClick={() => setOpenMenuIndex(null)}
-                        className="px-5 py-2 hover:bg-[#f0f9f9] dark:hover:bg-gray-700 hover:text-[#317F81] dark:hover:text-[#4fd1d5] text-center text-sm text-gray-600 dark:text-gray-300 font-medium odd:bg-gray-50 dark:odd:bg-gray-800/50 transition-colors"
+                        className="px-5 py-2 hover:bg-card hover:text-[#317F81] dark:hover:text-[#4fd1d5] text-center text-sm text-gray-600 dark:text-gray-300 font-medium odd:bg-card transition-colors"
                       >
                         {subItem.name}
                       </Link>
@@ -172,12 +172,12 @@ const Header = () => {
       )}
 
       <div 
-        className={`fixed top-20 left-1/2 -translate-x-1/2 w-[95%] max-w-[800px] bg-head rounded-3xl shadow-2xl z-50 overflow-hidden transition-all duration-300 ease-out origin-top border border-gray-200 dark:border-gray-700 ${
+        className={`fixed top-20 left-1/2 -translate-x-1/2 w-[95%] max-w-[800px] bg-main rounded-3xl shadow-2xl z-50 overflow-hidden transition-all duration-300 ease-out origin-top border border-gray-200 dark:border-gray-700 ${
           isSearchOpen ? 'opacity-100 scale-y-100 translate-y-0' : 'opacity-0 scale-y-95 -translate-y-4 pointer-events-none'
         }`}
       >
         <div className="p-4 md:p-6 border-b border-gray-100 dark:border-gray-800">
-          <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-5 py-3 hover:bg-gray-200 dark:hover:bg-gray-700 focus-within:bg-white dark:focus-within:bg-gray-900 focus-within:border-[#317F81] dark:focus-within:border-[#4fd1d5] focus-within:ring-2 focus-within:ring-[#317F81]/20 transition-all border border-transparent">
+          <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-main rounded-full px-5 py-3 hover:bg-gray-200 dark:hover:bg-gray-700 focus-within:bg-white dark:focus-within:bg-gray-900 focus-within:border-[#317F81] dark:focus-within:border-[#4fd1d5] focus-within:ring-2 focus-within:ring-[#317F81]/20 transition-all border border-transparent">
             <img src={SearchIcon} alt="search" className="w-6 h-6 opacity-50 mr-3 dark:invert" />
             <input
               type="text"
@@ -205,7 +205,7 @@ const Header = () => {
                     setIsSearchOpen(false);
                     navigate(`/board/${post.category}/${post.id}`);
                   }}
-                  className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm hover:border-[#317F81] dark:hover:border-[#4fd1d5] hover:shadow-md cursor-pointer transition-all group"
+                  className="flex items-center gap-3 p-3 bg-main rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm hover:border-[#317F81] dark:hover:border-[#4fd1d5] hover:shadow-md cursor-pointer transition-all group"
                 >
                   <div className="flex-shrink-0 w-10 h-10 bg-[#eef6f6] dark:bg-gray-700 text-[#317F81] dark:text-[#4fd1d5] rounded-lg flex items-center justify-center font-bold text-xs transition-colors">
                     {boardNames[post.category] ? boardNames[post.category].substring(0, 2) : '게시'}
