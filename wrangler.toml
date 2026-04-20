@@ -11,10 +11,10 @@ database_id = "51ee77bb-0238-45a4-bc23-b0cc4c54ad66"
 [vars]
 GOOGLE_CLIENT_ID = "657606921980-enegv4hcp0fs2m1kjavq3cn9jggo64bm.apps.googleusercontent.com"
 BETTER_AUTH_URL = "https://kipnb.pages.dev"
+NAVER_CLIENT_ID = "yF3gexl5vFb6E0d41KkW"
+NAVER_CLIENT_SECRET = "dwdnveoDMI"
 
 [[r2_buckets]]
 binding = "MY_R2"
 bucket_name = "kipnb-storage"
 
-NAVER_CLIENT_ID = "yF3gexl5vFb6E0d41KkW"
-NAVER_CLIENT_SECRET = "dwdnveoDMI"
