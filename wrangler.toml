@@ -15,3 +15,6 @@ BETTER_AUTH_URL = "https://kipnb.pages.dev"
 [[r2_buckets]]
 binding = "MY_R2"
 bucket_name = "kipnb-storage"
+
+NAVER_CLIENT_ID = "yF3gexl5vFb6E0d41KkW"
+NAVER_CLIENT_SECRET = "dwdnveoDMI"
