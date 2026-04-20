@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { authClient } from '../auth-client'; 
@@ -26,38 +26,25 @@ const boardSettings = {
   notice: { title: "공지사항", description: "사람과건축의 새로운 소식을 알려드립니다.", banner: BannerNotice },
   qna: { title: "문의상담", description: "궁금하신 점을 자유롭게 남겨주세요.", banner: BannerQnA },
   archive: { title: "자료실", description: "각종 유용한 자료를 내려받으실 수 있습니다.", banner: BannerArchive },
-  // ⭐ 여기에 'search' 설정을 추가해서 공지사항으로 빠지지 않게 막습니다!
-  search: { title: "통합 검색 결과", description: "입력하신 검색어와 일치하는 게시글 목록입니다.", banner: BannerArchive },
 };
 
 const Notice = () => {
   const { category } = useParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const globalQuery = searchParams.get('q') || "";
-
   const currentBoard = boardSettings[category] || boardSettings.notice;
   const { data: session } = authClient.useSession();
 
   const [posts, setPosts] = useState([]);      
   const [totalCount, setTotalCount] = useState(0); 
   const [loading, setLoading] = useState(true);   
-  
-  const [searchTerm, setSearchTerm] = useState(category === 'search' ? globalQuery : "");
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
-  useEffect(() => {
-    if (category === 'search') {
-      setSearchTerm(globalQuery);
-      setCurrentPage(1);
-    }
-  }, [globalQuery, category]);
 
   const loadPosts = async () => {
     setLoading(true);
     try {
-      const url = `/api/board?category=${category}&page=${currentPage}&search=${encodeURIComponent(searchTerm)}`;
+      const url = `/api/board?category=${category}&page=${currentPage}&search=${searchTerm}`;
       const response = await fetch(url);
       const data = await response.json();
       
@@ -83,19 +70,18 @@ const Notice = () => {
 
   const isQnA = category === 'qna';
   const hasManagerRole = session?.user?.role === '관리자' || session?.user?.role === '운영진';
-  // ⭐ 통합검색 결과창에서는 '글쓰기' 버튼을 아예 숨깁니다.
-  const canWrite = category !== 'search' && (isQnA ? true : hasManagerRole);
+  const canWrite = isQnA ? true : hasManagerRole;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
+    // ⭐ 전체 배경 다크모드 대응 (채도 없는 어두운 회색)
+    <div className="min-h-screen bg-main flex flex-col font-sans transition-colors duration-300">
       <Header />
       <main className="flex-grow">
-        <section className="max-w-[900px] mx-auto pt-4 pb-4 px-4 text-center">
+        <section className="max-w-[900px] mx-auto pt-6 pb-4 px-4 text-center">
           <h2 className="text-3xl font-extrabold text-gray-950 dark:text-white mb-2 tracking-tight transition-colors">
-            {/* ⭐ 검색어가 있으면 'ㅇㅇㅇ 검색 결과' 라고 더 친절하게 띄워줍니다. */}
-            {category === 'search' && globalQuery ? `'${globalQuery}' 검색 결과` : currentBoard.title}
+            {currentBoard.title}
           </h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2 transition-colors">
+          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-6 transition-colors">
             {currentBoard.description}
           </p>
           <div className="w-full h-[180px] rounded-3xl overflow-hidden shadow-md dark:shadow-none border border-transparent dark:border-gray-800 transition-colors">
@@ -103,25 +89,27 @@ const Notice = () => {
           </div>
         </section>
 
-        <section className="py-2">
+        <section className="py-6">
           <div className="max-w-[900px] mx-auto px-4">
             <div className="flex justify-between items-center mb-4">
               <div className="text-sm text-gray-500 dark:text-gray-400 font-medium transition-colors">
                 총 <span className="text-[#317F81] dark:text-[#4fd1d5] font-bold">{totalCount}</span>건
               </div>
+              {/* ⭐ 검색창 다크모드 대응 */}
               <input
                 type="text"
-                placeholder="결과 내 재검색..."
+                placeholder="제목으로 검색..."
                 value={searchTerm}
                 onChange={handleSearchChange}
-                className="w-64 px-4 py-2 text-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:outline-none focus:border-[#317F81] dark:focus:border-[#4fd1d5] transition-colors"
+                className="w-64 px-4 py-2 text-sm border border-gray-300 dark:border-gray-700 bg-main txt-main placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:outline-none focus:border-[#317F81] dark:focus:border-[#4fd1d5] transition-colors"
               />
             </div>
 
             <div className="overflow-x-auto">
+              {/* ⭐ 테이블 전체 테두리 다크모드 대응 */}
               <table className="w-full border-t-2 border-gray-800 dark:border-gray-600 transition-colors">
                 <thead>
-                  <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 text-sm font-bold text-gray-700 dark:text-gray-300 transition-colors">
+                  <tr className="bg-main border-b border-gray-200 dark:border-gray-700 text-sm font-bold text-gray-700 dark:text-gray-300 transition-colors">
                     <th className="py-4 w-16 text-center">번호</th>
                     <th className="py-4 px-4 text-left">제목</th>
                     <th className="py-4 w-20 text-center">첨부</th>
@@ -137,22 +125,16 @@ const Notice = () => {
                     posts.map((post, index) => {
                       const displayNumber = totalCount - ((currentPage - 1) * itemsPerPage) - index;
                       const hasImage = post.image_url && post.image_url !== "" && post.image_url !== "[]" && post.image_url !== '""';
-                      
-                      // ⭐ 통합 검색에서 클릭 시, 해당 글이 작성된 '원래 카테고리'로 이동시킵니다!
-                      const targetCategory = category === 'search' ? post.category : category;
 
                       return (
                         <tr 
                           key={post.id} 
-                          onClick={() => navigate(`/board/${targetCategory}/${post.id}`)} 
+                          onClick={() => navigate(`/board/${category}/${post.id}`)} 
+                          // ⭐ 테이블 행 호버 및 테두리 다크모드 대응
                           className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
                         >
                           <td className="py-4 text-center text-gray-400 dark:text-gray-500 text-sm font-bold">{displayNumber}</td>
-                          <td className="py-4 px-4 font-medium text-gray-800 dark:text-gray-200">
-                            {/* ⭐ 검색 결과일 경우 제목 앞에 [게시판 이름]을 붙여주어 출처를 알려줍니다. */}
-                            {category === 'search' && <span className="text-[11px] text-[#317F81] dark:text-[#4fd1d5] border border-[#317F81] dark:border-[#4fd1d5] px-1.5 py-0.5 rounded mr-2 align-middle">{boardNames[post.category] || '게시판'}</span>}
-                            {post.title}
-                          </td>
+                          <td className="py-4 px-4 font-medium text-gray-800 dark:text-gray-200">{post.title}</td>
                           
                           <td className="py-4 text-center text-lg flex items-center justify-center gap-1">
                             {post.has_file === 1 && <span title="첨부파일">💾</span>}
@@ -160,7 +142,7 @@ const Notice = () => {
                           </td>
                           
                           <td className="py-4 text-center text-sm text-gray-600 dark:text-gray-400">
-                            {post.category === 'qna' ? post.author_name : '관리자'}
+                            {isQnA ? post.author_name : '관리자'}
                           </td>
 
                           <td className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">{new Date(post.created_at).toLocaleDateString()}</td>
@@ -182,10 +164,11 @@ const Notice = () => {
                   <button
                     key={pageNum}
                     onClick={() => setCurrentPage(pageNum)}
+                    // ⭐ 페이지네이션 버튼 다크모드 대응
                     className={`w-8 h-8 flex items-center justify-center rounded-md text-sm font-bold transition-colors ${
                       currentPage === pageNum 
-                        ? "bg-[#317F81] text-white dark:bg-[#4fd1d5] dark:text-gray-900" 
-                        : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        ? "bg-main txt-main" 
+                        : "bg-main txt-main border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                     }`}
                   >
                     {pageNum}
