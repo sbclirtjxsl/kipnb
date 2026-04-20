@@ -33,7 +33,7 @@ const LoginPage = () => {
       color: 'bg-white',
       textColor: 'text-gray-600',
       icon: 'G',
-      border: 'border border-gray-200',
+      border: 'border border-gray-500 dark:border-gray-700',
       action: async () => {
         // ⭐ 1. 구글로 넘어가기 전에, 브라우저 종료 시 사라지는 '임시 출입증' 발급!
         document.cookie = "app_session=active; path=/;"; 
@@ -47,8 +47,8 @@ const LoginPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-6 font-main">
-      <div className="w-full max-w-[400px] bg-white rounded-3xl shadow-xl p-10 flex flex-col items-center">
+    <div className="min-h-screen bg-main flex flex-col justify-center items-center p-6 font-main">
+      <div className="w-full max-w-[400px] bg-10 rounded-3xl shadow-xl p-10 flex flex-col items-center">
         
         <div className="mb-10 text-center">
           <img src={LogoImg} alt="사람과건축 로고" className="h-12 mx-auto mb-4 object-contain" />
