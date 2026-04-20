@@ -15,6 +15,11 @@ export const auth = (env) => betterAuth({
             clientId: env.GOOGLE_CLIENT_ID, 
             clientSecret: env.GOOGLE_CLIENT_SECRET, 
         },
+        // ⭐ 네이버 설정을 여기에 추가합니다.
+        naver: {
+            clientId: env.NAVER_CLIENT_ID,
+            clientSecret: env.NAVER_CLIENT_SECRET,
+        },
     },
     user: {
         additionalFields: {
