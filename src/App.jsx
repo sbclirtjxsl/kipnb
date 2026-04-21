@@ -15,6 +15,7 @@ import BoardDetail from './pages/BoardDetail';
 import BoardWrite from './pages/BoardWrite';
 import BoardEdit from './pages/BoardEdit';
 import SearchResults from './pages/SearchResults';
+import BoardForm from './pages/BoardForm';
 
 function App() {
   return (
@@ -35,6 +36,8 @@ function App() {
       <Route path="/board/:category/write" element={<BoardWrite />} />
       <Route path="/board/:category/edit/:id" element={<BoardEdit />} />
       <Route path="/search" element={<SearchResults />} />
+      <Route path="/board/:category/write" element={<BoardForm />} />
+      <Route path="/board/:category/edit/:id" element={<BoardForm />} />
     </Routes>
   );
 }
