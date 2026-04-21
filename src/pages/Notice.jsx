@@ -1,304 +1,238 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import LogoImg from '../assets/logos/Logo.webp';
-import SearchIcon from '../assets/Search_B.svg';
-import login from '../assets/Login_B.svg';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import { authClient } from '../auth-client'; 
 
-const menuItems = [
-  { title: "사람과건축 소개", sub: [{ name: "인사말", path: "/greeting" }, { name: "사업분야", path: "/business" }, { name: "업무담당자 안내", path: "/Soon" }, { name: "오시는 길", path: "/location" }] },
-  { title: "연구 및 공익사업", sub: [{ name: "교육/세미나", path: "/board/edu" }, { name: "논문/출판", path: "/board/publish" }, { name: "홍보", path: "/board/pr" }] },
-  { title: "BF관련 업체정보", sub: [{ name: "제조", path: "/board/manufacture" }, { name: "시공", path: "/board/construction" }, { name: "컨설팅", path: "/board/consulting" }] },
-  { title: "장애물 없는 생활환경 인증", sub: [{ name: "BF 인증 개요", path: "/bf-info" }, { name: "BF인증 종류및절차", path: "/bf-process" }, { name: "인증수수료", path: "/bf-fee" }, { name: "인증 신청 첨부물", path: "/bf-files" }, { name: "인증 관련 서식", path: "/board/forms" }] },
-  { title: "게시판", sub: [{ name: "공지사항", path: "/board/notice" }, { name: "문의상담", path: "/board/qna" }] },
-  { title: "자료실", sub: [{ name: "자료실", path: "/board/archive" }] },
-];
+// 배너 이미지
+import BannerAd from '../assets/banner/Advertising.webp'; 
+import BannerArchive from '../assets/banner/Archive.webp'; 
+import BannerBook from '../assets/banner/Book.webp'; 
+import BannerTalk from '../assets/banner/converstation.webp'; 
+import BannerNotice from '../assets/banner/Notice.webp'; 
+import BannerQnA from '../assets/banner/QnA.webp'; 
+import BannerWorkers from '../assets/banner/workers.webp'; 
+import BannerManufacturing from '../assets/banner/Manufacturing.webp'; 
+import BannerConstruction from '../assets/banner/Construction.webp'; 
+import BannerConsulting from '../assets/banner/Consulting.webp'; 
 
+// ⭐ 안전장치 1: boardNames 객체 추가 (이게 없어서 치명적 에러가 났을 수 있습니다!)
 const boardNames = {
   edu: "교육/세미나", publish: "논문/출판", pr: "홍보",
   manufacture: "제조업체 정보", construction: "시공업체 정보", consulting: "컨설팅업체 정보",
-  forms: "관련 서식", notice: "공지사항", qna: "문의상담", archive: "자료실",
+  forms: "인증 관련 서식", notice: "공지사항", qna: "문의상담", archive: "자료실",
 };
 
-const Header = () => {
-  const { data: session, isPending } = authClient.useSession();
+const boardSettings = {
+  edu: { title: "교육/세미나", description: "관련 교육 및 세미나 일정을 안내합니다.", banner: BannerTalk },
+  publish: { title: "논문/출판", description: "연구 논문 및 출판 자료입니다.", banner: BannerBook },
+  pr: { title: "홍보", description: "기관의 홍보 자료를 확인하세요.", banner: BannerAd },
+  manufacture: { title: "제조업체 정보", description: "BF 인증 관련 제조업체 정보입니다.", banner: BannerManufacturing },
+  construction: { title: "시공업체 정보", description: "BF 인증 관련 시공업체 정보입니다.", banner: BannerConstruction },
+  consulting: { title: "컨설팅업체 정보", description: "BF 인증 관련 컨설팅업체 정보입니다.", banner: BannerConsulting },
+  forms: { title: "인증 관련 서식", description: "인증에 필요한 서식 자료실입니다.", banner: BannerNotice },
+  notice: { title: "공지사항", description: "사람과건축의 새로운 소식을 알려드립니다.", banner: BannerNotice },
+  qna: { title: "문의상담", description: "궁금하신 점을 자유롭게 남겨주세요.", banner: BannerQnA },
+  archive: { title: "자료실", description: "각종 유용한 자료를 내려받으실 수 있습니다.", banner: BannerArchive },
+  search: { title: "통합 검색 결과", description: "입력하신 검색어와 일치하는 게시글 목록입니다.", banner: BannerArchive },
+};
+
+const Notice = () => {
+  // ⭐ 안전장치 2: category가 undefined일 경우 강제로 'notice' 배정
+  const { category = "notice" } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const globalQuery = searchParams.get('q') || "";
 
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchKeyword, setSearchKeyword] = useState("");
-  const [popularPosts, setPopularPosts] = useState([]); 
-  const [openMenuIndex, setOpenMenuIndex] = useState(null);
+  // ⭐ 안전장치 3: 카테고리 매칭 실패 시 공지사항으로 안전하게 폴백
+  const currentBoard = boardSettings[category] || boardSettings.notice;
+  const { data: session } = authClient.useSession();
+
+  const [posts, setPosts] = useState([]);      
+  const [totalCount, setTotalCount] = useState(0); 
+  const [loading, setLoading] = useState(true);   
   
-  const [suggestions, setSuggestions] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(category === 'search' ? globalQuery : "");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
+  // 카테고리(게시판)가 바뀔 때마다 검색어 초기화
   useEffect(() => {
-    if (session?.user) {
-      if (!document.cookie.includes('app_session=active')) {
-        authClient.signOut().then(() => {
-          window.location.reload(); 
-        });
-      }
+    if (category === 'search') {
+      setSearchTerm(globalQuery);
+    } else {
+      setSearchTerm(""); 
     }
-  }, [session]);
+    setCurrentPage(1);
+  }, [globalQuery, category]);
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (!e.target.closest('.nav-menu-item')) {
-        setOpenMenuIndex(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isSearchOpen && popularPosts.length === 0) {
-      fetch('/api/popular')
-        .then(res => res.json())
-        .then(data => setPopularPosts(data || []))
-        .catch(err => console.error(err));
+  const loadPosts = async () => {
+    setLoading(true);
+    try {
+      const url = `/api/board?category=${category}&page=${currentPage}&search=${encodeURIComponent(searchTerm)}`;
+      const response = await fetch(url);
+      const data = await response.json();
       
-      document.body.style.overflow = 'hidden'; 
-    } else if (!isSearchOpen) {
-      document.body.style.overflow = 'unset';
+      // ⭐ 안전장치 4: 무조건 배열(Array)만 setPosts에 들어가도록 방어! (에러 원인 1순위)
+      setPosts(Array.isArray(data.posts) ? data.posts : []);
+      setTotalCount(Number(data.total) || 0);
+    } catch (error) {
+      console.error("데이터 로드 실패:", error);
+      setPosts([]); // 에러 시 빈 배열로 안전하게 초기화
+      setTotalCount(0);
+    } finally {
+      setLoading(false);
     }
-    return () => { document.body.style.overflow = 'unset'; };
-  }, [isSearchOpen]);
-
-  // ⭐ 추천 검색어 로직 수정 (제목 텍스트 대신 게시글 객체 자체를 저장)
-  useEffect(() => {
-    if (searchKeyword.trim() === '') {
-      setSuggestions([]);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      fetch(`/api/board?category=search&search=${encodeURIComponent(searchKeyword)}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.posts && data.posts.length > 0) {
-            // 제목 중복을 제거하면서 글 객체 {id, title, category} 5개 추출
-            const seen = new Set();
-            const filtered = data.posts.filter(post => {
-              const isDuplicate = seen.has(post.title);
-              seen.add(post.title);
-              return !isDuplicate;
-            }).slice(0, 5);
-            
-            setSuggestions(filtered);
-          } else {
-            setSuggestions([]);
-          }
-        })
-        .catch(err => {
-          console.error("추천 검색어 로드 실패:", err);
-          setSuggestions([]);
-        });
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchKeyword]);
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (searchKeyword.trim() === "") return;
-    
-    navigate(`/board/search?q=${encodeURIComponent(searchKeyword)}`);
-    setIsSearchOpen(false); 
-    setSearchKeyword(""); 
   };
 
+  useEffect(() => {
+    loadPosts();
+  }, [category, currentPage, searchTerm]);
+
+  // ⭐ 안전장치 5: NaN 방지
+  const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage) || 1);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); 
+  };
+
+  const isQnA = category === 'qna';
+  const hasManagerRole = session?.user?.role === '관리자' || session?.user?.role === '운영진';
+  const canWrite = category !== 'search' && (isQnA ? true : hasManagerRole);
+
   return (
-    <>
-      <header className="sticky top-0 z-40 bg-white dark:bg-[#050505] border-b border-gray-200 dark:border-gray-800 shadow-sm dark:shadow-md relative transition-colors duration-300">
-        <div className="max-w-[1200px] mx-auto px-4">
-          <div className="max-w-[900px] mx-auto">
-            <div className="flex justify-between items-center py-0">
-              <Link to="/" className="flex items-center">
-                <img src={LogoImg} alt="사람과건축 로고" className="h-[50px] md:h-[55px] w-auto object-contain dark:invert transition-all duration-300" />
-              </Link>
-
-              <div className="flex items-center text-sm font-bold">
-                {isPending ? (
-                  <span className="text-gray-400 font-medium text-xs">확인 중...</span>
-                ) : session?.user ? (
-                  <div className="flex items-center gap-2">
-                    {session?.user?.role && (
-                      <span className="text-[11px] font-extrabold text-white bg-[#317F81] px-2 py-0.5 rounded-md">{session.user.role}</span>
-                    )}
-                    <img src={session?.user?.image} alt="프로필" className="w-7 h-7 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm" />
-                    <span className="text-gray-700 dark:text-gray-200">{session?.user?.name}님</span>
-                    <button 
-                      onClick={async () => { await authClient.signOut(); window.location.reload(); }}
-                      className="ml-3 px-3 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 transition-colors"
-                    >
-                      로그아웃
-                    </button>
-                  </div>
-                ) : (
-                  <Link to="/login" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
-                    <div className="w-7 h-7 text-white rounded-full flex items-center justify-center text-[10px]">
-                      <img src={login} alt="로그인" className="dark:invert transition-all duration-300" />
-                    </div>
-                    <span className="dark:text-gray-200">Log In</span>
-                  </Link>
-                )}
-              </div>
-            </div>
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
+      <Header />
+      <main className="flex-grow">
+        <section className="max-w-[900px] mx-auto pt-4 pb-4 px-4 text-center">
+          <h2 className="text-3xl font-extrabold text-gray-950 dark:text-white mb-2 tracking-tight transition-colors">
+            {category === 'search' && globalQuery ? `'${globalQuery}' 검색 결과` : currentBoard?.title}
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2 transition-colors">
+            {currentBoard?.description}
+          </p>
+          <div className="w-full h-[180px] rounded-3xl overflow-hidden shadow-md dark:shadow-none border border-transparent dark:border-gray-800 transition-colors">
+            {currentBoard?.banner && <img src={currentBoard.banner} alt="배너" className="w-full h-full object-cover" />}
           </div>
-          
-          <nav className="hidden md:flex justify-center items-center gap-10 text-[15.5px] font-bold relative pb-2">
-            {menuItems.map((item, idx) => (
-              <div 
-                key={idx} 
-                className="relative nav-menu-item"
-                onMouseEnter={() => setOpenMenuIndex(idx)}
-                onMouseLeave={() => setOpenMenuIndex(null)}
-              >
-                <button 
-                  onClick={() => setOpenMenuIndex(openMenuIndex === idx ? null : idx)}
-                  className={`py-3 transition-colors duration-200 ${
-                    openMenuIndex === idx 
-                      ? "text-[#317F81] dark:text-[#4fd1d5]" 
-                      : "text-gray-800 dark:text-gray-200 hover:text-[#317F81] dark:hover:text-[#4fd1d5]"
-                  }`}
-                >
-                  {item.title}
-                </button>
-                
-                <div className={`absolute top-full left-1/2 -translate-x-1/2 transition-all duration-300 min-w-[180px] bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl rounded-lg py-3 z-[100] ${
-                  openMenuIndex === idx 
-                    ? "visible opacity-100 translate-y-0" 
-                    : "invisible opacity-0 translate-y-2 pointer-events-none"
-                }`}>
-                  <div className="relative flex flex-col">
-                    {item.sub.map((subItem, subIdx) => (
-                      <Link 
-                        key={subIdx} 
-                        to={subItem.path} 
-                        onClick={() => setOpenMenuIndex(null)}
-                        className="px-5 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-[#317F81] dark:hover:text-[#4fd1d5] text-center text-sm text-gray-600 dark:text-gray-300 font-medium odd:bg-transparent transition-colors"
-                      >
-                        {subItem.name}
-                      </Link>
-                    ))}
-                  </div>
+        </section>
+
+        <section className="py-2">
+          <div className="max-w-[900px] mx-auto px-4">
+            <div className="flex justify-between items-center mb-4">
+              <div className="text-sm text-gray-500 dark:text-gray-400 font-medium transition-colors">
+                총 <span className="text-[#317F81] dark:text-[#4fd1d5] font-bold">{totalCount}</span>건
+              </div>
+              <input
+                type="text"
+                placeholder={category === 'search' ? "결과 내 재검색..." : "제목으로 검색..."}
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="w-64 px-4 py-2 text-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:outline-none focus:border-[#317F81] dark:focus:border-[#4fd1d5] transition-colors"
+              />
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full border-t-2 border-gray-800 dark:border-gray-600 transition-colors">
+                <thead>
+                  <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 text-sm font-bold text-gray-700 dark:text-gray-300 transition-colors">
+                    <th className="py-4 w-16 text-center">번호</th>
+                    <th className="py-4 px-4 text-left">제목</th>
+                    <th className="py-4 w-20 text-center">첨부</th>
+                    <th className="py-4 w-24 text-center">작성자</th>
+                    <th className="py-4 w-28 text-center">날짜</th>
+                    <th className="py-4 w-16 text-center">조회</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr><td colSpan={6} className="py-20 text-center text-gray-400 dark:text-gray-500">데이터를 불러오는 중...</td></tr>
+                  ) : Array.isArray(posts) && posts.length > 0 ? (
+                    posts.map((post, index) => {
+                      const displayNumber = totalCount - ((currentPage - 1) * itemsPerPage) - index;
+                      const hasImage = post.image_url && post.image_url !== "" && post.image_url !== "[]" && post.image_url !== '""';
+                      const targetCategory = category === 'search' ? (post.category || 'notice') : category;
+
+                      return (
+                        <tr 
+                          key={post.id || index} 
+                          onClick={() => navigate(`/board/${targetCategory}/${post.id}`)} 
+                          className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
+                        >
+                          <td className="py-4 text-center text-gray-400 dark:text-gray-500 text-sm font-bold">{displayNumber || 0}</td>
+                          <td className="py-4 px-4 font-medium text-gray-800 dark:text-gray-200">
+                            {category === 'search' && <span className="text-[11px] text-[#317F81] dark:text-[#4fd1d5] border border-[#317F81] dark:border-[#4fd1d5] px-1.5 py-0.5 rounded mr-2 align-middle">{boardNames[post.category] || '게시판'}</span>}
+                            {post.title || "제목 없음"}
+                          </td>
+                          <td className="py-4 text-center text-lg flex items-center justify-center gap-1">
+                            {post.has_file === 1 && <span title="첨부파일">💾</span>}
+                            {hasImage && <span title="사진 포함">🖼️</span>}
+                          </td>
+                          <td className="py-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                            {post.category === 'qna' ? (post.author_name || '익명') : '관리자'}
+                          </td>
+                          <td className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                            {post.created_at ? new Date(post.created_at).toLocaleDateString() : '-'}
+                          </td>
+                          <td className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">{post.views || 0}</td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr><td colSpan={6} className="py-20 text-center text-gray-500 dark:text-gray-400">등록된 게시물이 없습니다.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 페이지네이션 구역 */}
+            {totalCount > 0 && (
+              <div className="mt-6 flex items-center justify-between">
+                <div className="w-24"></div>
+                <div className="flex gap-2">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-8 h-8 flex items-center justify-center rounded-md text-sm font-bold transition-colors ${
+                        currentPage === pageNum 
+                          ? "bg-[#317F81] text-white dark:bg-[#4fd1d5] dark:text-gray-900" 
+                          : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  ))}
+                </div>
+                <div className="w-24 flex justify-end">
+                  {canWrite && (
+                    <button 
+                      className="px-6 py-2 bg-[#317F81] text-white font-bold rounded-lg hover:bg-[#256062] transition-colors"
+                      onClick={() => navigate(`/board/${category}/write`)}
+                    >
+                      글쓰기
+                    </button>
+                  )}
                 </div>
               </div>
-            ))}
-
-            <button onClick={() => setIsSearchOpen(true)} className="flex items-center hover:text-[#317F81] transition-colors ml-[-10px] p-1">
-              <img src={SearchIcon} alt="search" className="w-5 h-5 dark:invert transition-all duration-300" />
-            </button>
-          </nav>
-        </div>
-      </header>
-
-      {isSearchOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity"
-          onClick={() => setIsSearchOpen(false)}
-        />
-      )}
-
-      <div 
-        className={`fixed top-20 left-1/2 -translate-x-1/2 w-[95%] max-w-[800px] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl z-50 overflow-hidden transition-all duration-300 ease-out origin-top border border-gray-200 dark:border-gray-700 ${
-          isSearchOpen ? 'opacity-100 scale-y-100 translate-y-0' : 'opacity-0 scale-y-95 -translate-y-4 pointer-events-none'
-        }`}
-      >
-        <div className="p-4 md:p-6 border-b border-gray-100 dark:border-gray-800">
-          <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-5 py-3 hover:bg-gray-200 dark:hover:bg-gray-700 focus-within:bg-white dark:focus-within:bg-gray-900 focus-within:border-[#317F81] dark:focus-within:border-[#4fd1d5] focus-within:ring-2 focus-within:ring-[#317F81]/20 transition-all border border-transparent">
-            <img src={SearchIcon} alt="search" className="w-6 h-6 opacity-50 mr-3 dark:invert" />
-            <input
-              type="text"
-              autoFocus={isSearchOpen}
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              placeholder="무엇을 찾고 싶으신가요?"
-              className="w-full text-lg bg-transparent outline-none text-gray-900 dark:text-gray-100 font-medium placeholder-gray-400 dark:placeholder-gray-500"
-            />
-            <button 
-              type="button" 
-              onClick={() => {
-                if (searchKeyword.trim() !== "") {
-                  setSearchKeyword("");
-                } else {
-                  setIsSearchOpen(false);
-                }
-              }} 
-              className="ml-3 text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 p-1 transition-colors"
-            >
-              ✕
-            </button>
-          </form>
-        </div>
-
-        <div className="p-6 md:p-8 bg-gray-50/50 dark:bg-gray-800/30">
-          {searchKeyword.trim() !== "" ? (
-            <div>
-              <h3 className="text-sm font-extrabold text-gray-800 dark:text-gray-200 mb-5">추천 검색어 💡</h3>
-              {suggestions.length > 0 ? (
-                <ul className="flex flex-col gap-1">
-                  {suggestions.map((suggestion, idx) => (
-                    <li 
-                      key={idx}
-                      onClick={() => {
-                        // ⭐ 수정됨: 목록 페이지가 아닌, 게시물 상세 페이지로 즉시 이동
-                        navigate(`/board/${suggestion.category}/${suggestion.id}`);
-                        setIsSearchOpen(false);
-                        setSearchKeyword("");
-                      }}
-                      className="flex items-center cursor-pointer text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-[#317F81] dark:hover:text-[#4fd1d5] p-2.5 hover:bg-white dark:hover:bg-gray-800 rounded-lg transition-all"
-                    >
-                      <img src={SearchIcon} alt="search" className="w-4 h-4 mr-3 opacity-40 dark:invert" />
-                      {suggestion.title}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="text-center py-6 text-sm text-gray-400 dark:text-gray-500">
-                  해당 단어가 포함된 게시글이 없습니다.
-                </div>
-              )}
-            </div>
-          ) : (
-            <>
-              <h3 className="text-sm font-extrabold text-gray-800 dark:text-gray-200 mb-5">사람과건축 인기 게시글 🔥</h3>
-              
-              {popularPosts.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {popularPosts.map((post) => (
-                    <div 
-                      key={post.id}
-                      onClick={() => {
-                        setIsSearchOpen(false);
-                        navigate(`/board/${post.category}/${post.id}`);
-                      }}
-                      className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm hover:border-[#317F81] dark:hover:border-[#4fd1d5] hover:shadow-md cursor-pointer transition-all group"
-                    >
-                      <div className="flex-shrink-0 w-10 h-10 bg-[#eef6f6] dark:bg-gray-700 text-[#317F81] dark:text-[#4fd1d5] rounded-lg flex items-center justify-center font-bold text-xs transition-colors">
-                        {boardNames[post.category] ? boardNames[post.category].substring(0, 2) : '게시'}
-                      </div>
-                      <div className="flex-grow min-w-0">
-                        <p className="text-sm font-bold text-gray-700 dark:text-gray-200 truncate group-hover:text-[#317F81] dark:group-hover:text-[#4fd1d5] transition-colors">{post.title}</p>
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">👀 조회수 {post.views}회</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6 text-sm text-gray-400 dark:text-gray-500">인기 게시글을 불러오고 있습니다...</div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-    </>
+            )}
+            {/* 데이터가 0개여도 글쓰기 버튼은 보이게 처리 */}
+            {totalCount === 0 && canWrite && (
+              <div className="mt-6 flex justify-end">
+                 <button 
+                    className="px-6 py-2 bg-[#317F81] text-white font-bold rounded-lg hover:bg-[#256062] transition-colors"
+                    onClick={() => navigate(`/board/${category}/write`)}
+                  >
+                    글쓰기
+                  </button>
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </div>
   );
 };
 
-export default Header;
+export default Notice;
