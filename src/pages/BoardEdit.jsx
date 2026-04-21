@@ -11,8 +11,14 @@ const boardNames = {
 };
 
 const BoardEdit = () => {
-  const { category, id } = useParams();
+  const params = useParams();
   const navigate = useNavigate();
+  
+  // ⭐ 이중 안전장치: App.jsx에서 라우터 변수명이 다를 경우를 대비해 URL 끝에서 번호를 직접 뽑아냅니다.
+  const pathParts = window.location.pathname.split('/').filter(Boolean);
+  const urlId = pathParts[pathParts.length - 1];
+  const id = params.id || params.postId || params.boardId || urlId;
+  const category = params.category || pathParts[pathParts.length - 3];
   
   // 관리자 권한 확인
   const { data: session } = authClient.useSession();
@@ -25,22 +31,32 @@ const BoardEdit = () => {
   const [isSubmitting, setIsSubmitting] = useState(false); 
   const [loading, setLoading] = useState(true);
 
-  // 이미지 및 파일 관련 상태
   const [existingImages, setExistingImages] = useState([]);
   const [existingFiles, setExistingFiles] = useState([]);
   const [newImages, setNewImages] = useState([]);
   const [newPreviewUrls, setNewPreviewUrls] = useState([]);
   const [newFiles, setNewFiles] = useState([]);
 
-  // 데이터 불러오기
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const res = await fetch(`/api/board-detail?id=${id}`);
+        // ⭐ 캐시 무시 (항상 최신 DB 값을 가져오도록 방어)
+        const res = await fetch(`/api/board-detail?id=${id}&t=${Date.now()}`);
         if (res.ok) {
-          const data = await res.json();
-          setTitle(data.title);
-          setContent(data.content);
+          const rawData = await res.json();
+          // 백엔드가 배열을 주든 객체를 주든 무조건 알맹이를 빼오도록 방어
+          const data = Array.isArray(rawData) ? rawData[0] : (rawData.post || rawData);
+          
+          // 데이터가 비어있을 경우 경고창 띄우기
+          if (!data || !data.title) {
+            alert("기존 글 데이터를 불러오지 못했습니다. 주소를 확인해주세요.");
+            navigate(-1);
+            return;
+          }
+
+          // ⭐ 빈칸 방지: 데이터가 있으면 상태값에 완벽하게 세팅
+          setTitle(data.title || '');
+          setContent(data.content || '');
           
           if (data.created_at) {
             const date = new Date(data.created_at);
@@ -62,15 +78,16 @@ const BoardEdit = () => {
           navigate(-1);
         }
       } catch (error) {
-        console.error(error);
+        console.error("데이터 패치 에러:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchPost();
+    
+    if (id) fetchPost();
   }, [id, navigate]);
 
-  // ⭐ 첨부파일 관련 핸들러 함수들 (복구 완료!)
+  // 첨부파일 핸들러
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     setNewImages(prev => [...prev, ...files]);
@@ -91,7 +108,6 @@ const BoardEdit = () => {
   const removeExistingFile = (index) => setExistingFiles(prev => prev.filter((_, i) => i !== index));
   const removeNewFile = (index) => setNewFiles(prev => prev.filter((_, i) => i !== index));
 
-  // 전송 함수
   const handleSubmit = async (e) => {
     e.preventDefault(); 
     if (!title.trim() || !content.trim()) return alert("제목과 내용을 입력해 주세요.");
@@ -101,11 +117,9 @@ const BoardEdit = () => {
       let uploadedNewImageUrls = [];
       let uploadedNewFileUrls = []; 
 
-      // ⭐ 새 이미지 서버 업로드 (기존 글쓰기 페이지 로직과 동일하게 작동하도록 구성)
       if (newImages.length > 0) {
         const imgFormData = new FormData();
         newImages.forEach(file => imgFormData.append('images', file));
-        // 주의: 대표님의 실제 업로드 API 주소가 다르면 여기를 수정해야 할 수 있습니다!
         const imgRes = await fetch('/api/upload', { method: 'POST', body: imgFormData });
         if(imgRes.ok) {
            const data = await imgRes.json();
@@ -113,7 +127,6 @@ const BoardEdit = () => {
         }
       }
 
-      // ⭐ 새 일반 파일 서버 업로드
       if (newFiles.length > 0) {
         const fileFormData = new FormData();
         newFiles.forEach(file => fileFormData.append('files', file));
@@ -164,17 +177,15 @@ const BoardEdit = () => {
         <div className="max-w-[800px] mx-auto px-4">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
             <h1 className="text-2xl font-extrabold mb-6 border-b pb-4">
-              {boardNames[category]} 글 수정
+              {boardNames[category] || '게시판'} 글 수정
             </h1>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-              {/* 1. 제목 입력 */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">제목</label>
-                <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#317F81] outline-none" />
+                <input type="text" value={title || ''} onChange={(e) => setTitle(e.target.value)} required className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#317F81] outline-none" />
               </div>
 
-              {/* 2. 관리자 전용 날짜 수정 */}
               {isAdmin && (
                 <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-100">
                   <label className="block text-sm font-bold text-yellow-900 mb-2">
@@ -183,7 +194,7 @@ const BoardEdit = () => {
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                     <input
                       type="datetime-local"
-                      value={customDate}
+                      value={customDate || ''}
                       onChange={(e) => setCustomDate(e.target.value)}
                       className="px-4 py-2 border border-yellow-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-yellow-200"
                     />
@@ -192,11 +203,10 @@ const BoardEdit = () => {
                 </div>
               )}
 
-              {/* ⭐ 3. 내용 입력 (복구 완료!) */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">내용</label>
                 <textarea 
-                  value={content} 
+                  value={content || ''} 
                   onChange={(e) => setContent(e.target.value)} 
                   required 
                   rows={12}
@@ -205,12 +215,10 @@ const BoardEdit = () => {
                 />
               </div>
 
-              {/* ⭐ 4. 사진 첨부 (복구 완료!) */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">사진 첨부 (다중 선택 가능)</label>
                 <input type="file" accept="image/*" multiple onChange={handleImageChange} className="w-full px-4 py-2 border rounded-lg bg-gray-50" />
                 
-                {/* 사진 미리보기 영역 */}
                 {(existingImages.length > 0 || newPreviewUrls.length > 0) && (
                   <div className="flex flex-wrap gap-3 mt-4">
                     {existingImages.map((url, idx) => (
@@ -229,12 +237,10 @@ const BoardEdit = () => {
                 )}
               </div>
 
-              {/* ⭐ 5. 일반 파일 첨부 (복구 완료!) */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">일반 파일 첨부 (다중 선택 가능)</label>
                 <input type="file" multiple onChange={handleFileChange} className="w-full px-4 py-2 border rounded-lg bg-gray-50" />
                 
-                {/* 첨부된 파일 목록 영역 */}
                 {(existingFiles.length > 0 || newFiles.length > 0) && (
                   <div className="mt-4 flex flex-col gap-2 text-sm text-gray-600">
                     {existingFiles.map((url, idx) => {
@@ -256,7 +262,6 @@ const BoardEdit = () => {
                 )}
               </div>
 
-              {/* 6. 취소 및 수정 버튼 */}
               <div className="flex justify-end gap-3 mt-4 pt-4 border-t">
                 <button type="button" onClick={() => navigate(-1)} className="px-6 py-3 font-bold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">취소</button>
                 <button type="submit" disabled={isSubmitting} className={`px-8 py-3 font-bold text-white rounded-lg transition-colors ${isSubmitting ? "bg-gray-400" : "bg-[#317F81] hover:bg-[#256062]"}`}>
