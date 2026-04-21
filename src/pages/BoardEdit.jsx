@@ -1,14 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; // ⭐ 핵심: useParams가 여기에 있어야 합니다!
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import { authClient } from '../auth-client'; 
-
-const boardNames = {
-  edu: "교육/세미나", publish: "논문/출판", pr: "홍보",
-  manufacture: "제조업체 정보", construction: "시공업체 정보", consulting: "컨설팅업체 정보",
-  forms: "인증 관련 서식", notice: "공지사항", qna: "문의상담", archive: "자료실",
-};
+// ... 상단 import 생략 (기존과 동일)
 
 const BoardEdit = () => {
   const { category, id } = useParams();
