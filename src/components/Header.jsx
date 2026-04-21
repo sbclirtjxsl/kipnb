@@ -29,7 +29,6 @@ const Header = () => {
   const [popularPosts, setPopularPosts] = useState([]); 
   const [openMenuIndex, setOpenMenuIndex] = useState(null);
   
-  // ⭐ DB에서 받아올 추천 검색어 상태
   const [suggestions, setSuggestions] = useState([]);
 
   useEffect(() => {
@@ -42,7 +41,6 @@ const Header = () => {
     }
   }, [session]);
 
-  // 외부 영역 클릭 시 메뉴 닫기
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (!e.target.closest('.nav-menu-item')) {
@@ -57,7 +55,6 @@ const Header = () => {
     };
   }, []);
 
-  // 인기 게시글 불러오기 및 배경 스크롤 방지
   useEffect(() => {
     if (isSearchOpen && popularPosts.length === 0) {
       fetch('/api/popular')
@@ -72,27 +69,31 @@ const Header = () => {
     return () => { document.body.style.overflow = 'unset'; };
   }, [isSearchOpen]);
 
-  // ⭐ 검색어 입력 시 API(DB)에 추천 검색어 요청하기 (디바운싱 적용)
+  // ⭐ 검색어 입력 시 실제 DB의 게시글 제목을 가져오도록 수정
   useEffect(() => {
     if (searchKeyword.trim() === '') {
       setSuggestions([]);
       return;
     }
 
-    // 타자를 치는 동안에는 기다렸다가, 0.3초간 입력이 멈추면 그때 DB(API)로 요청
     const timer = setTimeout(() => {
-      // 나중에 Cloudflare 백엔드에 이 API 주소를 만들어서 D1 DB를 조회하도록 연결하시면 됩니다.
-      fetch(`/api/suggestions?q=${encodeURIComponent(searchKeyword)}`)
+      // 없는 주소 대신, 실제 게시판 백엔드로 요청을 보냅니다.
+      fetch(`/api/board?category=search&search=${encodeURIComponent(searchKeyword)}`)
         .then(res => res.json())
         .then(data => {
-          // 백엔드에서 배열 형태(예: ["추천글1", "추천글2"])로 보내준다고 가정
-          setSuggestions(data || []);
+          if (data.posts && data.posts.length > 0) {
+            // 가져온 게시글에서 제목만 쏙 빼서 중복을 제거하고 5개만 자릅니다.
+            const uniqueTitles = Array.from(new Set(data.posts.map(post => post.title))).slice(0, 5);
+            setSuggestions(uniqueTitles);
+          } else {
+            setSuggestions([]);
+          }
         })
         .catch(err => {
           console.error("추천 검색어 로드 실패:", err);
           setSuggestions([]);
         });
-    }, 300); // 300ms 지연
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [searchKeyword]);
@@ -215,14 +216,24 @@ const Header = () => {
               placeholder="무엇을 찾고 싶으신가요?"
               className="w-full text-lg bg-transparent outline-none text-gray-900 dark:text-gray-100 font-medium placeholder-gray-400 dark:placeholder-gray-500"
             />
-            <button type="button" onClick={() => setIsSearchOpen(false)} className="ml-3 text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 p-1 transition-colors">
+            {/* ⭐ X 버튼 로직 수정: 글자가 있으면 지우고, 없으면 창 닫기 */}
+            <button 
+              type="button" 
+              onClick={() => {
+                if (searchKeyword.trim() !== "") {
+                  setSearchKeyword("");
+                } else {
+                  setIsSearchOpen(false);
+                }
+              }} 
+              className="ml-3 text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 p-1 transition-colors"
+            >
               ✕
             </button>
           </form>
         </div>
 
         <div className="p-6 md:p-8 bg-gray-50/50 dark:bg-gray-800/30">
-          {/* ⭐ 검색어가 있을 때는 추천 검색어, 없을 때는 인기 게시글 보여주기 */}
           {searchKeyword.trim() !== "" ? (
             <div>
               <h3 className="text-sm font-extrabold text-gray-800 dark:text-gray-200 mb-5">추천 검색어 💡</h3>
