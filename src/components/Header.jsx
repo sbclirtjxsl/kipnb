@@ -27,9 +27,10 @@ const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [popularPosts, setPopularPosts] = useState([]); 
-
-  // 현재 열려있는 드롭다운 메뉴의 인덱스 상태 (대표님 원본 로직)
   const [openMenuIndex, setOpenMenuIndex] = useState(null);
+  
+  // ⭐ DB에서 받아올 추천 검색어 상태
+  const [suggestions, setSuggestions] = useState([]);
 
   useEffect(() => {
     if (session?.user) {
@@ -41,21 +42,7 @@ const Header = () => {
     }
   }, [session]);
 
-  useEffect(() => {
-    if (isSearchOpen && popularPosts.length === 0) {
-      fetch('/api/popular')
-        .then(res => res.json())
-        .then(data => setPopularPosts(data || []))
-        .catch(err => console.error(err));
-      
-      document.body.style.overflow = 'hidden'; 
-    } else if (!isSearchOpen) {
-      document.body.style.overflow = 'unset';
-    }
-    return () => { document.body.style.overflow = 'unset'; };
-  }, [isSearchOpen]);
-
-  // 외부 영역 터치(클릭) 시 메뉴 닫기 (대표님 원본 로직)
+  // 외부 영역 클릭 시 메뉴 닫기
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (!e.target.closest('.nav-menu-item')) {
@@ -70,11 +57,50 @@ const Header = () => {
     };
   }, []);
 
+  // 인기 게시글 불러오기 및 배경 스크롤 방지
+  useEffect(() => {
+    if (isSearchOpen && popularPosts.length === 0) {
+      fetch('/api/popular')
+        .then(res => res.json())
+        .then(data => setPopularPosts(data || []))
+        .catch(err => console.error(err));
+      
+      document.body.style.overflow = 'hidden'; 
+    } else if (!isSearchOpen) {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isSearchOpen]);
+
+  // ⭐ 검색어 입력 시 API(DB)에 추천 검색어 요청하기 (디바운싱 적용)
+  useEffect(() => {
+    if (searchKeyword.trim() === '') {
+      setSuggestions([]);
+      return;
+    }
+
+    // 타자를 치는 동안에는 기다렸다가, 0.3초간 입력이 멈추면 그때 DB(API)로 요청
+    const timer = setTimeout(() => {
+      // 나중에 Cloudflare 백엔드에 이 API 주소를 만들어서 D1 DB를 조회하도록 연결하시면 됩니다.
+      fetch(`/api/suggestions?q=${encodeURIComponent(searchKeyword)}`)
+        .then(res => res.json())
+        .then(data => {
+          // 백엔드에서 배열 형태(예: ["추천글1", "추천글2"])로 보내준다고 가정
+          setSuggestions(data || []);
+        })
+        .catch(err => {
+          console.error("추천 검색어 로드 실패:", err);
+          setSuggestions([]);
+        });
+    }, 300); // 300ms 지연
+
+    return () => clearTimeout(timer);
+  }, [searchKeyword]);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchKeyword.trim() === "") return;
     
-    // ⭐ 수정됨: 검색 시 통합 게시판(/board/search)으로 이동합니다.
     navigate(`/board/search?q=${encodeURIComponent(searchKeyword)}`);
     setIsSearchOpen(false); 
     setSearchKeyword(""); 
@@ -82,7 +108,6 @@ const Header = () => {
 
   return (
     <>
-      {/* ⭐ 수정됨: 투명해지는 bg-main 대신 bg-white 와 dark:bg-[#050505] 를 사용하여 완벽한 불투명 헤더를 만듭니다. */}
       <header className="sticky top-0 z-40 bg-white dark:bg-[#050505] border-b border-gray-200 dark:border-gray-800 shadow-sm dark:shadow-md relative transition-colors duration-300">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="max-w-[900px] mx-auto">
@@ -139,7 +164,6 @@ const Header = () => {
                   {item.title}
                 </button>
                 
-                {/* ⭐ 수정됨: 드롭다운 배경도 불투명하게 수정 */}
                 <div className={`absolute top-full left-1/2 -translate-x-1/2 transition-all duration-300 min-w-[180px] bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl rounded-lg py-3 z-[100] ${
                   openMenuIndex === idx 
                     ? "visible opacity-100 translate-y-0" 
@@ -175,7 +199,6 @@ const Header = () => {
         />
       )}
 
-      {/* ⭐ 수정됨: 검색 모달창 배경 불투명하게 수정 */}
       <div 
         className={`fixed top-20 left-1/2 -translate-x-1/2 w-[95%] max-w-[800px] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl z-50 overflow-hidden transition-all duration-300 ease-out origin-top border border-gray-200 dark:border-gray-700 ${
           isSearchOpen ? 'opacity-100 scale-y-100 translate-y-0' : 'opacity-0 scale-y-95 -translate-y-4 pointer-events-none'
@@ -199,31 +222,62 @@ const Header = () => {
         </div>
 
         <div className="p-6 md:p-8 bg-gray-50/50 dark:bg-gray-800/30">
-          <h3 className="text-sm font-extrabold text-gray-800 dark:text-gray-200 mb-5">사람과건축 인기 게시글 🔥</h3>
-          
-          {popularPosts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {popularPosts.map((post) => (
-                <div 
-                  key={post.id}
-                  onClick={() => {
-                    setIsSearchOpen(false);
-                    navigate(`/board/${post.category}/${post.id}`);
-                  }}
-                  className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm hover:border-[#317F81] dark:hover:border-[#4fd1d5] hover:shadow-md cursor-pointer transition-all group"
-                >
-                  <div className="flex-shrink-0 w-10 h-10 bg-[#eef6f6] dark:bg-gray-700 text-[#317F81] dark:text-[#4fd1d5] rounded-lg flex items-center justify-center font-bold text-xs transition-colors">
-                    {boardNames[post.category] ? boardNames[post.category].substring(0, 2) : '게시'}
-                  </div>
-                  <div className="flex-grow min-w-0">
-                    <p className="text-sm font-bold text-gray-700 dark:text-gray-200 truncate group-hover:text-[#317F81] dark:group-hover:text-[#4fd1d5] transition-colors">{post.title}</p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">👀 조회수 {post.views}회</p>
-                  </div>
+          {/* ⭐ 검색어가 있을 때는 추천 검색어, 없을 때는 인기 게시글 보여주기 */}
+          {searchKeyword.trim() !== "" ? (
+            <div>
+              <h3 className="text-sm font-extrabold text-gray-800 dark:text-gray-200 mb-5">추천 검색어 💡</h3>
+              {suggestions.length > 0 ? (
+                <ul className="flex flex-col gap-1">
+                  {suggestions.map((suggestion, idx) => (
+                    <li 
+                      key={idx}
+                      onClick={() => {
+                        navigate(`/board/search?q=${encodeURIComponent(suggestion)}`);
+                        setIsSearchOpen(false);
+                        setSearchKeyword("");
+                      }}
+                      className="flex items-center cursor-pointer text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-[#317F81] dark:hover:text-[#4fd1d5] p-2.5 hover:bg-white dark:hover:bg-gray-800 rounded-lg transition-all"
+                    >
+                      <img src={SearchIcon} alt="search" className="w-4 h-4 mr-3 opacity-40 dark:invert" />
+                      {suggestion}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-center py-6 text-sm text-gray-400 dark:text-gray-500">
+                  해당 단어가 포함된 게시글이 없습니다.
                 </div>
-              ))}
+              )}
             </div>
           ) : (
-            <div className="text-center py-6 text-sm text-gray-400 dark:text-gray-500">인기 게시글을 불러오고 있습니다...</div>
+            <>
+              <h3 className="text-sm font-extrabold text-gray-800 dark:text-gray-200 mb-5">사람과건축 인기 게시글 🔥</h3>
+              
+              {popularPosts.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {popularPosts.map((post) => (
+                    <div 
+                      key={post.id}
+                      onClick={() => {
+                        setIsSearchOpen(false);
+                        navigate(`/board/${post.category}/${post.id}`);
+                      }}
+                      className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm hover:border-[#317F81] dark:hover:border-[#4fd1d5] hover:shadow-md cursor-pointer transition-all group"
+                    >
+                      <div className="flex-shrink-0 w-10 h-10 bg-[#eef6f6] dark:bg-gray-700 text-[#317F81] dark:text-[#4fd1d5] rounded-lg flex items-center justify-center font-bold text-xs transition-colors">
+                        {boardNames[post.category] ? boardNames[post.category].substring(0, 2) : '게시'}
+                      </div>
+                      <div className="flex-grow min-w-0">
+                        <p className="text-sm font-bold text-gray-700 dark:text-gray-200 truncate group-hover:text-[#317F81] dark:group-hover:text-[#4fd1d5] transition-colors">{post.title}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">👀 조회수 {post.views}회</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-sm text-gray-400 dark:text-gray-500">인기 게시글을 불러오고 있습니다...</div>
+              )}
+            </>
           )}
         </div>
       </div>
