@@ -1,4 +1,8 @@
-// ... 상단 import 생략 (기존과 동일)
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import { authClient } from '../auth-client';
 
 const BoardEdit = () => {
   const { category, id } = useParams();
