@@ -37,16 +37,18 @@ const BoardDetail = () => {
         if (response.ok) {
           setPost(await response.json());
         } else {
-          navigate(`/board/${category}`); 
+          // 백엔드 통신 실패 시 무한 루프나 빈 화면이 되지 않도록 처리
+          setPost(null); 
         }
       } catch (error) {
         console.error(error);
+        setPost(null);
       } finally {
         setLoading(false);
       }
     };
     fetchPostDetail();
-  }, [id, category, navigate]); 
+  }, [id, category]); 
 
   const handleDelete = async () => {
     if (!window.confirm("정말로 이 게시글을 삭제하시겠습니까?")) return; 
@@ -63,14 +65,41 @@ const BoardDetail = () => {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-[#2a2a2a] flex items-center justify-center text-gray-500">불러오는 중...</div>;
-  if (!post) return null; 
+  // ⭐ 1. 로딩 중일 때도 빈 화면이 아니라 예쁘게 띄워줍니다.
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
+        <Header />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-gray-500 dark:text-gray-400 font-bold">데이터를 불러오는 중입니다...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // ⭐ 2. 함정 제거! 데이터가 없을 때 백지(null) 대신 친절한 안내를 띄웁니다.
+  if (!post) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
+        <Header />
+        <main className="flex-grow flex flex-col items-center justify-center text-center px-4">
+          <span className="text-5xl mb-4">📂</span>
+          <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 mb-2">게시글을 찾을 수 없습니다.</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">주소가 잘못되었거나 삭제된 게시물일 수 있습니다.</p>
+          <button onClick={() => navigate(`/board/${category}`)} className="px-6 py-2 bg-[#317F81] hover:bg-[#256062] text-white font-bold rounded-lg transition-colors">
+            게시판 목록으로 돌아가기
+          </button>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   const isAuthor = session?.user?.name === post.author_name;
   const hasManagerRole = session?.user?.role === '관리자' || session?.user?.role === '운영진';
   const canEditOrDelete = isAuthor || hasManagerRole;
 
-  // 작성자 이름 로직 (QnA 제외 관리자 고정)
   const isQnA = category === 'qna';
   const displayAuthor = isQnA ? post.author_name : '관리자';
 
@@ -88,43 +117,40 @@ const BoardDetail = () => {
   fileUrls = fileUrls.filter(url => url && url.trim() !== "");
 
   return (
-    // ⭐ 바깥 배경을 밝은 회색(#2a2a2a)으로 고정하여 종이 같은 느낌 부여
-    <div className="min-h-screen bg-[#2a2a2a] flex flex-col font-sans transition-colors duration-300">
+    <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
       <Header />
       <main className="flex-grow py-10">
         <div className="max-w-[900px] mx-auto px-4">
           
-          {/* ⭐ 본문 카드 배경을 완전한 흰색(bg-white)으로 고정 */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-8 py-6 border-b border-gray-100">
-              <span className="text-xs font-extrabold text-[#317F81] bg-[#eef6f6] px-2 py-1 rounded">{boardNames[category]}</span>
-              <h1 className="text-2xl font-extrabold mt-3 mb-4 text-gray-900">{post.title}</h1>
-              <div className="text-sm text-gray-500 flex gap-4 items-center">
-                <span className="font-bold text-gray-700">👤 {displayAuthor}</span>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors">
+            <div className="px-8 py-6 border-b border-gray-100 dark:border-gray-700">
+              <span className="text-xs font-extrabold text-[#317F81] dark:text-[#4fd1d5] bg-[#eef6f6] dark:bg-gray-700 px-2 py-1 rounded">{boardNames[category]}</span>
+              <h1 className="text-2xl font-extrabold mt-3 mb-4 text-gray-900 dark:text-white">{post.title}</h1>
+              <div className="text-sm text-gray-500 dark:text-gray-400 flex gap-4 items-center">
+                <span className="font-bold text-gray-700 dark:text-gray-300">👤 {displayAuthor}</span>
                 <span>{new Date(post.created_at).toLocaleString()}</span>
-                <span className="flex items-center gap-1 text-gray-400 before:content-['|'] before:mr-3 before:text-gray-300">
+                <span className="flex items-center gap-1 text-gray-400 before:content-['|'] before:mr-3 before:text-gray-300 dark:before:text-gray-600">
                   👀 조회 {post.views || 0}
                 </span>
               </div>
             </div>
 
-            <div className="px-8 py-10 min-h-[200px] text-gray-800 leading-relaxed whitespace-pre-wrap">
+            <div className="px-8 py-10 min-h-[200px] text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
               {imageUrls.map((url, index) => (
                 <div key={index} className="mb-8 flex justify-center">
-                  <img src={url} alt={`첨부이미지`} className="max-w-full max-h-[700px] rounded-xl shadow-sm border border-gray-200 object-contain" />
+                  <img src={url} alt={`첨부이미지`} className="max-w-full max-h-[700px] rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 object-contain" />
                 </div>
               ))}
               
-              {/* Quill 에디터의 HTML 렌더링 영역 */}
               <div 
-                className="prose max-w-none text-gray-800" 
+                className="prose dark:prose-invert max-w-none" 
                 dangerouslySetInnerHTML={{ __html: post.content }} 
               />
             </div>
 
             {fileUrls.length > 0 && (
-              <div className="px-8 py-6 bg-blue-50 border-t border-blue-100">
-                <h3 className="text-sm font-extrabold text-blue-900 mb-4 flex items-center gap-2">
+              <div className="px-8 py-6 bg-blue-50 dark:bg-gray-800 border-t border-blue-100 dark:border-gray-700">
+                <h3 className="text-sm font-extrabold text-blue-900 dark:text-blue-400 mb-4 flex items-center gap-2">
                   💾 첨부된 자료 다운로드 ({fileUrls.length}개)
                 </h3>
                 <div className="flex flex-col gap-3">
@@ -132,10 +158,10 @@ const BoardDetail = () => {
                     const originalName = decodeURIComponent(url.split('/').pop().split('-').slice(1).join('-')) || `첨부파일_${idx + 1}`;
                     const ext = originalName.split('.').pop().toUpperCase();
                     return (
-                      <div key={idx} className="flex flex-wrap items-center justify-between bg-white p-4 rounded-xl border border-blue-200 shadow-sm hover:border-blue-400 hover:shadow transition-all gap-4">
+                      <div key={idx} className="flex flex-wrap items-center justify-between bg-white dark:bg-gray-700 p-4 rounded-xl border border-blue-200 dark:border-gray-600 shadow-sm hover:border-blue-400 transition-all gap-4">
                         <div className="flex items-center gap-3 overflow-hidden">
-                          <div className="min-w-10 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-700"><span className="font-bold text-[10px]">{ext}</span></div>
-                          <span className="text-sm font-bold text-gray-700 truncate">{originalName}</span>
+                          <div className="min-w-10 w-10 h-10 bg-blue-100 dark:bg-gray-800 rounded-lg flex items-center justify-center text-blue-700 dark:text-blue-400"><span className="font-bold text-[10px]">{ext}</span></div>
+                          <span className="text-sm font-bold text-gray-700 dark:text-gray-200 truncate">{originalName}</span>
                         </div>
                         <a href={url} target="_blank" rel="noopener noreferrer" className="whitespace-nowrap px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-2">내려받기</a>
                       </div>
@@ -145,23 +171,23 @@ const BoardDetail = () => {
               </div>
             )}
 
-            <div className="border-t border-gray-100 bg-gray-50/50">
+            <div className="border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
               {post.nextPost && (
                 <div 
                   onClick={() => navigate(`/board/${category}/${post.nextPost.id}`)}
-                  className="flex items-center px-8 py-4 border-b border-gray-100 cursor-pointer hover:bg-white transition-colors group"
+                  className="flex items-center px-8 py-4 border-b border-gray-100 dark:border-gray-700 cursor-pointer hover:bg-white dark:hover:bg-gray-700 transition-colors group"
                 >
-                  <span className="text-sm font-extrabold text-[#317F81] w-20">▲ 다음글</span>
-                  <span className="text-sm font-medium text-gray-700 group-hover:text-black">{post.nextPost.title}</span>
+                  <span className="text-sm font-extrabold text-[#317F81] dark:text-[#4fd1d5] w-20">▲ 다음글</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white">{post.nextPost.title}</span>
                 </div>
               )}
               {post.prevPost && (
                 <div 
                   onClick={() => navigate(`/board/${category}/${post.prevPost.id}`)}
-                  className="flex items-center px-8 py-4 cursor-pointer hover:bg-white transition-colors group"
+                  className="flex items-center px-8 py-4 cursor-pointer hover:bg-white dark:hover:bg-gray-700 transition-colors group"
                 >
                   <span className="text-sm font-extrabold text-gray-400 w-20">▼ 이전글</span>
-                  <span className="text-sm font-medium text-gray-700 group-hover:text-black">{post.prevPost.title}</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white">{post.prevPost.title}</span>
                 </div>
               )}
             </div>
@@ -169,11 +195,11 @@ const BoardDetail = () => {
           </div>
 
           <div className="mt-6 flex justify-between items-center">
-            <button onClick={() => navigate(`/board/${category}`)} className="px-6 py-2 bg-gray-100 text-gray-800 font-bold rounded-lg hover:bg-gray-200 transition-colors">목록으로</button>
+            <button onClick={() => navigate(`/board/${category}`)} className="px-6 py-2 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-bold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">목록으로</button>
             {canEditOrDelete && (
               <div className="flex gap-2">
-                <button onClick={() => navigate(`/board/${category}/edit/${post.id}`)} className="px-4 py-2 border border-gray-300 text-gray-700 font-bold rounded-lg hover:bg-gray-50 transition-colors">수정</button>
-                <button onClick={handleDelete} className="px-4 py-2 border border-red-200 text-red-500 font-bold rounded-lg hover:bg-red-50 transition-colors">삭제</button>
+                <button onClick={() => navigate(`/board/${category}/edit/${post.id}`)} className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">수정</button>
+                <button onClick={handleDelete} className="px-4 py-2 border border-red-200 dark:border-red-900/30 text-red-500 dark:text-red-400 font-bold rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">삭제</button>
               </div>
             )}
           </div>
