@@ -69,7 +69,7 @@ const Header = () => {
     return () => { document.body.style.overflow = 'unset'; };
   }, [isSearchOpen]);
 
-  // ⭐ 검색어 입력 시 실제 DB의 게시글 제목을 가져오도록 수정
+  // ⭐ 추천 검색어 로직: 에러가 나지 않도록 고유 ID와 카테고리를 확실하게 뽑아옵니다.
   useEffect(() => {
     if (searchKeyword.trim() === '') {
       setSuggestions([]);
@@ -77,14 +77,23 @@ const Header = () => {
     }
 
     const timer = setTimeout(() => {
-      // 없는 주소 대신, 실제 게시판 백엔드로 요청을 보냅니다.
       fetch(`/api/board?category=search&search=${encodeURIComponent(searchKeyword)}`)
         .then(res => res.json())
         .then(data => {
           if (data.posts && data.posts.length > 0) {
-            // 가져온 게시글에서 제목만 쏙 빼서 중복을 제거하고 5개만 자릅니다.
-            const uniqueTitles = Array.from(new Set(data.posts.map(post => post.title))).slice(0, 5);
-            setSuggestions(uniqueTitles);
+            const seen = new Set();
+            const filtered = [];
+            for (const post of data.posts) {
+              if (!seen.has(post.title)) {
+                seen.add(post.title);
+                filtered.push({
+                  id: post.id,
+                  title: post.title,
+                  category: post.category || 'notice' // 혹시 카테고리가 비어있으면 공지사항으로 처리
+                });
+              }
+            }
+            setSuggestions(filtered.slice(0, 5));
           } else {
             setSuggestions([]);
           }
@@ -216,7 +225,6 @@ const Header = () => {
               placeholder="무엇을 찾고 싶으신가요?"
               className="w-full text-lg bg-transparent outline-none text-gray-900 dark:text-gray-100 font-medium placeholder-gray-400 dark:placeholder-gray-500"
             />
-            {/* ⭐ X 버튼 로직 수정: 글자가 있으면 지우고, 없으면 창 닫기 */}
             <button 
               type="button" 
               onClick={() => {
@@ -243,14 +251,20 @@ const Header = () => {
                     <li 
                       key={idx}
                       onClick={() => {
-                        navigate(`/board/search?q=${encodeURIComponent(suggestion)}`);
+                        // ⭐ 이중 안전장치: DB에서 ID와 카테고리를 완벽히 가져왔다면 '해당 글로 즉시 이동'
+                        if (suggestion.id && suggestion.category) {
+                          navigate(`/board/${suggestion.category}/${suggestion.id}`);
+                        } else {
+                          // 만약 어떠한 이유로 데이터가 깨졌다면, 빈 화면이 뜨지 않게 '통합 검색 결과창'으로 안전하게 이동
+                          navigate(`/board/search?q=${encodeURIComponent(suggestion.title || suggestion)}`);
+                        }
                         setIsSearchOpen(false);
                         setSearchKeyword("");
                       }}
                       className="flex items-center cursor-pointer text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-[#317F81] dark:hover:text-[#4fd1d5] p-2.5 hover:bg-white dark:hover:bg-gray-800 rounded-lg transition-all"
                     >
                       <img src={SearchIcon} alt="search" className="w-4 h-4 mr-3 opacity-40 dark:invert" />
-                      {suggestion}
+                      {suggestion.title || suggestion}
                     </li>
                   ))}
                 </ul>
