@@ -1,3 +1,5 @@
+// functions/api/board.js 수정본
+
 export async function onRequestGet(context) {
     const { env, request } = context;
     const { searchParams } = new URL(request.url);
@@ -15,21 +17,20 @@ export async function onRequestGet(context) {
         let params;
         let countParams;
 
-        // 1. 통합 검색일 경우: 전체 게시판을 뒤집니다.
         if (category === 'search') {
             query = `SELECT * FROM board WHERE title LIKE ? ORDER BY created_at DESC LIMIT ? OFFSET ?`;
             countQuery = `SELECT COUNT(*) as total FROM board WHERE title LIKE ?`;
             params = [`%${search}%`, limit, offset];
             countParams = [`%${search}%`];
         } 
-        // ⭐ 2. 추가된 부분 (자료실): 카테고리가 'archive'이거나 첨부파일(has_file=1)이 있는 글을 모두 가져옵니다!
+        // ⭐ 수정된 부분: 자료실(archive) 로직
+        // 카테고리가 'archive'이거나 (첨부파일이 있으면서 문의상담이 아닌 경우)를 필터링합니다.
         else if (category === 'archive') {
-            query = `SELECT * FROM board WHERE (category = 'archive' OR has_file = 1) AND title LIKE ? ORDER BY created_at DESC LIMIT ? OFFSET ?`;
-            countQuery = `SELECT COUNT(*) as total FROM board WHERE (category = 'archive' OR has_file = 1) AND title LIKE ?`;
+            query = `SELECT * FROM board WHERE (category = 'archive' OR (has_file = 1 AND category != 'qna')) AND title LIKE ? ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+            countQuery = `SELECT COUNT(*) as total FROM board WHERE (category = 'archive' OR (has_file = 1 AND category != 'qna')) AND title LIKE ?`;
             params = [`%${search}%`, limit, offset];
             countParams = [`%${search}%`];
         }
-        // 3. 일반 게시판일 경우: 해당 카테고리만 뒤집니다.
         else {
             query = `SELECT * FROM board WHERE category = ? AND title LIKE ? ORDER BY created_at DESC LIMIT ? OFFSET ?`;
             countQuery = `SELECT COUNT(*) as total FROM board WHERE category = ? AND title LIKE ?`;
