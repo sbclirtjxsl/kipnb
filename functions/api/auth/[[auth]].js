@@ -20,9 +20,18 @@ export const auth = (env) => betterAuth({
             clientId: env.NAVER_CLIENT_ID,
             clientSecret: env.NAVER_CLIENT_SECRET,
         },
+
         kakao: {
-            clientId: env.KAKAO_CLIENT_ID, // REST API 키
-            clientSecret: env.KAKAO_CLIENT_SECRET, // 보안 메뉴의 시크릿 키
+            clientId: env.KAKAO_CLIENT_ID,
+            clientSecret: env.KAKAO_CLIENT_SECRET,
+            scope: ["profile_nickname"],
+            // 이메일이 없을 경우를 대비해 고유 ID를 기반으로 임시 값을 넣거나 빈 값을 허용하게 합니다.
+            mapUser: (user) => {
+                return {
+                    email: user.kakao_account?.email || `${user.id}@kakao.user`, // 이메일이 없으면 임시 이메일 생성
+                    name: user.properties.nickname,
+                };
+            },
         },
     },
     user: {
