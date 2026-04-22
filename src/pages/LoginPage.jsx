@@ -26,7 +26,15 @@ const LoginPage = () => {
       color: 'bg-[#FEE500]',
       textColor: 'text-[#191919]',
       icon: 'K',
-      action: () => console.log('Kakao Login'),
+      action: async () => {
+        // 세션 체크용 임시 쿠키 생성 (구글, 네이버와 동일)
+        document.cookie = "app_session=active; path=/;"; 
+        
+        await authClient.signIn.social({
+          provider: "kakao",
+          callbackURL: "/", // 로그인 완료 후 돌아올 경로
+        });
+      },
     },
     {
       name: '구글',

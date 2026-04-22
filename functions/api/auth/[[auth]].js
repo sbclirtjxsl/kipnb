@@ -20,6 +20,10 @@ export const auth = (env) => betterAuth({
             clientId: env.NAVER_CLIENT_ID,
             clientSecret: env.NAVER_CLIENT_SECRET,
         },
+        kakao: {
+            clientId: env.KAKAO_CLIENT_ID, // REST API 키
+            clientSecret: env.KAKAO_CLIENT_SECRET, // 보안 메뉴의 시크릿 키
+        },
     },
     user: {
         additionalFields: {
