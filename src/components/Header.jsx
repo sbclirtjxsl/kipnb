@@ -123,8 +123,7 @@ const Header = () => {
           <div className="max-w-[900px] mx-auto">
             <div className="flex justify-between items-center py-0">
               <Link to="/" className="flex items-center">
-                {/* 이미지는 CSS 변수 적용이 안 되므로 dark:invert 유지 */}
-                <img src={LogoImg} alt="사람과건축 로고" className="h-[50px] md:h-[55px] w-auto object-contain dark:invert transition-all duration-300" />
+                <img src={LogoImg} alt="사람과건축 로고" className="h-[50px] md:h-[55px] w-auto object-contain auto-invert transition-all duration-300" />
               </Link>
 
               <div className="flex items-center text-sm font-bold">
@@ -148,7 +147,7 @@ const Header = () => {
                 ) : (
                   <Link to="/login" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
                     <div className="w-7 h-7 text-txt-inverse rounded-full flex items-center justify-center text-[10px]">
-                      <img src={login} alt="로그인" className="dark:invert transition-all duration-300" />
+                      <img src={login} alt="로그인" className="auto-invert transition-all duration-300" />
                     </div>
                     <span className="text-txt-primary">Log In</span>
                   </Link>
@@ -200,7 +199,7 @@ const Header = () => {
             ))}
 
             <button onClick={() => setIsSearchOpen(true)} className="flex items-center hover:text-brand-main transition-colors ml-[-10px] p-1">
-              <img src={SearchIcon} alt="search" className="w-5 h-5 dark:invert transition-all duration-300" />
+              <img src={SearchIcon} alt="search" className="w-5 h-5 auto-invert transition-all duration-300" />
             </button>
           </nav>
         </div>
@@ -223,7 +222,7 @@ const Header = () => {
         <div className="p-4 md:p-6 border-b border-bd-default">
           {/* 입력창: bg-bg-base, hover/focus 시 색상 전환 */}
           <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-bg-base rounded-full px-5 py-3 hover:bg-bg-surface-hover focus-within:bg-bg-surface focus-within:border-brand-main focus-within:ring-2 focus-within:ring-brand-main/20 transition-all border border-transparent">
-            <img src={SearchIcon} alt="search" className="w-6 h-6 opacity-50 mr-3 dark:invert" />
+            <img src={SearchIcon} alt="search" className="w-6 h-6 opacity-50 mr-3 auto-invert" />
             <input
               type="text"
               autoFocus={isSearchOpen}
@@ -263,7 +262,7 @@ const Header = () => {
                       }}
                       className="flex items-center cursor-pointer text-sm font-medium text-txt-secondary hover:text-brand-main p-2.5 hover:bg-bg-surface rounded-lg transition-all"
                     >
-                      <img src={SearchIcon} alt="search" className="w-4 h-4 mr-3 opacity-40 dark:invert" />
+                      <img src={SearchIcon} alt="search" className="w-4 h-4 mr-3 opacity-40 auto-invert" />
                       {suggestion.title || suggestion}
                     </li>
                   ))}

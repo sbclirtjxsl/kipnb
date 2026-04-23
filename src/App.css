@@ -90,3 +90,14 @@
   --color-brand-main: var(--brand-main);
   --color-brand-dark: var(--brand-dark);
 }
+
+/* -----------------------------------------
+   4. 다크모드 이미지 반전 유틸리티
+----------------------------------------- */
+.auto-invert {
+  filter: invert(0);
+}
+
+:root.dark .auto-invert {
+  filter: invert(1);
+}

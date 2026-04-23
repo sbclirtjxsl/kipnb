@@ -57,7 +57,7 @@ const ThemeToggle = () => {
   const getCurrentIcon = () => {
     if (theme === 'light') return '☀️';
     if (theme === 'dark') return '🌙';
-    return '💻';
+    return '🌇';
   };
 
   return (
@@ -85,7 +85,7 @@ const ThemeToggle = () => {
             onClick={() => { setTheme('system'); setIsOpen(false); }}
             className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${theme === 'system' ? 'bg-brand-light text-brand-main' : 'text-txt-secondary hover:bg-bg-surface-hover hover:text-txt-primary'}`}
           >
-            <span>💻</span> 시스템
+            <span>🌇</span> 시스템
           </button>
         </div>
       </div>
