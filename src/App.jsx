@@ -16,28 +16,35 @@ import BoardWrite from './pages/BoardWrite';
 import BoardEdit from './pages/BoardEdit';
 import SearchResults from './pages/SearchResults';
 
+// 테마 토글 컴포넌트 불러오기
+import ThemeToggle from './components/ThemeToggle';
 
 function App() {
   return (
-    <Routes>
-      {/* "/" 경로일 때 Home 컴포넌트를 보여줌 */}
-      <Route path="/" element={<Home />} />
-      <Route path="/greeting" element={<AA_Greeting />} /> 
-      <Route path="/business" element={<AB_Business />} />
-      <Route path="/location" element={<AD_Location />} />
-      <Route path="/Soon" element={<Soon />} />
-      <Route path="/bf-info" element={<BF_Info />} />
-      <Route path="/bf-process" element={<BF_Process />} />
-      <Route path="/bf-fee" element={<BF_Fee />} />
-      <Route path="/bf-files" element={<BF_Files />} />
-      <Route path="/board/:category" element={<Notice />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/board/:category/:id" element={<BoardDetail />} />
-      <Route path="/board/:category/write" element={<BoardWrite />} />
-      <Route path="/board/:category/edit/:id" element={<BoardEdit />} />
-      <Route path="/search" element={<SearchResults />} />
+    // React Fragment (<> ... </>) 로 감싸서 최상위 라우터와 전역 UI를 묶어줍니다.
+    <>
+      <Routes>
+        {/* "/" 경로일 때 Home 컴포넌트를 보여줌 */}
+        <Route path="/" element={<Home />} />
+        <Route path="/greeting" element={<AA_Greeting />} /> 
+        <Route path="/business" element={<AB_Business />} />
+        <Route path="/location" element={<AD_Location />} />
+        <Route path="/Soon" element={<Soon />} />
+        <Route path="/bf-info" element={<BF_Info />} />
+        <Route path="/bf-process" element={<BF_Process />} />
+        <Route path="/bf-fee" element={<BF_Fee />} />
+        <Route path="/bf-files" element={<BF_Files />} />
+        <Route path="/board/:category" element={<Notice />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/board/:category/:id" element={<BoardDetail />} />
+        <Route path="/board/:category/write" element={<BoardWrite />} />
+        <Route path="/board/:category/edit/:id" element={<BoardEdit />} />
+        <Route path="/search" element={<SearchResults />} />
+      </Routes>
 
-    </Routes>
+      {/* 💡 Routes 바깥에 배치하여 페이지가 바뀌어도 항상 렌더링되도록 합니다 */}
+      <ThemeToggle />
+    </>
   );
 }
 

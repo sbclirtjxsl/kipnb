@@ -3,46 +3,46 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 import '../App.css';
-import GreetingMainImg from '../assets/page_image/greeting.webp'; // 사진1의 건물 이미지
-import LogoMolit from '../assets/logos/MOLIT_logo.webp';         // 국토교통부 로고
-import LogoChungnam from '../assets/logos/Chungnam.webp';   // 충청남도 로고
+import GreetingMainImg from '../assets/page_image/greeting.webp'; 
+import LogoMolit from '../assets/logos/MOLIT_logo.webp';        
+import LogoChungnam from '../assets/logos/Chungnam.webp';   
 
 const AA__Greeting = () => {
   return (
-    <div className="min-h-screen bg-main font-sans txt-main">
+    /* 1. 전체 배경 및 기본 텍스트 색상 연동 */
+    <div className="min-h-screen bg-bg-base font-sans text-txt-primary transition-colors duration-300">
       <Header />
 
       <main>
-        {/* 1. 서브 페이지 헤더 (타이틀 영역) - 사진 1 스타일로 슬림하게 수정 */}
-        <section className="py-6"> {/* 배경색 제거, 패딩 축소 */}
+        {/* 서브 페이지 헤더 (타이틀 영역) */}
+        <section className="py-10">
           <div className="max-w-[1200px] mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-2">인사말</h2>
+            <h2 className="text-3xl font-bold mb-3 text-txt-primary">인사말</h2>
             
-            {/* 브레드크럼 디자인 수정: separator 제거, 색상 통일 */}
-            <div className=" text-sm txt-50 flex justify-center gap-1">
+            {/* 브레드크럼: 지나온 경로는 text-txt-muted, 현재 페이지는 포인트 컬러(brand-main) 사용 */}
+            <div className="text-sm text-txt-muted flex justify-center items-center gap-2">
               <span>사람과건축 소개</span>
-              <span>&gt;</span>
-              <span className="text-gray-500 font-bold">인사말</span> {/* 색상 강조 제거 */}
+              <span className="text-[10px] opacity-50">&gt;</span>
+              <span className="font-bold text-brand-main">인사말</span> 
             </div>
           </div>
         </section>
 
-        {/* 2. 본문 영역 - 세로 1단 구조로 전면 수정 */}
-        <section className="pb-1">
+        {/* 본문 영역 */}
+        <section className="pb-20">
           <div className="max-w-[1000px] mx-auto px-4">
             
-            {/* [추가] 상단 메인 이미지 영역 (사진 1처럼 와이드하게) */}
-            <div className="w-full h-[450px] md:h-[150px] mb-12 rounded-lg overflow-hidden shadow-md">
+            {/* 상단 메인 이미지 영역 */}
+            <div className="w-full h-[150px] md:h-[300px] mb-12 rounded-xl overflow-hidden shadow-sm border border-bd-subtle">
               <img 
                 src={GreetingMainImg} 
                 alt="사람과건축 전경" 
-                className="w-full h-auto object-cover aspect-[21/9]" // 와이드 비율 유지
+                className="w-full h-full object-cover aspect-[21/9] transition-opacity duration-300 dark:opacity-90" 
               />
-              {/* 이미지가 없을 때를 위한 fallback (개발용) */}
             </div>
 
-            {/* 텍스트 영역: 기존 flex 구조 제거, break-keep 적용으로 한글 가독성 향상 */}
-            <div className="space-y-8 text-[16px] leading-relaxed txt-main break-keep text-justify">
+            {/* 텍스트 영역: 긴 본문은 눈이 편안한 text-txt-secondary 사용 */}
+            <div className="space-y-6 text-[16px] md:text-[17px] leading-loose text-txt-secondary break-keep text-justify">
               <p>
                 우리는 현재 기후 변화와 자원 고갈, 도시화 등의 문제로 인해 건축 환경이 도전받고 있는 상황에 직면해 있습니다. 
                 이러한 문제들은 건축물의 안전성, 쾌적성, 경제성 등에 영향을 미치며, 인류의 생존과 발전에 위협이 되고 있습니다.
@@ -55,10 +55,19 @@ const AA__Greeting = () => {
               </p>
             </div>
 
-            {/* [추가] 하단 유관기관 로고 영역 */}
-            <div className="mt-8 pt-1 border-t border-gray-100 flex justify-center items-center gap-10">
-              <img src={LogoMolit} alt="국토교통부" className="h-12 w-auto opacity-90" />
-              <img src={LogoChungnam} alt="충청남도" className="h-12 w-auto opacity-90" />
+            {/* 하단 유관기관 로고 영역 */}
+            <div className="mt-16 pt-8 border-t border-bd-default flex justify-center items-center gap-8 md:gap-12">
+              {/* 로고 이미지가 검은색 글씨 기반이라면 다크모드에서 안 보일 수 있으므로 dark:invert 적용 */}
+              <img 
+                src={LogoMolit} 
+                alt="국토교통부" 
+                className="h-10 md:h-12 w-auto opacity-80 hover:opacity-100 transition-all " 
+              />
+              <img 
+                src={LogoChungnam} 
+                alt="충청남도" 
+                className="h-10 md:h-12 w-auto opacity-80 hover:opacity-100 transition-all " 
+              />
             </div>
 
           </div>

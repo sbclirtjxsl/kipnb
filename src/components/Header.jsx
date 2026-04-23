@@ -69,7 +69,6 @@ const Header = () => {
     return () => { document.body.style.overflow = 'unset'; };
   }, [isSearchOpen]);
 
-  // ⭐ 추천 검색어 로직: 에러가 나지 않도록 고유 ID와 카테고리를 확실하게 뽑아옵니다.
   useEffect(() => {
     if (searchKeyword.trim() === '') {
       setSuggestions([]);
@@ -89,7 +88,7 @@ const Header = () => {
                 filtered.push({
                   id: post.id,
                   title: post.title,
-                  category: post.category || 'notice' // 혹시 카테고리가 비어있으면 공지사항으로 처리
+                  category: post.category || 'notice'
                 });
               }
             }
@@ -118,37 +117,40 @@ const Header = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white dark:bg-[#050505] border-b border-gray-200 dark:border-gray-800 shadow-sm dark:shadow-md relative transition-colors duration-300">
+      {/* 1. 헤더 전체: bg-bg-header, border-bd-default */}
+      <header className="sticky top-0 z-40 bg-bg-header border-b border-bd-default shadow-sm relative transition-colors duration-300">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="max-w-[900px] mx-auto">
             <div className="flex justify-between items-center py-0">
               <Link to="/" className="flex items-center">
+                {/* 이미지는 CSS 변수 적용이 안 되므로 dark:invert 유지 */}
                 <img src={LogoImg} alt="사람과건축 로고" className="h-[50px] md:h-[55px] w-auto object-contain dark:invert transition-all duration-300" />
               </Link>
 
               <div className="flex items-center text-sm font-bold">
                 {isPending ? (
-                  <span className="text-gray-400 font-medium text-xs">확인 중...</span>
+                  <span className="text-txt-muted font-medium text-xs">확인 중...</span>
                 ) : session?.user ? (
                   <div className="flex items-center gap-2">
                     {session?.user?.role && (
-                      <span className="text-[11px] font-extrabold text-white bg-[#317F81] px-2 py-0.5 rounded-md">{session.user.role}</span>
+                      /* 역할 배지: bg-brand-main, text-txt-inverse */
+                      <span className="text-[11px] font-extrabold text-txt-inverse bg-brand-main px-2 py-0.5 rounded-md">{session.user.role}</span>
                     )}
-                    <img src={session?.user?.image} alt="프로필" className="w-7 h-7 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm" />
-                    <span className="text-gray-700 dark:text-gray-200">{session?.user?.name}님</span>
+                    <img src={session?.user?.image} alt="프로필" className="w-7 h-7 rounded-full border border-bd-default shadow-sm" />
+                    <span className="text-txt-primary">{session?.user?.name}님</span>
                     <button 
                       onClick={async () => { await authClient.signOut(); window.location.reload(); }}
-                      className="ml-3 px-3 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                      className="ml-3 px-3 py-1 text-xs font-medium text-txt-secondary border border-bd-strong rounded-full hover:bg-bg-surface-hover hover:text-red-500 transition-colors"
                     >
                       로그아웃
                     </button>
                   </div>
                 ) : (
                   <Link to="/login" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
-                    <div className="w-7 h-7 text-white rounded-full flex items-center justify-center text-[10px]">
+                    <div className="w-7 h-7 text-txt-inverse rounded-full flex items-center justify-center text-[10px]">
                       <img src={login} alt="로그인" className="dark:invert transition-all duration-300" />
                     </div>
-                    <span className="dark:text-gray-200">Log In</span>
+                    <span className="text-txt-primary">Log In</span>
                   </Link>
                 )}
               </div>
@@ -163,18 +165,20 @@ const Header = () => {
                 onMouseEnter={() => setOpenMenuIndex(idx)}
                 onMouseLeave={() => setOpenMenuIndex(null)}
               >
+                {/* 2. 네비게이션 텍스트: text-txt-primary, hover:text-brand-main */}
                 <button 
                   onClick={() => setOpenMenuIndex(openMenuIndex === idx ? null : idx)}
                   className={`py-3 transition-colors duration-200 ${
                     openMenuIndex === idx 
-                      ? "text-[#317F81] dark:text-[#4fd1d5]" 
-                      : "text-gray-800 dark:text-gray-200 hover:text-[#317F81] dark:hover:text-[#4fd1d5]"
+                      ? "text-brand-main" 
+                      : "text-txt-primary hover:text-brand-main"
                   }`}
                 >
                   {item.title}
                 </button>
                 
-                <div className={`absolute top-full left-1/2 -translate-x-1/2 transition-all duration-300 min-w-[180px] bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl rounded-lg py-3 z-[100] ${
+                {/* 3. 드롭다운: bg-bg-dropdown, border-bd-dropdown */}
+                <div className={`absolute top-full left-1/2 -translate-x-1/2 transition-all duration-300 min-w-[180px] bg-bg-dropdown border border-bd-dropdown shadow-xl rounded-lg py-3 z-[100] ${
                   openMenuIndex === idx 
                     ? "visible opacity-100 translate-y-0" 
                     : "invisible opacity-0 translate-y-2 pointer-events-none"
@@ -185,7 +189,7 @@ const Header = () => {
                         key={subIdx} 
                         to={subItem.path} 
                         onClick={() => setOpenMenuIndex(null)}
-                        className="px-5 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-[#317F81] dark:hover:text-[#4fd1d5] text-center text-sm text-gray-600 dark:text-gray-300 font-medium odd:bg-transparent transition-colors"
+                        className="px-5 py-2 hover:bg-bg-dropdown-hover hover:text-brand-main text-center text-sm text-txt-secondary font-medium transition-colors"
                       >
                         {subItem.name}
                       </Link>
@@ -195,13 +199,14 @@ const Header = () => {
               </div>
             ))}
 
-            <button onClick={() => setIsSearchOpen(true)} className="flex items-center hover:text-[#317F81] transition-colors ml-[-10px] p-1">
+            <button onClick={() => setIsSearchOpen(true)} className="flex items-center hover:text-brand-main transition-colors ml-[-10px] p-1">
               <img src={SearchIcon} alt="search" className="w-5 h-5 dark:invert transition-all duration-300" />
             </button>
           </nav>
         </div>
       </header>
 
+      {/* 검색 모달 배경 */}
       {isSearchOpen && (
         <div 
           className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity"
@@ -209,13 +214,15 @@ const Header = () => {
         />
       )}
 
+      {/* 4. 검색창 모달 컨테이너: bg-bg-surface */}
       <div 
-        className={`fixed top-20 left-1/2 -translate-x-1/2 w-[95%] max-w-[800px] bg-white dark:bg-gray-900 rounded-3xl shadow-2xl z-50 overflow-hidden transition-all duration-300 ease-out origin-top border border-gray-200 dark:border-gray-700 ${
+        className={`fixed top-20 left-1/2 -translate-x-1/2 w-[95%] max-w-[800px] bg-bg-surface rounded-3xl shadow-2xl z-50 overflow-hidden transition-all duration-300 ease-out origin-top border border-bd-default ${
           isSearchOpen ? 'opacity-100 scale-y-100 translate-y-0' : 'opacity-0 scale-y-95 -translate-y-4 pointer-events-none'
         }`}
       >
-        <div className="p-4 md:p-6 border-b border-gray-100 dark:border-gray-800">
-          <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-5 py-3 hover:bg-gray-200 dark:hover:bg-gray-700 focus-within:bg-white dark:focus-within:bg-gray-900 focus-within:border-[#317F81] dark:focus-within:border-[#4fd1d5] focus-within:ring-2 focus-within:ring-[#317F81]/20 transition-all border border-transparent">
+        <div className="p-4 md:p-6 border-b border-bd-default">
+          {/* 입력창: bg-bg-base, hover/focus 시 색상 전환 */}
+          <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-bg-base rounded-full px-5 py-3 hover:bg-bg-surface-hover focus-within:bg-bg-surface focus-within:border-brand-main focus-within:ring-2 focus-within:ring-brand-main/20 transition-all border border-transparent">
             <img src={SearchIcon} alt="search" className="w-6 h-6 opacity-50 mr-3 dark:invert" />
             <input
               type="text"
@@ -223,45 +230,38 @@ const Header = () => {
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               placeholder="무엇을 찾고 싶으신가요?"
-              className="w-full text-lg bg-transparent outline-none text-gray-900 dark:text-gray-100 font-medium placeholder-gray-400 dark:placeholder-gray-500"
+              className="w-full text-lg bg-transparent outline-none text-txt-primary font-medium placeholder-txt-muted"
             />
             <button 
               type="button" 
               onClick={() => {
-                if (searchKeyword.trim() !== "") {
-                  setSearchKeyword("");
-                } else {
-                  setIsSearchOpen(false);
-                }
+                if (searchKeyword.trim() !== "") setSearchKeyword("");
+                else setIsSearchOpen(false);
               }} 
-              className="ml-3 text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 p-1 transition-colors"
+              className="ml-3 text-txt-muted hover:text-txt-primary p-1 transition-colors"
             >
               ✕
             </button>
           </form>
         </div>
 
-        <div className="p-6 md:p-8 bg-gray-50/50 dark:bg-gray-800/30">
+        {/* 결과 영역 */}
+        <div className="p-6 md:p-8 bg-bg-base/50">
           {searchKeyword.trim() !== "" ? (
             <div>
-              <h3 className="text-sm font-extrabold text-gray-800 dark:text-gray-200 mb-5">추천 검색어 💡</h3>
+              <h3 className="text-sm font-extrabold text-txt-primary mb-5">추천 검색어 💡</h3>
               {suggestions.length > 0 ? (
                 <ul className="flex flex-col gap-1">
                   {suggestions.map((suggestion, idx) => (
                     <li 
                       key={idx}
                       onClick={() => {
-                        // ⭐ 이중 안전장치: DB에서 ID와 카테고리를 완벽히 가져왔다면 '해당 글로 즉시 이동'
-                        if (suggestion.id && suggestion.category) {
-                          navigate(`/board/${suggestion.category}/${suggestion.id}`);
-                        } else {
-                          // 만약 어떠한 이유로 데이터가 깨졌다면, 빈 화면이 뜨지 않게 '통합 검색 결과창'으로 안전하게 이동
-                          navigate(`/board/search?q=${encodeURIComponent(suggestion.title || suggestion)}`);
-                        }
+                        if (suggestion.id && suggestion.category) navigate(`/board/${suggestion.category}/${suggestion.id}`);
+                        else navigate(`/board/search?q=${encodeURIComponent(suggestion.title || suggestion)}`);
                         setIsSearchOpen(false);
                         setSearchKeyword("");
                       }}
-                      className="flex items-center cursor-pointer text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-[#317F81] dark:hover:text-[#4fd1d5] p-2.5 hover:bg-white dark:hover:bg-gray-800 rounded-lg transition-all"
+                      className="flex items-center cursor-pointer text-sm font-medium text-txt-secondary hover:text-brand-main p-2.5 hover:bg-bg-surface rounded-lg transition-all"
                     >
                       <img src={SearchIcon} alt="search" className="w-4 h-4 mr-3 opacity-40 dark:invert" />
                       {suggestion.title || suggestion}
@@ -269,15 +269,14 @@ const Header = () => {
                   ))}
                 </ul>
               ) : (
-                <div className="text-center py-6 text-sm text-gray-400 dark:text-gray-500">
+                <div className="text-center py-6 text-sm text-txt-muted">
                   해당 단어가 포함된 게시글이 없습니다.
                 </div>
               )}
             </div>
           ) : (
             <>
-              <h3 className="text-sm font-extrabold text-gray-800 dark:text-gray-200 mb-5">사람과건축 인기 게시글 🔥</h3>
-              
+              <h3 className="text-sm font-extrabold text-txt-primary mb-5">사람과건축 인기 게시글 🔥</h3>
               {popularPosts.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {popularPosts.map((post) => (
@@ -287,20 +286,21 @@ const Header = () => {
                         setIsSearchOpen(false);
                         navigate(`/board/${post.category}/${post.id}`);
                       }}
-                      className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm hover:border-[#317F81] dark:hover:border-[#4fd1d5] hover:shadow-md cursor-pointer transition-all group"
+                      className="flex items-center gap-3 p-3 bg-bg-surface rounded-xl border border-bd-subtle hover:border-brand-main shadow-sm hover:shadow-md cursor-pointer transition-all group"
                     >
-                      <div className="flex-shrink-0 w-10 h-10 bg-[#eef6f6] dark:bg-gray-700 text-[#317F81] dark:text-[#4fd1d5] rounded-lg flex items-center justify-center font-bold text-xs transition-colors">
+                      {/* 5. 아이콘 박스: bg-brand-light, text-brand-main */}
+                      <div className="flex-shrink-0 w-10 h-10 bg-brand-light text-brand-main rounded-lg flex items-center justify-center font-bold text-xs transition-colors">
                         {boardNames[post.category] ? boardNames[post.category].substring(0, 2) : '게시'}
                       </div>
                       <div className="flex-grow min-w-0">
-                        <p className="text-sm font-bold text-gray-700 dark:text-gray-200 truncate group-hover:text-[#317F81] dark:group-hover:text-[#4fd1d5] transition-colors">{post.title}</p>
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">👀 조회수 {post.views}회</p>
+                        <p className="text-sm font-bold text-txt-primary truncate group-hover:text-brand-main transition-colors">{post.title}</p>
+                        <p className="text-xs text-txt-muted mt-0.5">👀 조회수 {post.views}회</p>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 text-sm text-gray-400 dark:text-gray-500">인기 게시글을 불러오고 있습니다...</div>
+                <div className="text-center py-6 text-sm text-txt-muted">인기 게시글을 불러오고 있습니다...</div>
               )}
             </>
           )}

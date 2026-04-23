@@ -16,7 +16,6 @@ import BannerManufacturing from '../assets/banner/Manufacturing.webp';
 import BannerConstruction from '../assets/banner/Construction.webp'; 
 import BannerConsulting from '../assets/banner/Consulting.webp'; 
 
-// ⭐ 안전장치 1: boardNames 객체 추가 (이게 없어서 치명적 에러가 났을 수 있습니다!)
 const boardNames = {
   edu: "교육/세미나", publish: "논문/출판", pr: "홍보",
   manufacture: "제조업체 정보", construction: "시공업체 정보", consulting: "컨설팅업체 정보",
@@ -38,13 +37,11 @@ const boardSettings = {
 };
 
 const Notice = () => {
-  // ⭐ 안전장치 2: category가 undefined일 경우 강제로 'notice' 배정
   const { category = "notice" } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const globalQuery = searchParams.get('q') || "";
 
-  // ⭐ 안전장치 3: 카테고리 매칭 실패 시 공지사항으로 안전하게 폴백
   const currentBoard = boardSettings[category] || boardSettings.notice;
   const { data: session } = authClient.useSession();
 
@@ -56,7 +53,6 @@ const Notice = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // 카테고리(게시판)가 바뀔 때마다 검색어 초기화
   useEffect(() => {
     if (category === 'search') {
       setSearchTerm(globalQuery);
@@ -73,12 +69,11 @@ const Notice = () => {
       const response = await fetch(url);
       const data = await response.json();
       
-      // ⭐ 안전장치 4: 무조건 배열(Array)만 setPosts에 들어가도록 방어! (에러 원인 1순위)
       setPosts(Array.isArray(data.posts) ? data.posts : []);
       setTotalCount(Number(data.total) || 0);
     } catch (error) {
       console.error("데이터 로드 실패:", error);
-      setPosts([]); // 에러 시 빈 배열로 안전하게 초기화
+      setPosts([]); 
       setTotalCount(0);
     } finally {
       setLoading(false);
@@ -89,7 +84,6 @@ const Notice = () => {
     loadPosts();
   }, [category, currentPage, searchTerm]);
 
-  // ⭐ 안전장치 5: NaN 방지
   const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage) || 1);
 
   const handleSearchChange = (e) => {
@@ -102,40 +96,46 @@ const Notice = () => {
   const canWrite = category !== 'search' && (isQnA ? true : hasManagerRole);
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
+    <div className="min-h-screen bg-bg-base flex flex-col font-sans transition-colors duration-300">
       <Header />
       <main className="flex-grow">
+        {/* 상단 타이틀 및 배너 영역 */}
         <section className="max-w-[900px] mx-auto pt-4 pb-4 px-4 text-center">
-          <h2 className="text-3xl font-extrabold text-gray-950 dark:text-white mb-2 tracking-tight transition-colors">
+          <h2 className="text-3xl font-extrabold text-txt-primary mb-2 tracking-tight">
             {category === 'search' && globalQuery ? `'${globalQuery}' 검색 결과` : currentBoard?.title}
           </h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-2 transition-colors">
+          <p className="text-txt-secondary text-sm font-medium mb-4">
             {currentBoard?.description}
           </p>
-          <div className="w-full h-[180px] rounded-3xl overflow-hidden shadow-md dark:shadow-none border border-transparent dark:border-gray-800 transition-colors">
-            {currentBoard?.banner && <img src={currentBoard.banner} alt="배너" className="w-full h-full object-cover" />}
+          {/* 다크모드 대응을 위해 투명 테두리를 주어 전환 시 어색함 방지 */}
+          <div className="w-full h-[180px] rounded-3xl overflow-hidden shadow-sm ">
+            {currentBoard?.banner && <img src={currentBoard.banner} alt="배너" className="w-full h-full object-cover dark:opacity-90" />}
           </div>
         </section>
 
+        {/* 게시판 목록 영역 */}
         <section className="py-2">
           <div className="max-w-[900px] mx-auto px-4">
+            
+            {/* 검색 및 건수 */}
             <div className="flex justify-between items-center mb-4">
-              <div className="text-sm text-gray-500 dark:text-gray-400 font-medium transition-colors">
-                총 <span className="text-[#317F81] dark:text-[#4fd1d5] font-bold">{totalCount}</span>건
+              <div className="text-sm text-txt-secondary font-medium">
+                총 <span className="text-brand-main font-bold">{totalCount}</span>건
               </div>
               <input
                 type="text"
                 placeholder={category === 'search' ? "결과 내 재검색..." : "제목으로 검색..."}
                 value={searchTerm}
                 onChange={handleSearchChange}
-                className="w-64 px-4 py-2 text-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:outline-none focus:border-[#317F81] dark:focus:border-[#4fd1d5] transition-colors"
+                className="w-64 px-4 py-2 text-sm border border-bd-strong bg-bg-surface text-txt-primary placeholder-txt-muted rounded-lg focus:outline-none focus:border-brand-main focus:ring-1 focus:ring-brand-main transition-colors"
               />
             </div>
 
+            {/* 테이블 */}
             <div className="overflow-x-auto">
-              <table className="w-full border-t-2 border-gray-800 dark:border-gray-600 transition-colors">
+              <table className="w-full border-t-2 border-txt-primary">
                 <thead>
-                  <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 text-sm font-bold text-gray-700 dark:text-gray-300 transition-colors">
+                  <tr className="bg-bg-surface border-b border-bd-default text-sm font-bold text-txt-primary">
                     <th className="py-4 w-16 text-center">번호</th>
                     <th className="py-4 px-4 text-left">제목</th>
                     <th className="py-4 w-20 text-center">첨부</th>
@@ -146,7 +146,7 @@ const Notice = () => {
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={6} className="py-20 text-center text-gray-400 dark:text-gray-500">데이터를 불러오는 중...</td></tr>
+                    <tr><td colSpan={6} className="py-20 text-center text-txt-muted">데이터를 불러오는 중...</td></tr>
                   ) : Array.isArray(posts) && posts.length > 0 ? (
                     posts.map((post, index) => {
                       const displayNumber = totalCount - ((currentPage - 1) * itemsPerPage) - index;
@@ -157,29 +157,34 @@ const Notice = () => {
                         <tr 
                           key={post.id || index} 
                           onClick={() => navigate(`/board/${targetCategory}/${post.id}`)} 
-                          className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
+                          className="border-b border-bd-subtle hover:bg-bg-surface-hover cursor-pointer transition-colors"
                         >
-                          <td className="py-4 text-center text-gray-400 dark:text-gray-500 text-sm font-bold">{displayNumber || 0}</td>
-                          <td className="py-4 px-4 font-medium text-gray-800 dark:text-gray-200">
-                            {category === 'search' && <span className="text-[11px] text-[#317F81] dark:text-[#4fd1d5] border border-[#317F81] dark:border-[#4fd1d5] px-1.5 py-0.5 rounded mr-2 align-middle">{boardNames[post.category] || '게시판'}</span>}
+                          <td className="py-4 text-center text-txt-muted text-sm font-bold">{displayNumber || 0}</td>
+                          <td className="py-4 px-4 font-medium text-txt-primary">
+                            {/* 검색 결과일 경우 카테고리 뱃지 */}
+                            {category === 'search' && (
+                              <span className="text-[11px] text-brand-main border border-brand-main px-1.5 py-0.5 rounded mr-2 align-middle">
+                                {boardNames[post.category] || '게시판'}
+                              </span>
+                            )}
                             {post.title || "제목 없음"}
                           </td>
                           <td className="py-4 text-center text-lg flex items-center justify-center gap-1">
                             {post.has_file === 1 && <span title="첨부파일">💾</span>}
                             {hasImage && <span title="사진 포함">🖼️</span>}
                           </td>
-                          <td className="py-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                          <td className="py-4 text-center text-sm text-txt-secondary">
                             {post.category === 'qna' ? (post.author_name || '익명') : '관리자'}
                           </td>
-                          <td className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                          <td className="py-4 text-center text-sm text-txt-muted">
                             {post.created_at ? new Date(post.created_at).toLocaleDateString() : '-'}
                           </td>
-                          <td className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">{post.views || 0}</td>
+                          <td className="py-4 text-center text-sm text-txt-muted">{post.views || 0}</td>
                         </tr>
                       );
                     })
                   ) : (
-                    <tr><td colSpan={6} className="py-20 text-center text-gray-500 dark:text-gray-400">등록된 게시물이 없습니다.</td></tr>
+                    <tr><td colSpan={6} className="py-20 text-center text-txt-muted">등록된 게시물이 없습니다.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -196,8 +201,8 @@ const Notice = () => {
                       onClick={() => setCurrentPage(pageNum)}
                       className={`w-8 h-8 flex items-center justify-center rounded-md text-sm font-bold transition-colors ${
                         currentPage === pageNum 
-                          ? "bg-[#317F81] text-white dark:bg-[#4fd1d5] dark:text-gray-900" 
-                          : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          ? "bg-brand-main text-txt-inverse" 
+                          : "bg-bg-surface text-txt-secondary border border-bd-default hover:bg-bg-surface-hover"
                       }`}
                     >
                       {pageNum}
@@ -207,7 +212,7 @@ const Notice = () => {
                 <div className="w-24 flex justify-end">
                   {canWrite && (
                     <button 
-                      className="px-6 py-2 bg-[#317F81] text-white font-bold rounded-lg hover:bg-[#256062] transition-colors"
+                      className="px-6 py-2 bg-brand-main text-txt-inverse font-bold rounded-lg hover:bg-brand-dark transition-colors"
                       onClick={() => navigate(`/board/${category}/write`)}
                     >
                       글쓰기
@@ -216,11 +221,12 @@ const Notice = () => {
                 </div>
               </div>
             )}
+            
             {/* 데이터가 0개여도 글쓰기 버튼은 보이게 처리 */}
             {totalCount === 0 && canWrite && (
               <div className="mt-6 flex justify-end">
                  <button 
-                    className="px-6 py-2 bg-[#317F81] text-white font-bold rounded-lg hover:bg-[#256062] transition-colors"
+                    className="px-6 py-2 bg-brand-main text-txt-inverse font-bold rounded-lg hover:bg-brand-dark transition-colors"
                     onClick={() => navigate(`/board/${category}/write`)}
                   >
                     글쓰기

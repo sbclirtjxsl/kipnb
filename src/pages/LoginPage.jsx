@@ -55,11 +55,11 @@ const LoginPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-main flex flex-col justify-center items-center p-6 font-main">
-      <div className="w-full max-w-[400px] bg-10 rounded-3xl shadow-xl dark:shadow-[0_0_20px_rgba(255,255,255,0.3)] p-10 flex flex-col items-center">
+    <div className="min-h-screen flex flex-col justify-center items-center p-6 font-main">
+      <div className="w-full max-w-[400px] bg-surface rounded-3xl shadow-xl dark:shadow-[0_0_20px_rgba(255,255,255,0.3)] p-10 flex flex-col items-center">
         
         <div className="mb-10 text-center">
-          <img src={LogoImg} alt="사람과건축 로고" className="h-12 mx-auto mb-4 object-contain" />
+          <img src={LogoImg} alt="사람과건축 로고" className=" bg-surface-hover h-12 mx-auto mb-4 object-contain dark:invert" />
           <p className="text-gray-400 text-sm font-medium tracking-tight">
             사람과건축 서비스 이용을 위해<br />로그인을 진행해 주세요.
           </p>
