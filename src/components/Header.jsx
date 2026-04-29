@@ -117,7 +117,6 @@ const Header = () => {
 
   return (
     <>
-      {/* 1. 헤더 전체: bg-bg-header, border-bd-default */}
       <header className="sticky top-0 z-40 bg-bg-header border-b border-bd-default shadow-sm relative transition-colors duration-300">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="max-w-[900px] mx-auto">
@@ -132,11 +131,24 @@ const Header = () => {
                 ) : session?.user ? (
                   <div className="flex items-center gap-2">
                     {session?.user?.role && (
-                      /* 역할 배지: bg-brand-main, text-txt-inverse */
                       <span className="text-[11px] font-extrabold text-txt-inverse bg-brand-main px-2 py-0.5 rounded-md">{session.user.role}</span>
                     )}
-                    <img src={session?.user?.image} alt="프로필" className="w-7 h-7 rounded-full border border-bd-default shadow-sm" />
-                    <span className="text-txt-primary">{session?.user?.name}님</span>
+                    
+                    {/* 프로필 이미지 및 이름 클릭 시 마이페이지 이동 영역 */}
+                    <div 
+                      onClick={() => navigate('/mypage')}
+                      className="flex items-center gap-2 cursor-pointer group"
+                    >
+                      <img 
+                        src={session?.user?.image} 
+                        alt="프로필" 
+                        className="w-7 h-7 rounded-full border border-bd-default shadow-sm group-hover:border-brand-main transition-colors" 
+                      />
+                      <span className="text-txt-primary group-hover:text-brand-main transition-colors">
+                        {session?.user?.name}님
+                      </span>
+                    </div>
+
                     <button 
                       onClick={async () => { await authClient.signOut(); window.location.reload(); }}
                       className="ml-3 px-3 py-1 text-xs font-medium text-txt-secondary border border-bd-strong rounded-full hover:bg-bg-surface-hover hover:text-red-500 transition-colors"
@@ -164,7 +176,6 @@ const Header = () => {
                 onMouseEnter={() => setOpenMenuIndex(idx)}
                 onMouseLeave={() => setOpenMenuIndex(null)}
               >
-                {/* 2. 네비게이션 텍스트: text-txt-primary, hover:text-brand-main */}
                 <button 
                   onClick={() => setOpenMenuIndex(openMenuIndex === idx ? null : idx)}
                   className={`py-3 transition-colors duration-200 ${
@@ -176,7 +187,6 @@ const Header = () => {
                   {item.title}
                 </button>
                 
-                {/* 3. 드롭다운: bg-bg-dropdown, border-bd-dropdown */}
                 <div className={`absolute top-full left-1/2 -translate-x-1/2 transition-all duration-300 min-w-[180px] bg-bg-dropdown border border-bd-dropdown shadow-xl rounded-lg py-3 z-[100] ${
                   openMenuIndex === idx 
                     ? "visible opacity-100 translate-y-0" 
@@ -213,14 +223,13 @@ const Header = () => {
         />
       )}
 
-      {/* 4. 검색창 모달 컨테이너: bg-bg-surface */}
+      {/* 검색창 모달 컨테이너 */}
       <div 
         className={`fixed top-20 left-1/2 -translate-x-1/2 w-[95%] max-w-[800px] bg-bg-surface rounded-3xl shadow-2xl z-50 overflow-hidden transition-all duration-300 ease-out origin-top border border-bd-default ${
           isSearchOpen ? 'opacity-100 scale-y-100 translate-y-0' : 'opacity-0 scale-y-95 -translate-y-4 pointer-events-none'
         }`}
       >
         <div className="p-4 md:p-6 border-b border-bd-default">
-          {/* 입력창: bg-bg-base, hover/focus 시 색상 전환 */}
           <form onSubmit={handleSearchSubmit} className="relative flex items-center bg-bg-base rounded-full px-5 py-3 hover:bg-bg-surface-hover focus-within:bg-bg-surface focus-within:border-brand-main focus-within:ring-2 focus-within:ring-brand-main/20 transition-all border border-transparent">
             <img src={SearchIcon} alt="search" className="w-6 h-6 opacity-50 mr-3 auto-invert" />
             <input
@@ -244,7 +253,6 @@ const Header = () => {
           </form>
         </div>
 
-        {/* 결과 영역 */}
         <div className="p-6 md:p-8 bg-bg-base/50">
           {searchKeyword.trim() !== "" ? (
             <div>
@@ -287,7 +295,6 @@ const Header = () => {
                       }}
                       className="flex items-center gap-3 p-3 bg-bg-surface rounded-xl border border-bd-subtle hover:border-brand-main shadow-sm hover:shadow-md cursor-pointer transition-all group"
                     >
-                      {/* 5. 아이콘 박스: bg-brand-light, text-brand-main */}
                       <div className="flex-shrink-0 w-10 h-10 bg-brand-light text-brand-main rounded-lg flex items-center justify-center font-bold text-xs transition-colors">
                         {boardNames[post.category] ? boardNames[post.category].substring(0, 2) : '게시'}
                       </div>

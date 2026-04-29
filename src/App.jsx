@@ -16,6 +16,7 @@ import BoardWrite from './pages/BoardWrite';
 import BoardEdit from './pages/BoardEdit';
 import SearchResults from './pages/SearchResults';
 import MyPage from './pages/MyPage';
+import EditProfile from './pages/EditProfile';
 
 // 테마 토글 컴포넌트 불러오기
 import ThemeToggle from './components/ThemeToggle';
@@ -38,6 +39,7 @@ function App() {
         <Route path="/board/:category" element={<Notice />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/mypage" element={<MyPage />} />
+        <Route path="/edit-profile" element={<EditProfile />} /> 
         <Route path="/board/:category/:id" element={<BoardDetail />} />
         <Route path="/board/:category/write" element={<BoardWrite />} />
         <Route path="/board/:category/edit/:id" element={<BoardEdit />} />
