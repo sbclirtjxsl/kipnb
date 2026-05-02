@@ -13,6 +13,7 @@ database_id = "51ee77bb-0238-45a4-bc23-b0cc4c54ad66"
 GOOGLE_CLIENT_ID = "657606921980-enegv4hcp0fs2m1kjavq3cn9jggo64bm.apps.googleusercontent.com"
 NAVER_CLIENT_ID = "yF3gexl5vFb6E0d41KkW"
 KAKAO_CLIENT_ID = "07c02c374fa8cb586136ac915ceb025b" 
+NAVER_CLIENT_SECRET = "ODkDZm3YCz"
 
 [[r2_buckets]]
 binding = "MY_R2"
