@@ -15,17 +15,19 @@ export const auth = (env) => betterAuth({
             clientId: env.GOOGLE_CLIENT_ID, 
             clientSecret: env.GOOGLE_CLIENT_SECRET, 
         },
-        // ⭐ 네이버 설정을 여기에 추가합니다.
+        // ⭐ 수정된 네이버 설정: 안전한 데이터 추출 로직 적용
         naver: {
             clientId: env.NAVER_CLIENT_ID,
             clientSecret: env.NAVER_CLIENT_SECRET,
             mapUser: (user) => {
-                // 네이버는 응답 객체 안에 'response' 키로 데이터가 들어옵니다.
-                const res = user.response;
+                // 구조가 다를 경우를 대비해 옵셔널 체이닝(?.)과 Fallback 객체 추가
+                const res = user?.response || user || {};
+                
                 return {
-                    email: res.email,
-                    name: res.name || res.nickname,
-                    image: res.profile_image,
+                    // 값이 없을 경우 서버가 뻗지 않도록 임시값(Fallback) 지정
+                    email: res?.email || `naver_${Date.now()}@temp.user`,
+                    name: res?.name || res?.nickname || "네이버회원",
+                    image: res?.profile_image || null,
                 };
             },
         },
@@ -38,7 +40,7 @@ export const auth = (env) => betterAuth({
             mapUser: (user) => {
                 return {
                     email: user.kakao_account?.email || `${user.id}@kakao.user`, // 이메일이 없으면 임시 이메일 생성
-                    name: user.properties.nickname,
+                    name: user.properties?.nickname || "카카오회원",
                 };
             },
         },
