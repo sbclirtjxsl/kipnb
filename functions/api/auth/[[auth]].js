@@ -19,6 +19,15 @@ export const auth = (env) => betterAuth({
         naver: {
             clientId: env.NAVER_CLIENT_ID,
             clientSecret: env.NAVER_CLIENT_SECRET,
+            mapUser: (user) => {
+                // 네이버는 응답 객체 안에 'response' 키로 데이터가 들어옵니다.
+                const res = user.response;
+                return {
+                    email: res.email,
+                    name: res.name || res.nickname,
+                    image: res.profile_image,
+                };
+            },
         },
 
         kakao: {

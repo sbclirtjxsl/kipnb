@@ -11,7 +11,6 @@ database_id = "51ee77bb-0238-45a4-bc23-b0cc4c54ad66"
 [vars]
 # ID 값들은 외부에 공개되어도 되는 식별자이므로 여기에 남겨둡니다.
 GOOGLE_CLIENT_ID = "657606921980-enegv4hcp0fs2m1kjavq3cn9jggo64bm.apps.googleusercontent.com"
-NAVER_CLIENT_ID = "yF3gexl5vFb6E0d41KkW"
 KAKAO_CLIENT_ID = "07c02c374fa8cb586136ac915ceb025b" 
 
 [[r2_buckets]]
