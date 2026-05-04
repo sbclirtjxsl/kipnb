@@ -10,12 +10,15 @@ export const auth = (env) => betterAuth({
     },
     baseURL: env.BETTER_AUTH_URL, 
     secret: env.BETTER_AUTH_SECRET,
+    // ⭐ 이 부분을 추가합니다! (서버 로그 강제 출력)
+    logger: {
+        level: "debug"
+    },
     socialProviders: {
         google: {
             clientId: env.GOOGLE_CLIENT_ID, 
             clientSecret: env.GOOGLE_CLIENT_SECRET, 
         },
-        // ⭐ mapUser를 완전히 제거하고 가장 기본 설정만 남깁니다.
         naver: {
             clientId: env.NAVER_CLIENT_ID,
             clientSecret: env.NAVER_CLIENT_SECRET,
