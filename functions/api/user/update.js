@@ -6,7 +6,7 @@ export async function onRequestPost(context) {
     const formData = await request.formData();
     const name = formData.get('name');
     const profileImage = formData.get('profileImage');
-    const userId = formData.get('userId'); // ✅ 프론트엔드에서 보낸 실제 유저 ID 받기
+    const userId = formData.get('userId'); // 프론트엔드에서 보낸 실제 유저 ID 받기
 
     if (!userId) {
       return new Response(JSON.stringify({ success: false, message: "유저 식별자(ID)가 없습니다." }), { status: 400 });
@@ -19,16 +19,18 @@ export async function onRequestPost(context) {
       const fileExtension = profileImage.name.split('.').pop();
       const fileName = `profile_${userId}_${Date.now()}.${fileExtension}`;
       
-      // ✅ 수정 1: env.MY_R2_BUCKET -> env.MY_R2 (wrangler.toml과 일치시킴)
+      // env.MY_R2 (wrangler.toml과 일치)
       await env.MY_R2.put(fileName, profileImage);
       
-      // ✅ 수정 2: R2 버킷의 실제 공개 URL 주소로 변경해야 합니다!
-      // 주의: 아래 도메인은 R2 설정에서 할당받은 Public URL이나 커스텀 도메인으로 꼭 바꿔주세요.
-      newImageUrl = `https://pub-xxxxxx.r2.dev/${fileName}`; 
+      // 🚨 방금 화면에서 복사하신 진짜 주소를 아래 따옴표 안에 덮어씌워주세요!
+      // (주의: 맨 뒤에 슬래시(/)가 있다면 빼고 넣어주시는게 깔끔합니다)
+      const r2PublicDomain = "https://여기에-복사한-주소를-붙여넣으세요"; 
+      
+      newImageUrl = `${r2PublicDomain}/${fileName}`; 
     }
 
     // 3. D1 데이터베이스에 유저 정보 업데이트
-    // ✅ 수정 3: 테이블 이름을 users -> user 로 변경 (Better Auth 기본 테이블명)
+    // 테이블 이름을 user 로 변경 (Better Auth 기본 테이블명)
     if (newImageUrl) {
       // 사진과 이름 모두 변경할 때
       await env.DB.prepare(
