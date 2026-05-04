@@ -101,6 +101,9 @@ const EditProfile = () => {
     try {
       const formData = new FormData();
       formData.append('name', name);
+      // ✅ 추가됨: 백엔드에서 식별할 수 있도록 유저 ID 함께 전송
+      formData.append('userId', session.user.id); 
+
       if (selectedFile) {
         formData.append('profileImage', selectedFile); 
       }

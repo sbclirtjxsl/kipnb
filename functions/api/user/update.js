@@ -6,42 +6,42 @@ export async function onRequestPost(context) {
     const formData = await request.formData();
     const name = formData.get('name');
     const profileImage = formData.get('profileImage');
-    
-    // 💡 현재 로그인한 유저 정보 가져오기 (프로젝트의 인증 방식에 따라 다름)
-    // 예: const session = await getSession(request);
-    // 예: const userId = session.user.id;
-    const userId = "temp_user_id"; // 임시 처리 (실제로는 세션에서 유저 ID를 빼와야 합니다)
+    const userId = formData.get('userId'); // ✅ 프론트엔드에서 보낸 실제 유저 ID 받기
+
+    if (!userId) {
+      return new Response(JSON.stringify({ success: false, message: "유저 식별자(ID)가 없습니다." }), { status: 400 });
+    }
 
     let newImageUrl = null;
 
     // 2. 프로필 이미지가 전송되었다면 R2에 업로드
     if (profileImage && profileImage.name) {
-      // 파일명 중복 방지를 위해 유저ID와 현재 시간을 조합하여 파일명 생성
       const fileExtension = profileImage.name.split('.').pop();
       const fileName = `profile_${userId}_${Date.now()}.${fileExtension}`;
       
-      // env.MY_R2_BUCKET 은 wrangler.toml에 설정한 R2 바인딩 이름입니다.
-      await env.MY_R2_BUCKET.put(fileName, profileImage);
+      // ✅ 수정 1: env.MY_R2_BUCKET -> env.MY_R2 (wrangler.toml과 일치시킴)
+      await env.MY_R2.put(fileName, profileImage);
       
-      // R2 버킷에 연결된 커스텀 도메인(공개 URL) 경로를 조합
-      newImageUrl = `https://사진저장소-도메인.com/${fileName}`; 
+      // ✅ 수정 2: R2 버킷의 실제 공개 URL 주소로 변경해야 합니다!
+      // 주의: 아래 도메인은 R2 설정에서 할당받은 Public URL이나 커스텀 도메인으로 꼭 바꿔주세요.
+      newImageUrl = `https://pub-xxxxxx.r2.dev/${fileName}`; 
     }
 
     // 3. D1 데이터베이스에 유저 정보 업데이트
-    // env.DB 는 wrangler.toml에 설정한 D1 바인딩 이름입니다.
+    // ✅ 수정 3: 테이블 이름을 users -> user 로 변경 (Better Auth 기본 테이블명)
     if (newImageUrl) {
       // 사진과 이름 모두 변경할 때
       await env.DB.prepare(
-        `UPDATE users SET name = ?, image = ? WHERE id = ?`
+        `UPDATE user SET name = ?, image = ? WHERE id = ?`
       ).bind(name, newImageUrl, userId).run();
     } else {
       // 사진은 안 바꾸고 이름만 변경할 때
       await env.DB.prepare(
-        `UPDATE users SET name = ? WHERE id = ?`
+        `UPDATE user SET name = ? WHERE id = ?`
       ).bind(name, userId).run();
     }
 
-    // 모든 작업이 끝났으면 프론트엔드에 성공 응답 보내기
+    // 성공 응답 보내기
     return new Response(JSON.stringify({ success: true, message: "업데이트 성공" }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
