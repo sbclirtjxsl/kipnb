@@ -28,8 +28,11 @@ const Header = () => {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [popularPosts, setPopularPosts] = useState([]); 
   const [openMenuIndex, setOpenMenuIndex] = useState(null);
-  
   const [suggestions, setSuggestions] = useState([]);
+
+  // ✅ 추가: 모바일 슬라이드 메뉴 상태 관리
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mobileOpenIndex, setMobileOpenIndex] = useState(null); // 모바일 아코디언 메뉴
 
   useEffect(() => {
     if (session?.user) {
@@ -55,19 +58,22 @@ const Header = () => {
     };
   }, []);
 
+  // ✅ 수정: 검색창 및 모바일 메뉴 열릴 때 배경 스크롤 방지
   useEffect(() => {
     if (isSearchOpen && popularPosts.length === 0) {
       fetch('/api/popular')
         .then(res => res.json())
         .then(data => setPopularPosts(data || []))
         .catch(err => console.error(err));
-      
+    }
+    
+    if (isSearchOpen || isMobileMenuOpen) {
       document.body.style.overflow = 'hidden'; 
-    } else if (!isSearchOpen) {
+    } else {
       document.body.style.overflow = 'unset';
     }
     return () => { document.body.style.overflow = 'unset'; };
-  }, [isSearchOpen]);
+  }, [isSearchOpen, isMobileMenuOpen]);
 
   useEffect(() => {
     if (searchKeyword.trim() === '') {
@@ -120,54 +126,69 @@ const Header = () => {
       <header className="sticky top-0 z-40 bg-bg-header border-b border-bd-default shadow-sm relative transition-colors duration-300">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="max-w-[900px] mx-auto">
-            <div className="flex justify-between items-center py-0">
+            {/* ✅ 수정: 모바일에서 버튼들이 잘 정렬되도록 감싸줌 */}
+            <div className="flex justify-between items-center py-2 md:py-0">
               <Link to="/" className="flex items-center">
-                <img src={LogoImg} alt="사람과건축 로고" className="h-[50px] md:h-[55px] w-auto object-contain auto-invert transition-all duration-300" />
+                <img src={LogoImg} alt="사람과건축 로고" className="h-[40px] md:h-[55px] w-auto object-contain auto-invert transition-all duration-300" />
               </Link>
 
-              <div className="flex items-center text-sm font-bold">
-                {isPending ? (
-                  <span className="text-txt-muted font-medium text-xs">확인 중...</span>
-                ) : session?.user ? (
-                  <div className="flex items-center gap-2">
-                    {session?.user?.role && (
-                      <span className="text-[11px] font-extrabold text-txt-inverse bg-brand-main px-2 py-0.5 rounded-md">{session.user.role}</span>
-                    )}
-                    
-                    {/* 프로필 이미지 및 이름 클릭 시 마이페이지 이동 영역 */}
-                    <div 
-                      onClick={() => navigate('/mypage')}
-                      className="flex items-center gap-2 cursor-pointer group"
-                    >
-                      <img 
-                        src={session?.user?.image} 
-                        alt="프로필" 
-                        className="w-7 h-7 rounded-full border border-bd-default shadow-sm group-hover:border-brand-main transition-colors" 
-                      />
-                      <span className="text-txt-primary group-hover:text-brand-main transition-colors">
-                        {session?.user?.name}님
-                      </span>
-                    </div>
+              <div className="flex items-center gap-3 md:gap-0">
+                <div className="flex items-center text-sm font-bold">
+                  {isPending ? (
+                    <span className="text-txt-muted font-medium text-xs">확인 중...</span>
+                  ) : session?.user ? (
+                    <div className="flex items-center gap-2">
+                      {session?.user?.role && (
+                        <span className="hidden md:inline-block text-[11px] font-extrabold text-txt-inverse bg-brand-main px-2 py-0.5 rounded-md">{session.user.role}</span>
+                      )}
+                      
+                      <div 
+                        onClick={() => navigate('/mypage')}
+                        className="flex items-center gap-2 cursor-pointer group"
+                      >
+                        <img 
+                          src={session?.user?.image} 
+                          alt="프로필" 
+                          className="w-7 h-7 rounded-full border border-bd-default shadow-sm group-hover:border-brand-main transition-colors" 
+                        />
+                        <span className="hidden sm:inline-block text-txt-primary group-hover:text-brand-main transition-colors">
+                          {session?.user?.name}님
+                        </span>
+                      </div>
 
-                    <button 
-                      onClick={async () => { await authClient.signOut(); window.location.reload(); }}
-                      className="ml-3 px-3 py-1 text-xs font-medium text-txt-secondary border border-bd-strong rounded-full hover:bg-bg-surface-hover hover:text-red-500 transition-colors"
-                    >
-                      로그아웃
-                    </button>
-                  </div>
-                ) : (
-                  <Link to="/login" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
-                    <div className="w-7 h-7 text-txt-inverse rounded-full flex items-center justify-center text-[10px]">
-                      <img src={login} alt="로그인" className="auto-invert transition-all duration-300" />
+                      <button 
+                        onClick={async () => { await authClient.signOut(); window.location.reload(); }}
+                        className="hidden md:block ml-3 px-3 py-1 text-xs font-medium text-txt-secondary border border-bd-strong rounded-full hover:bg-bg-surface-hover hover:text-red-500 transition-colors"
+                      >
+                        로그아웃
+                      </button>
                     </div>
-                    <span className="text-txt-primary">Log In</span>
-                  </Link>
-                )}
+                  ) : (
+                    <Link to="/login" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
+                      <div className="w-7 h-7 text-txt-inverse rounded-full flex items-center justify-center text-[10px]">
+                        <img src={login} alt="로그인" className="auto-invert transition-all duration-300" />
+                      </div>
+                      <span className="hidden sm:block text-txt-primary">Log In</span>
+                    </Link>
+                  )}
+                </div>
+
+                {/* ✅ 추가: 모바일 전용 아이콘 (검색 + 햄버거 메뉴) */}
+                <div className="flex items-center gap-1 md:hidden">
+                  <button onClick={() => setIsSearchOpen(true)} className="p-2">
+                    <img src={SearchIcon} alt="search" className="w-5 h-5 auto-invert" />
+                  </button>
+                  <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-txt-primary">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
           
+          {/* 데스크톱 메뉴 (그대로 유지) */}
           <nav className="hidden md:flex justify-center items-center gap-10 text-[15.5px] font-bold relative pb-2">
             {menuItems.map((item, idx) => (
               <div 
@@ -215,17 +236,76 @@ const Header = () => {
         </div>
       </header>
 
-      {/* 검색 모달 배경 */}
+      {/* ✅ 추가: 모바일 전용 오른쪽 슬라이드 메뉴 패널 */}
+      {/* 배경 오버레이 */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* 오른쪽에서 나오는 사이드바 */}
+      <div className={`fixed top-0 right-0 h-full w-[80%] max-w-[320px] bg-bg-surface shadow-2xl z-[70] transform transition-transform duration-300 ease-in-out md:hidden flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        {/* 사이드바 헤더 */}
+        <div className="flex justify-between items-center p-5 border-b border-bd-default">
+          <span className="font-bold text-lg text-txt-primary">전체 메뉴</span>
+          <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-txt-muted hover:text-txt-primary">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        {/* 사이드바 본문 (아코디언 메뉴) */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <ul className="flex flex-col gap-2">
+            {menuItems.map((item, idx) => (
+              <li key={idx} className="border-b border-bd-subtle pb-2">
+                <button 
+                  onClick={() => setMobileOpenIndex(mobileOpenIndex === idx ? null : idx)}
+                  className="flex justify-between items-center w-full py-3 text-left font-bold text-txt-primary"
+                >
+                  {item.title}
+                  {/* 펼치기/접기 화살표 아이콘 */}
+                  <svg className={`w-5 h-5 text-txt-muted transition-transform duration-300 ${mobileOpenIndex === idx ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {/* 서브 메뉴 목록 */}
+                <div className={`overflow-hidden transition-all duration-300 ${mobileOpenIndex === idx ? 'max-h-96 opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
+                  <ul className="flex flex-col gap-1 pl-2 pb-2 bg-bg-base/50 rounded-lg">
+                    {item.sub.map((subItem, subIdx) => (
+                      <li key={subIdx}>
+                        <Link 
+                          to={subItem.path} 
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="block px-4 py-2 text-sm font-medium text-txt-secondary hover:text-brand-main active:bg-bg-surface-hover rounded-md"
+                        >
+                          {subItem.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* 기존 검색 모달 영역 (그대로 유지) */}
       {isSearchOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm transition-opacity"
           onClick={() => setIsSearchOpen(false)}
         />
       )}
 
-      {/* 검색창 모달 컨테이너 */}
+      {/* 검색창 모달 컨테이너 (그대로 유지, z-index만 60으로 약간 올림) */}
       <div 
-        className={`fixed top-20 left-1/2 -translate-x-1/2 w-[95%] max-w-[800px] bg-bg-surface rounded-3xl shadow-2xl z-50 overflow-hidden transition-all duration-300 ease-out origin-top border border-bd-default ${
+        className={`fixed top-20 left-1/2 -translate-x-1/2 w-[95%] max-w-[800px] bg-bg-surface rounded-3xl shadow-2xl z-[70] overflow-hidden transition-all duration-300 ease-out origin-top border border-bd-default ${
           isSearchOpen ? 'opacity-100 scale-y-100 translate-y-0' : 'opacity-0 scale-y-95 -translate-y-4 pointer-events-none'
         }`}
       >
