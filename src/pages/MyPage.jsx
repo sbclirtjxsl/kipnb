@@ -10,7 +10,8 @@ const MyPage = () => {
 
   // ✅ 실제 탈퇴 및 연동 해제 로직
   const handleWithdrawal = async () => {
-    if (!window.confirm('정말 네이버 연동을 해제하고 탈퇴하시겠습니까?\n탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.')) {
+    // 경고 문구에서 하드코딩된 '네이버' 제거
+    if (!window.confirm('정말 연동을 해제하고 탈퇴하시겠습니까?\n탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.')) {
       return;
     }
 
@@ -66,6 +67,24 @@ const MyPage = () => {
       );
     }
 
+    // ✅ 연동 계정 정보를 동적으로 가져오는 함수
+    const getProviderInfo = () => {
+      const provider = session?.user?.provider || 'unknown'; 
+      const emailDomain = session?.user?.email?.split('@')[1]?.toLowerCase() || '';
+
+      if (provider === 'naver' || emailDomain.includes('naver.com')) {
+        return { name: '네이버 (Naver Login)', color: 'bg-[#03C75A]' };
+      } else if (provider === 'kakao' || emailDomain.includes('kakao.com') || emailDomain.includes('daum.net') || emailDomain.includes('hanmail.net')) {
+         return { name: '카카오 (Kakao Login)', color: 'bg-[#FEE500]' };
+      } else if (provider === 'google' || emailDomain.includes('gmail.com')) {
+         return { name: '구글 (Google Login)', color: 'bg-[#EA4335]' };
+      } else {
+        return { name: '이메일 회원', color: 'bg-gray-400' };
+      }
+    };
+
+    const providerInfo = getProviderInfo();
+
     return (
       <div className="max-w-[800px] mx-auto px-4 py-12 font-main">
         <div className="mb-10">
@@ -104,11 +123,12 @@ const MyPage = () => {
                   <span className="text-xs font-bold text-txt-muted w-16 uppercase">이메일</span>
                   <span className="text-sm font-medium">{session.user.email}</span>
                 </div>
+                {/* ✅ 동적으로 연동계정 정보 렌더링 적용 */}
                 <div className="flex items-center justify-center md:justify-start gap-3 text-txt-secondary">
                   <span className="text-xs font-bold text-txt-muted w-16 uppercase">연동계정</span>
                   <span className="text-sm font-medium flex items-center gap-1.5">
-                    <span className="w-2 h-2 bg-[#03C75A] rounded-full"></span>
-                    네이버 (Naver Login)
+                    <span className={`w-2 h-2 rounded-full ${providerInfo.color}`}></span>
+                    {providerInfo.name}
                   </span>
                 </div>
               </div>
@@ -134,7 +154,7 @@ const MyPage = () => {
               </button>
             </div>
 
-            {/* ✅ 수정된 버튼: handleWithdrawal 함수 호출 */}
+            {/* ✅ 탈퇴 함수 호출 부분 (기존과 동일) */}
             <button 
               onClick={handleWithdrawal}
               className="text-xs font-bold text-txt-muted hover:text-red-500 underline underline-offset-4 transition-colors"
