@@ -99,7 +99,7 @@ const Notice = () => {
     <div className="min-h-screen bg-bg-base flex flex-col font-sans transition-colors duration-300">
       <Header />
       <main className="flex-grow">
-        {/* 상단 타이틀 및 배너 영역 */}
+        {/* 상단 타이틀 및 배너 영역 (기존과 동일) */}
         <section className="max-w-[900px] mx-auto pt-4 pb-4 px-4 text-center">
           <h2 className="text-3xl font-extrabold text-txt-primary mb-2 tracking-tight">
             {category === 'search' && globalQuery ? `'${globalQuery}' 검색 결과` : currentBoard?.title}
@@ -107,7 +107,6 @@ const Notice = () => {
           <p className="text-txt-secondary text-sm font-medium mb-4">
             {currentBoard?.description}
           </p>
-          {/* 다크모드 대응을 위해 투명 테두리를 주어 전환 시 어색함 방지 */}
           <div className="w-full h-[180px] rounded-3xl overflow-hidden shadow-sm ">
             {currentBoard?.banner && <img src={currentBoard.banner} alt="배너" className="w-full h-full object-cover dark:opacity-90" />}
           </div>
@@ -118,7 +117,7 @@ const Notice = () => {
           <div className="max-w-[900px] mx-auto px-4">
             
             {/* 검색 및 건수 */}
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
               <div className="text-sm text-txt-secondary font-medium">
                 총 <span className="text-brand-main font-bold">{totalCount}</span>건
               </div>
@@ -127,73 +126,117 @@ const Notice = () => {
                 placeholder={category === 'search' ? "결과 내 재검색..." : "제목으로 검색..."}
                 value={searchTerm}
                 onChange={handleSearchChange}
-                className="w-64 px-4 py-2 text-sm border border-bd-strong bg-bg-surface text-txt-primary placeholder-txt-muted rounded-lg focus:outline-none focus:border-brand-main focus:ring-1 focus:ring-brand-main transition-colors"
+                className="w-full sm:w-64 px-4 py-2 text-sm border border-bd-strong bg-bg-surface text-txt-primary placeholder-txt-muted rounded-lg focus:outline-none focus:border-brand-main focus:ring-1 focus:ring-brand-main transition-colors"
               />
             </div>
 
-            {/* 테이블 */}
-            <div className="overflow-x-auto">
-              <table className="w-full border-t-2 border-txt-primary">
-                <thead>
-                  <tr className="bg-bg-surface border-b border-bd-default text-sm font-bold text-txt-primary">
-                    <th className="py-4 w-16 text-center">번호</th>
-                    <th className="py-4 px-4 text-left">제목</th>
-                    <th className="py-4 w-20 text-center">첨부</th>
-                    <th className="py-4 w-24 text-center">작성자</th>
-                    <th className="py-4 w-28 text-center">날짜</th>
-                    <th className="py-4 w-16 text-center">조회</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr><td colSpan={6} className="py-20 text-center text-txt-muted">데이터를 불러오는 중...</td></tr>
-                  ) : Array.isArray(posts) && posts.length > 0 ? (
-                    posts.map((post, index) => {
-                      const displayNumber = totalCount - ((currentPage - 1) * itemsPerPage) - index;
-                      const hasImage = post.image_url && post.image_url !== "" && post.image_url !== "[]" && post.image_url !== '""';
-                      const targetCategory = category === 'search' ? (post.category || 'notice') : category;
+            {loading ? (
+               <div className="py-20 text-center text-txt-muted border-t-2 border-txt-primary">데이터를 불러오는 중...</div>
+            ) : Array.isArray(posts) && posts.length > 0 ? (
+              <>
+                {/* 1. 데스크탑용 테이블 레이아웃 (md 이상에서만 보임) */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full border-t-2 border-txt-primary">
+                    <thead>
+                      <tr className="bg-bg-surface border-b border-bd-default text-sm font-bold text-txt-primary">
+                        <th className="py-4 w-16 text-center">번호</th>
+                        <th className="py-4 px-4 text-left">제목</th>
+                        <th className="py-4 w-20 text-center">첨부</th>
+                        <th className="py-4 w-24 text-center">작성자</th>
+                        <th className="py-4 w-28 text-center">날짜</th>
+                        <th className="py-4 w-16 text-center">조회</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {posts.map((post, index) => {
+                        const displayNumber = totalCount - ((currentPage - 1) * itemsPerPage) - index;
+                        const hasImage = post.image_url && post.image_url !== "" && post.image_url !== "[]" && post.image_url !== '""';
+                        const targetCategory = category === 'search' ? (post.category || 'notice') : category;
 
-                      return (
-                        <tr 
-                          key={post.id || index} 
-                          onClick={() => navigate(`/board/${targetCategory}/${post.id}`)} 
-                          className="border-b border-bd-subtle hover:bg-bg-surface-hover cursor-pointer transition-colors"
-                        >
-                          <td className="py-4 text-center text-txt-muted text-sm font-bold">{displayNumber || 0}</td>
-                          <td className="py-4 px-4 font-medium text-txt-primary">
-                            {/* 검색 결과일 경우 카테고리 뱃지 */}
+                        return (
+                          <tr 
+                            key={post.id || index} 
+                            onClick={() => navigate(`/board/${targetCategory}/${post.id}`)} 
+                            className="border-b border-bd-subtle hover:bg-bg-surface-hover cursor-pointer transition-colors"
+                          >
+                            <td className="py-4 text-center text-txt-muted text-sm font-bold">{displayNumber || 0}</td>
+                            <td className="py-4 px-4 font-medium text-txt-primary">
+                              {category === 'search' && (
+                                <span className="text-[11px] text-brand-main border border-brand-main px-1.5 py-0.5 rounded mr-2 align-middle">
+                                  {boardNames[post.category] || '게시판'}
+                                </span>
+                              )}
+                              {post.title || "제목 없음"}
+                            </td>
+                            <td className="py-4 text-center text-lg flex items-center justify-center gap-1">
+                              {post.has_file === 1 && <span title="첨부파일">💾</span>}
+                              {hasImage && <span title="사진 포함">🖼️</span>}
+                            </td>
+                            <td className="py-4 text-center text-sm text-txt-secondary">
+                              {post.category === 'qna' ? (post.author_name || '익명') : '관리자'}
+                            </td>
+                            <td className="py-4 text-center text-sm text-txt-muted">
+                              {post.created_at ? new Date(post.created_at).toLocaleDateString() : '-'}
+                            </td>
+                            <td className="py-4 text-center text-sm text-txt-muted">{post.views || 0}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* 2. 모바일용 리스트 레이아웃 (md 미만에서만 보임) */}
+                <div className="md:hidden border-t-2 border-txt-primary">
+                  {posts.map((post, index) => {
+                    const displayNumber = totalCount - ((currentPage - 1) * itemsPerPage) - index;
+                    const hasImage = post.image_url && post.image_url !== "" && post.image_url !== "[]" && post.image_url !== '""';
+                    const targetCategory = category === 'search' ? (post.category || 'notice') : category;
+
+                    return (
+                      <div 
+                        key={post.id || index}
+                        onClick={() => navigate(`/board/${targetCategory}/${post.id}`)}
+                        className="py-4 border-b border-bd-subtle hover:bg-bg-surface-hover cursor-pointer flex flex-col gap-2"
+                      >
+                        {/* 상단: 번호 및 제목 */}
+                        <div className="flex items-start gap-2">
+                          <span className="text-xs font-bold text-txt-muted mt-1 w-6 shrink-0">{displayNumber || 0}</span>
+                          <h3 className="font-medium text-txt-primary leading-tight break-all">
                             {category === 'search' && (
-                              <span className="text-[11px] text-brand-main border border-brand-main px-1.5 py-0.5 rounded mr-2 align-middle">
+                              <span className="inline-block text-[10px] text-brand-main border border-brand-main px-1 py-0.5 rounded mr-2 align-middle mb-1">
                                 {boardNames[post.category] || '게시판'}
                               </span>
                             )}
                             {post.title || "제목 없음"}
-                          </td>
-                          <td className="py-4 text-center text-lg flex items-center justify-center gap-1">
-                            {post.has_file === 1 && <span title="첨부파일">💾</span>}
-                            {hasImage && <span title="사진 포함">🖼️</span>}
-                          </td>
-                          <td className="py-4 text-center text-sm text-txt-secondary">
-                            {post.category === 'qna' ? (post.author_name || '익명') : '관리자'}
-                          </td>
-                          <td className="py-4 text-center text-sm text-txt-muted">
-                            {post.created_at ? new Date(post.created_at).toLocaleDateString() : '-'}
-                          </td>
-                          <td className="py-4 text-center text-sm text-txt-muted">{post.views || 0}</td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr><td colSpan={6} className="py-20 text-center text-txt-muted">등록된 게시물이 없습니다.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                          </h3>
+                        </div>
+                        
+                        {/* 하단: 부가 정보 (작성자, 날짜, 조회수, 아이콘) */}
+                        <div className="flex justify-between items-center pl-8 text-[11px] text-txt-muted">
+                          <div className="flex items-center gap-3">
+                            <span>{post.category === 'qna' ? (post.author_name || '익명') : '관리자'}</span>
+                            <span>{post.created_at ? new Date(post.created_at).toLocaleDateString() : '-'}</span>
+                            <span>조회 {post.views || 0}</span>
+                          </div>
+                          <div className="flex gap-1 text-sm">
+                            {post.has_file === 1 && <span>💾</span>}
+                            {hasImage && <span>🖼️</span>}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <div className="py-20 text-center text-txt-muted border-t-2 border-txt-primary">등록된 게시물이 없습니다.</div>
+            )}
 
-            {/* 페이지네이션 구역 */}
+            {/* 페이지네이션 구역 (기존과 구조 동일, 모바일 대응 위해 flex 레이아웃 수정) */}
             {totalCount > 0 && (
-              <div className="mt-6 flex items-center justify-between">
-                <div className="w-24"></div>
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="hidden sm:block w-24"></div> {/* 데스크탑용 빈 공간 */}
                 <div className="flex gap-2">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
                     <button
@@ -209,10 +252,10 @@ const Notice = () => {
                     </button>
                   ))}
                 </div>
-                <div className="w-24 flex justify-end">
+                <div className="w-full sm:w-24 flex justify-end">
                   {canWrite && (
                     <button 
-                      className="px-6 py-2 bg-brand-main text-txt-inverse font-bold rounded-lg hover:bg-brand-dark transition-colors"
+                      className="w-full sm:w-auto px-6 py-2 bg-brand-main text-txt-inverse font-bold rounded-lg hover:bg-brand-dark transition-colors"
                       onClick={() => navigate(`/board/${category}/write`)}
                     >
                       글쓰기
@@ -222,11 +265,11 @@ const Notice = () => {
               </div>
             )}
             
-            {/* 데이터가 0개여도 글쓰기 버튼은 보이게 처리 */}
+            {/* 데이터가 0개일 때 글쓰기 버튼 (모바일 꽉 차게) */}
             {totalCount === 0 && canWrite && (
               <div className="mt-6 flex justify-end">
                  <button 
-                    className="px-6 py-2 bg-brand-main text-txt-inverse font-bold rounded-lg hover:bg-brand-dark transition-colors"
+                    className="w-full sm:w-auto px-6 py-2 bg-brand-main text-txt-inverse font-bold rounded-lg hover:bg-brand-dark transition-colors"
                     onClick={() => navigate(`/board/${category}/write`)}
                   >
                     글쓰기
