@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authClient } from '../auth-client';
-// ✅ 헤더 경로 수정 (src/components/Header.jsx)
 import Header from '../components/Header'; 
 
 const EditProfile = () => {
@@ -10,6 +9,8 @@ const EditProfile = () => {
 
   const [name, setName] = useState('');
   const [previewImage, setPreviewImage] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null); // ✅ 실제 업로드할 파일 상태 추가
+  const [isSubmitting, setIsSubmitting] = useState(false); // ✅ 제출 중 상태 (중복 클릭 방지)
 
   useEffect(() => {
     if (session?.user) {
@@ -21,9 +22,10 @@ const EditProfile = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setSelectedFile(file); // ✅ 전송을 위해 파일 객체 저장
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviewImage(reader.result);
+        setPreviewImage(reader.result); // ✅ 화면 미리보기용
       };
       reader.readAsDataURL(file);
     }
@@ -31,8 +33,43 @@ const EditProfile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('정보가 성공적으로 수정되었습니다.');
-    navigate('/mypage');
+    if (!session?.user) return;
+    
+    setIsSubmitting(true);
+
+    try {
+      // ✅ 1. 폼 데이터 생성 (파일과 이름 전송)
+      const formData = new FormData();
+      formData.append('name', name);
+      if (selectedFile) {
+        formData.append('profileImage', selectedFile); 
+      }
+
+      // ✅ 2. 백엔드 API로 정보 수정 요청 (경로는 실제 서버 환경에 맞게 수정 필요)
+      const response = await fetch('/api/user/update', {
+        method: 'POST',
+        // FormData를 보낼 때는 Content-Type을 수동으로 설정하지 않습니다. (브라우저가 boundary와 함께 자동 설정)
+        body: formData, 
+      });
+
+      if (response.ok) {
+        // 성공 처리
+        alert('정보가 성공적으로 수정되었습니다.');
+        
+        // ✅ 3. 선택 사항: 세션 정보 강제 갱신 
+        // (만약 백엔드에서 세션을 자동 갱신해주지 않는다면, 페이지를 새로고침하거나 세션 업데이트 함수를 호출해야 변경된 이미지가 보입니다)
+        window.location.href = '/mypage'; // 강제 새로고침을 동반한 이동 (확실한 업데이트 확인을 위함)
+      } else {
+        const errorData = await response.json();
+        alert(`수정 실패: ${errorData.message || '알 수 없는 오류'}`);
+      }
+
+    } catch (error) {
+      console.error('Profile update error:', error);
+      alert('서버 통신 중 오류가 발생했습니다.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isPending) {
@@ -47,9 +84,7 @@ const EditProfile = () => {
   }
 
   return (
-    // ✅ 1. 최상단 컨테이너에 bg-bg-base를 주어 전체 배경색 통일 (다크모드 대응)
     <div className="min-h-screen bg-bg-base transition-colors duration-300">
-      {/* ✅ 2. 헤더 적용 */}
       <Header />
       
       <main className="max-w-[600px] mx-auto px-4 py-12">
@@ -58,7 +93,6 @@ const EditProfile = () => {
           <p className="text-txt-muted mt-2">프로필 이미지와 닉네임을 변경할 수 있습니다.</p>
         </div>
 
-        {/* ✅ 3. 카드 배경색을 bg-bg-surface로 설정하여 다크모드에서 자연스럽게 보이게 함 */}
         <form onSubmit={handleSubmit} className="bg-bg-surface border border-bd-default rounded-3xl p-6 md:p-10 shadow-sm">
           
           <div className="flex flex-col items-center mb-8">
@@ -105,15 +139,17 @@ const EditProfile = () => {
             <button 
               type="button"
               onClick={() => navigate('/mypage')}
-              className="flex-1 py-3.5 bg-bg-base border border-bd-default text-txt-secondary font-bold rounded-xl"
+              disabled={isSubmitting}
+              className="flex-1 py-3.5 bg-bg-base border border-bd-default text-txt-secondary font-bold rounded-xl disabled:opacity-50"
             >
               취소
             </button>
             <button 
               type="submit"
-              className="flex-1 py-3.5 bg-brand-main text-white font-bold rounded-xl shadow-md shadow-brand-main/20"
+              disabled={isSubmitting}
+              className="flex-1 py-3.5 bg-brand-main text-white font-bold rounded-xl shadow-md shadow-brand-main/20 disabled:opacity-50"
             >
-              저장하기
+              {isSubmitting ? '저장 중...' : '저장하기'}
             </button>
           </div>
         </form>
