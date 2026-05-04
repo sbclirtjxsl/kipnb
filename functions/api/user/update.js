@@ -24,7 +24,7 @@ export async function onRequestPost(context) {
       
       // 🚨 방금 화면에서 복사하신 진짜 주소를 아래 따옴표 안에 덮어씌워주세요!
       // (주의: 맨 뒤에 슬래시(/)가 있다면 빼고 넣어주시는게 깔끔합니다)
-      const r2PublicDomain = "https://여기에-복사한-주소를-붙여넣으세요"; 
+      const r2PublicDomain = "https://pub-1234abcd5678efgh.r2.dev"; 
       
       newImageUrl = `${r2PublicDomain}/${fileName}`; 
     }
