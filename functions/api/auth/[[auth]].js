@@ -10,7 +10,6 @@ export const auth = (env) => betterAuth({
     },
     baseURL: env.BETTER_AUTH_URL, 
     secret: env.BETTER_AUTH_SECRET,
-    // ⭐ 이 부분을 추가합니다! (서버 로그 강제 출력)
     logger: {
         level: "debug"
     },
@@ -22,6 +21,12 @@ export const auth = (env) => betterAuth({
         naver: {
             clientId: env.NAVER_CLIENT_ID,
             clientSecret: env.NAVER_CLIENT_SECRET,
+            // ⭐️ 클라우드플레어 환경에서 통신 성공률을 높이기 위한 옵션
+            fetchOptions: {
+                headers: {
+                    'User-Agent': 'KIPNB-Auth-Client/1.0', // 봇 차단 방지
+                }
+            }
         },
         kakao: {
             clientId: env.KAKAO_CLIENT_ID,
@@ -36,10 +41,32 @@ export const auth = (env) => betterAuth({
                 defaultValue: "일반 회원" 
             }
         }
+    },
+    // ⭐️ 에러 발생 시 숨기지 않고 강제로 로그에 찍어버리는 훅(Hook)
+    hooks: {
+        after: async (context) => {
+            if (context.response instanceof Response && !context.response.ok) {
+                try {
+                    const errorText = await context.response.clone().text();
+                    console.error("[BETTER-AUTH CRITICAL ERROR]:", context.response.status, errorText);
+                } catch (e) {
+                    console.error("[BETTER-AUTH CRITICAL ERROR]: Could not parse error response", e);
+                }
+            }
+        }
     }
 });
 
 export async function onRequest(context) {
     const { env, request } = context;
-    return auth(env).handler(request);
+    try {
+        return await auth(env).handler(request);
+    } catch (error) {
+        // 가장 바깥쪽에서 서버가 죽는 에러를 잡습니다.
+        console.error("[FATAL SERVER ERROR]:", error);
+        return new Response(JSON.stringify({ error: "Fatal Server Error", details: error.message }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" }
+        });
+    }
 }
