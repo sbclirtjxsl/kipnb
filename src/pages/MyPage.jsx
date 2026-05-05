@@ -1,22 +1,19 @@
+// MyPage.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authClient } from '../auth-client'; 
-// ✅ 헤더 컴포넌트 경로 확인 (사용자 환경에 맞춤)
 import Header from '../components/Header'; 
 
 const MyPage = () => {
   const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
 
-  // ✅ 실제 탈퇴 및 연동 해제 로직
   const handleWithdrawal = async () => {
-    // 경고 문구에서 하드코딩된 '네이버' 제거
     if (!window.confirm('정말 연동을 해제하고 탈퇴하시겠습니까?\n탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.')) {
       return;
     }
 
     try {
-      // 1. 백엔드 탈퇴 API 호출
       const response = await fetch('/api/auth/withdraw', {
         method: 'POST',
         headers: {
@@ -25,11 +22,8 @@ const MyPage = () => {
       });
 
       if (response.ok) {
-        // 2. 성공 시 프론트엔드 세션 로그아웃
         await authClient.signOut();
         alert('연동 해제 및 탈퇴가 완료되었습니다.');
-        
-        // 3. 메인 페이지로 이동 (상태 초기화를 위해 강제 이동)
         window.location.href = '/'; 
       } else {
         const errorData = await response.json();
@@ -67,7 +61,6 @@ const MyPage = () => {
       );
     }
 
-    // ✅ 연동 계정 정보를 동적으로 가져오는 함수
     const getProviderInfo = () => {
       const provider = session?.user?.provider || 'unknown'; 
       const emailDomain = session?.user?.email?.split('@')[1]?.toLowerCase() || '';
@@ -96,17 +89,13 @@ const MyPage = () => {
           <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
             <div className="relative group">
               <img 
-                // ✅ 핵심: session.user.image가 로그인 시 저장된 소셜 프로필 이미지 URL입니다.
-                // 만약 이미지가 없다면 기본 아이콘이나 대체 이미지를 보여주도록 설정합니다.
                 src={session?.user?.image || 'https://via.placeholder.com/150?text=No+Image'} 
                 alt="프로필" 
                 className="w-32 h-32 rounded-3xl object-cover border-4 border-bg-base shadow-xl"
-                // ✅ 네이버 등 외부 이미지 로드 실패 시를 대비한 보안 로직
                 onError={(e) => {
                   e.target.src = 'https://via.placeholder.com/150?text=Profile'; 
                 }}
               />
-              {/* 이미지 위 오버레이 (디자인 요소) */}
               <div className="absolute inset-0 bg-black/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
             </div>
 
@@ -123,7 +112,35 @@ const MyPage = () => {
                   <span className="text-xs font-bold text-txt-muted w-16 uppercase">이메일</span>
                   <span className="text-sm font-medium">{session.user.email}</span>
                 </div>
-                {/* ✅ 동적으로 연동계정 정보 렌더링 적용 */}
+
+                {/* ✅ 연락처 렌더링 */}
+                {session.user.mobile && (
+                  <div className="flex items-center justify-center md:justify-start gap-3 text-txt-secondary">
+                    <span className="text-xs font-bold text-txt-muted w-16 uppercase">연락처</span>
+                    <span className="text-sm font-medium">{session.user.mobile}</span>
+                  </div>
+                )}
+
+                {/* ✅ 성별 렌더링 (M, F 변환) */}
+                {session.user.gender && (
+                  <div className="flex items-center justify-center md:justify-start gap-3 text-txt-secondary">
+                    <span className="text-xs font-bold text-txt-muted w-16 uppercase">성별</span>
+                    <span className="text-sm font-medium">
+                      {session.user.gender === 'M' ? '남성' : session.user.gender === 'F' ? '여성' : '선택안함'}
+                    </span>
+                  </div>
+                )}
+
+                {/* ✅ 생년월일 렌더링 */}
+                {session.user.birthday && (
+                  <div className="flex items-center justify-center md:justify-start gap-3 text-txt-secondary">
+                    <span className="text-xs font-bold text-txt-muted w-16 uppercase">생년월일</span>
+                    <span className="text-sm font-medium">
+                      {session.user.birthyear ? `${session.user.birthyear}-${session.user.birthday}` : session.user.birthday}
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-center md:justify-start gap-3 text-txt-secondary">
                   <span className="text-xs font-bold text-txt-muted w-16 uppercase">연동계정</span>
                   <span className="text-sm font-medium flex items-center gap-1.5">
@@ -154,7 +171,6 @@ const MyPage = () => {
               </button>
             </div>
 
-            {/* ✅ 탈퇴 함수 호출 부분 (기존과 동일) */}
             <button 
               onClick={handleWithdrawal}
               className="text-xs font-bold text-txt-muted hover:text-red-500 underline underline-offset-4 transition-colors"
