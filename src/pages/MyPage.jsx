@@ -1,3 +1,4 @@
+// MyPage.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authClient } from '../auth-client'; 
@@ -119,11 +120,41 @@ const MyPage = () => {
               </div>
 
               <div className="space-y-3">
+                {/* 이메일 */}
                 <div className="flex items-center justify-center md:justify-start gap-3 text-txt-secondary">
                   <span className="text-xs font-bold text-txt-muted w-16 uppercase">이메일</span>
                   <span className="text-sm font-medium">{session.user.email}</span>
                 </div>
-                {/* ✅ 동적으로 연동계정 정보 렌더링 적용 */}
+
+                {/* ✅ 추가: 휴대전화번호 */}
+                {session.user.mobile && (
+                  <div className="flex items-center justify-center md:justify-start gap-3 text-txt-secondary">
+                    <span className="text-xs font-bold text-txt-muted w-16 uppercase">연락처</span>
+                    <span className="text-sm font-medium">{session.user.mobile}</span>
+                  </div>
+                )}
+
+                {/* ✅ 추가: 성별 (M, F 변환) */}
+                {session.user.gender && (
+                  <div className="flex items-center justify-center md:justify-start gap-3 text-txt-secondary">
+                    <span className="text-xs font-bold text-txt-muted w-16 uppercase">성별</span>
+                    <span className="text-sm font-medium">
+                      {session.user.gender === 'M' ? '남성' : session.user.gender === 'F' ? '여성' : '선택안함'}
+                    </span>
+                  </div>
+                )}
+
+                {/* ✅ 추가: 생년월일 (출생연도 + 생일) */}
+                {session.user.birthday && (
+                  <div className="flex items-center justify-center md:justify-start gap-3 text-txt-secondary">
+                    <span className="text-xs font-bold text-txt-muted w-16 uppercase">생년월일</span>
+                    <span className="text-sm font-medium">
+                      {session.user.birthyear ? `${session.user.birthyear}-${session.user.birthday}` : session.user.birthday}
+                    </span>
+                  </div>
+                )}
+
+                {/* 연동계정 */}
                 <div className="flex items-center justify-center md:justify-start gap-3 text-txt-secondary">
                   <span className="text-xs font-bold text-txt-muted w-16 uppercase">연동계정</span>
                   <span className="text-sm font-medium flex items-center gap-1.5">
