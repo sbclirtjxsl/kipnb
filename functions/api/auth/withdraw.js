@@ -6,10 +6,10 @@ export async function onRequestPost(context) {
   const { env, request } = context;
 
   try {
-    // ✅ 핵심 수정: auth(env)를 호출하여 실제 betterAuth 인스턴스를 생성합니다.
+    // [수정 1] env를 주입하여 betterAuth 인스턴스를 정상적으로 생성합니다.
     const authInstance = auth(env);
 
-    // ✅ 이제 정상적으로 인스턴스에서 세션을 가져올 수 있습니다.
+    // 이제 정상적으로 인스턴스에서 세션을 가져올 수 있습니다.
     const session = await authInstance.api.getSession({
       headers: request.headers,
     });
@@ -23,13 +23,14 @@ export async function onRequestPost(context) {
 
     const userId = session.user.id;
 
-    // 네이버 엑세스 토큰 확인 (DB 조회)
+    // [수정 2] DB 컬럼명을 스네이크 케이스(access_token)에서 카멜 케이스(accessToken)로 변경합니다.
     const account = await env.DB.prepare(
-      "SELECT access_token FROM account WHERE userId = ? AND providerId = 'naver' LIMIT 1"
+      "SELECT accessToken FROM account WHERE userId = ? AND providerId = 'naver' LIMIT 1"
     ).bind(userId).first();
 
-    if (account?.access_token) {
-      const naverRevokeUrl = `https://nid.naver.com/oauth2.0/token?grant_type=delete&client_id=${env.NAVER_CLIENT_ID}&client_secret=${env.NAVER_CLIENT_SECRET}&access_token=${account.access_token}&service_provider=NAVER`;
+    // 가져온 토큰 변수명도 accessToken으로 맞춰서 네이버 연동 해제 API를 호출합니다.
+    if (account?.accessToken) {
+      const naverRevokeUrl = `https://nid.naver.com/oauth2.0/token?grant_type=delete&client_id=${env.NAVER_CLIENT_ID}&client_secret=${env.NAVER_CLIENT_SECRET}&access_token=${account.accessToken}&service_provider=NAVER`;
       
       await fetch(naverRevokeUrl);
     }
