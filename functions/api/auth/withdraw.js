@@ -1,14 +1,16 @@
 // functions/api/auth/withdraw.js
 
-// 1. 같은 폴더에 있는 [[auth]].js 파일로부터 auth 객체를 가져옵니다.
 import { auth } from "./[[auth]]"; 
 
 export async function onRequestPost(context) {
   const { env, request } = context;
 
   try {
-    // 2. 이제 정상적으로 세션을 가져올 수 있습니다.
-    const session = await auth.api.getSession({
+    // ✅ 핵심 수정: auth(env)를 호출하여 실제 betterAuth 인스턴스를 생성합니다.
+    const authInstance = auth(env);
+
+    // ✅ 이제 정상적으로 인스턴스에서 세션을 가져올 수 있습니다.
+    const session = await authInstance.api.getSession({
       headers: request.headers,
     });
 
@@ -21,7 +23,7 @@ export async function onRequestPost(context) {
 
     const userId = session.user.id;
 
-    // 3. 네이버 엑세스 토큰 확인 (DB 조회)
+    // 네이버 엑세스 토큰 확인 (DB 조회)
     const account = await env.DB.prepare(
       "SELECT access_token FROM account WHERE userId = ? AND providerId = 'naver' LIMIT 1"
     ).bind(userId).first();
@@ -32,7 +34,7 @@ export async function onRequestPost(context) {
       await fetch(naverRevokeUrl);
     }
 
-    // 4. DB 데이터 삭제 (트랜잭션 권장)
+    // DB 데이터 삭제 (트랜잭션)
     const deleteQueries = [
       env.DB.prepare("DELETE FROM session WHERE userId = ?").bind(userId),
       env.DB.prepare("DELETE FROM account WHERE userId = ?").bind(userId),
