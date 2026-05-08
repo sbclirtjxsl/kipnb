@@ -13,10 +13,10 @@ const BF_Process = () => {
 
       <main className="flex-grow">
         
-        {/* 타이틀 영역 (사진 1처럼 좌측 정렬, 배너 없음) */}
+        {/* 타이틀 영역 */}
         <section className="pt-12 pb-6">
           <div className="max-w-[1000px] mx-auto px-6 md:px-8">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-txt-primary tracking-tight">
+            <h2 className="text-3xl font-extrabold text-txt-primary tracking-tight">
               종류 및 절차
             </h2>
           </div>
@@ -27,7 +27,8 @@ const BF_Process = () => {
           <div className="max-w-[1000px] mx-auto px-6 md:px-8">
             
             {/* 1. 예비인증 박스 */}
-            <div className="border border-bd-strong bg-bg-surface p-6 md:p-10 mb-8 shadow-sm">
+            {/* ✨ 수정됨: 테두리(border), 그림자(shadow), 여백(padding)을 모두 제거하여 평면적인 문서 스타일로 변경 */}
+            <div className="mb-16">
               
               {/* 박스 타이틀 */}
               <div className="flex items-center gap-3 mb-8">
@@ -53,19 +54,19 @@ const BF_Process = () => {
                   <div className="w-3 h-3 bg-[#facc15] rounded-full"></div>
                   <h4 className="text-[17px] font-bold text-txt-primary">인증절차</h4>
                 </div>
-                {/* 💡 모바일 화면에서 도표가 잘리지 않도록 좌우 스크롤(overflow-x-auto)을 적용했습니다. */}
-                <div className="w-full overflow-x-auto bg-bg-base rounded-lg p-4 border border-bd-subtle">
+                <div className="w-full overflow-x-auto">
                   <img 
                     src={BFProcess1} 
                     alt="예비인증 절차 도표" 
-                    className="w-full min-w-[700px] h-auto object-contain dark:invert dark:hue-rotate-180" 
+                    className="w-full min-w-[700px] h-auto object-contain auto-invert" 
                   />
                 </div>
               </div>
             </div>
 
             {/* 2. 본인증 박스 */}
-            <div className="border border-bd-strong bg-bg-surface p-6 md:p-10 shadow-sm">
+            {/* ✨ 수정됨: 테두리(border), 그림자(shadow), 여백(padding) 제거 */}
+            <div>
               
               {/* 박스 타이틀 */}
               <div className="flex items-center gap-3 mb-8">
@@ -106,11 +107,11 @@ const BF_Process = () => {
                   <div className="w-3 h-3 bg-[#facc15] rounded-full"></div>
                   <h4 className="text-[17px] font-bold text-txt-primary">인증절차</h4>
                 </div>
-                <div className="w-full overflow-x-auto bg-bg-base rounded-lg p-4 border border-bd-subtle">
+                <div className="w-full overflow-x-auto">
                   <img 
                     src={BFProcess2} 
                     alt="본인증 절차 도표" 
-                    className="w-full min-w-[700px] h-auto object-contain dark:invert dark:hue-rotate-180" 
+                    className="w-full min-w-[700px] h-auto object-contain auto-invert" 
                   />
                 </div>
               </div>

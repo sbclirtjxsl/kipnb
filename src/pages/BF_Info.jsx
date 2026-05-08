@@ -21,8 +21,8 @@ const BF_Info = () => {
         <section className="py-12 pb-24 relative z-10">
           <div className="max-w-[1000px] mx-auto px-6 md:px-8">
             
-            {/* 메인 타이틀 */}
-            <h2 className="text-3xl md:text-4xl font-extrabold text-txt-primary mb-16 tracking-tight">
+            {/* ✨ 수정됨: AA_Greeting과 동일하게 text-3xl로 크기를 고정하고 여백(mb-12)을 맞춤 */}
+            <h2 className="text-3xl font-extrabold text-txt-primary mb-6 tracking-tight">
               BF 인증개요
             </h2>
 
