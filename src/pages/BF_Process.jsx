@@ -2,98 +2,117 @@ import React from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
-const steps = [
-  { id: "01", title: "인증신청", desc: "신청서 및 설계도서 접수", icon: "📝" },
-  { id: "02", title: "서류심사", desc: "인증기준 적합성 검토", icon: "🔍" },
-  { id: "03", title: "현장실사", desc: "현장 점검 및 심사(본인증)", icon: "🏗️" },
-  { id: "04", title: "심사위원회", desc: "전문가 심사 및 의결", icon: "🤝" },
-  { id: "05", title: "인증서 교부", desc: "인증서 및 인증명판 수여", icon: "📜" },
-];
+// 💡 assets 폴더에 있는 SVG 파일들을 불러옵니다.
+import BFProcess1 from '../assets/BF_Process1.svg';
+import BFProcess2 from '../assets/BF_Process2.svg';
 
 const BF_Process = () => {
   return (
-    <div className="min-h-screen bg-bg-base font-sans text-txt-primary transition-colors duration-300">
+    <div className="min-h-screen bg-bg-base font-sans text-txt-primary transition-colors duration-300 flex flex-col">
       <Header />
 
-      <main>
-        {/* 서브 페이지 헤더 */}
-        <section className="bg-bg-base py-10">
-          <div className="max-w-[1200px] mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold text-txt-primary mb-4">인증절차</h2>
-            <div className="text-[13px] text-txt-muted flex justify-center items-center gap-2">
-              <span>장애물 없는 생활환경 인증</span>
-              <span className="text-[10px] opacity-50">&gt;</span>
-              <span className="font-bold text-brand-main">인증절차</span>
-            </div>
+      <main className="flex-grow">
+        
+        {/* 타이틀 영역 (사진 1처럼 좌측 정렬, 배너 없음) */}
+        <section className="pt-12 pb-6">
+          <div className="max-w-[1000px] mx-auto px-6 md:px-8">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-txt-primary tracking-tight">
+              종류 및 절차
+            </h2>
           </div>
         </section>
 
         {/* 본문 콘텐츠 */}
-        <section className="py-10 md:py-5">
-          <div className="max-w-[1000px] mx-auto px-4">
+        <section className="pb-24">
+          <div className="max-w-[1000px] mx-auto px-6 md:px-8">
             
-            {/* 상단 안내 문구 */}
-            <div className="text-center mb-16">
-              <h3 className="text-2xl font-bold mb-4 italic text-brand-main">"신속하고 정확한 인증 서비스를 약속드립니다."</h3>
-              <p className="text-txt-secondary break-keep leading-relaxed">
-                (사)사람과건축은 관련 법령에 의거하여 엄격하고 공정한 절차를 통해 <br className="hidden md:block" />
-                모두가 편리한 생활환경을 조성하는 데 앞장서고 있습니다.
-              </p>
-            </div>
-
-            {/* 프로세스 맵 (가로/세로 반응형) */}
-            <div className="relative">
-              {/* PC 버전 연결선 (가로선): 다크모드 대응을 위해 border 변수 사용 */}
-              <div className="hidden md:block absolute top-[40px] left-0 w-full h-0.5 bg-bd-subtle -translate-y-1/2 z-0"></div>
+            {/* 1. 예비인증 박스 */}
+            <div className="border border-bd-strong bg-bg-surface p-6 md:p-10 mb-8 shadow-sm">
               
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-8 relative z-10">
-                {steps.map((step, idx) => (
-                  <div key={idx} className="flex flex-col items-center group">
-                    {/* 원형 아이콘 박스 */}
-                    <div className="w-20 h-20 bg-bg-surface border-2 border-bd-default rounded-full flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:border-brand-main group-hover:shadow-md transition-all duration-300 relative">
-                      {/* 스텝 넘버 뱃지: bg-gray-800 대신 테마 변수 활용 */}
-                      <span className="absolute -top-2 -left-2 w-7 h-7 bg-txt-primary text-bg-base text-[10px] flex items-center justify-center rounded-full font-bold shadow-sm">
-                        {step.id}
-                      </span>
-                      {step.icon}
-                    </div>
-                    
-                    {/* 텍스트 정보 */}
-                    <div className="text-center">
-                      <h4 className="text-lg font-bold text-txt-primary mb-2 group-hover:text-brand-main transition-colors">{step.title}</h4>
-                      <p className="text-sm text-txt-secondary break-keep leading-snug">{step.desc}</p>
-                    </div>
-
-                    {/* 모바일 버전 화살표 (세로형) */}
-                    {idx !== steps.length - 1 && (
-                      <div className="md:hidden my-4 text-bd-strong text-2xl font-light">↓</div>
-                    )}
-                  </div>
-                ))}
+              {/* 박스 타이틀 */}
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-5 h-5 bg-[#eb5a5a] rounded-sm"></div>
+                <h3 className="text-[22px] md:text-[24px] font-bold text-txt-primary tracking-tight">예비인증</h3>
               </div>
-            </div>
-
-            {/* 상세 설명 영역 */}
-            <div className="mt-24 space-y-12">
-              <div className="p-8 bg-bg-surface rounded-2xl border border-bd-subtle shadow-sm">
-                <h4 className="text-xl font-bold mb-6 flex items-center gap-2 text-txt-primary">
-                  <span className="text-brand-main">✓</span> 예비인증 및 본인증 절차 안내
-                </h4>
-                <ul className="space-y-4 text-txt-secondary list-disc ml-5 break-keep leading-relaxed">
-                  <li><strong className="text-txt-primary">접수방법:</strong> 온라인 신청 및 방문/우편 접수 가능</li>
-                  <li><strong className="text-txt-primary">소요일정:</strong> 신청서 접수일로부터 약 60일 이내 (보완기간 제외)</li>
-                  <li><strong className="text-txt-primary">심사비용:</strong> 인증 신청 대상 건축물의 면적 및 용도에 따라 산정</li>
+              
+              {/* 신청시기 */}
+              <div className="mb-10 pl-1 md:pl-2">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-3 h-3 bg-[#facc15] rounded-full"></div>
+                  <h4 className="text-[17px] font-bold text-txt-primary">신청시기</h4>
+                </div>
+                <ul className="pl-6 space-y-1.5 text-[15px] md:text-[16px] text-txt-secondary break-keep">
+                  <li>- 개별시설 또는 지역</li>
+                  <li>- 설계에 반영된 내용을 대상으로 본인증 신청 전</li>
                 </ul>
               </div>
 
-              {/* 하단 버튼 */}
-              <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <button className="w-full sm:w-auto px-8 py-4 bg-brand-main text-txt-inverse font-bold rounded-lg shadow-md hover:bg-brand-dark transition-all">
-                  인증 신청서 다운로드
-                </button>
-                <button className="w-full sm:w-auto px-8 py-4 bg-bg-surface border border-bd-strong text-txt-primary font-bold rounded-lg hover:bg-bg-surface-hover transition-all">
-                  수수료 안내 보기
-                </button>
+              {/* 인증절차 (SVG 도표) */}
+              <div className="pl-1 md:pl-2">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-3 h-3 bg-[#facc15] rounded-full"></div>
+                  <h4 className="text-[17px] font-bold text-txt-primary">인증절차</h4>
+                </div>
+                {/* 💡 모바일 화면에서 도표가 잘리지 않도록 좌우 스크롤(overflow-x-auto)을 적용했습니다. */}
+                <div className="w-full overflow-x-auto bg-bg-base rounded-lg p-4 border border-bd-subtle">
+                  <img 
+                    src={BFProcess1} 
+                    alt="예비인증 절차 도표" 
+                    className="w-full min-w-[700px] h-auto object-contain dark:invert dark:hue-rotate-180" 
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 2. 본인증 박스 */}
+            <div className="border border-bd-strong bg-bg-surface p-6 md:p-10 shadow-sm">
+              
+              {/* 박스 타이틀 */}
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-5 h-5 bg-[#eb5a5a] rounded-sm"></div>
+                <h3 className="text-[22px] md:text-[24px] font-bold text-txt-primary tracking-tight">본인증</h3>
+              </div>
+              
+              {/* 신청시기 */}
+              <div className="mb-10 pl-1 md:pl-2">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-3 h-3 bg-[#facc15] rounded-full"></div>
+                  <h4 className="text-[17px] font-bold text-txt-primary">신청시기</h4>
+                </div>
+                
+                <div className="pl-6 text-[15px] md:text-[16px] text-txt-secondary leading-relaxed break-keep">
+                  <div className="mb-1">- 개별시설</div>
+                  <ul className="pl-4 mb-4 space-y-1.5">
+                    <li className="relative pl-3 before:absolute before:left-0 before:content-['·'] font-medium">
+                      장애인등편의법 제7조에 따른 대상시설, 교통약자법 제9조에 따른 여객시설 및 도로: 개별시설의 공사를 완료한 후
+                    </li>
+                    <li className="relative pl-3 before:absolute before:left-0 before:content-['·'] font-medium">
+                      교통약자법 제9조에 따른 교통수단: 「자동차관리법」 제5조에 따른 등록, 「선박법」 제8조에 따른 등록 및 「항공법」 제3조에 따른 등록 또는 그 밖의 법령에 따라 운행허가를 받은 이후
+                    </li>
+                  </ul>
+                  
+                  <div className="mb-1">- 지역</div>
+                  <ul className="pl-4 space-y-1.5">
+                    <li className="relative pl-3 before:absolute before:left-0 before:content-['·'] font-medium">
+                      지역: 「국토의 계획 및 이용에 관한 법률」 제98조 또는 그 밖의 법령에 따른 공사 등의 완료 후
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* 인증절차 (SVG 도표) */}
+              <div className="pl-1 md:pl-2">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-3 h-3 bg-[#facc15] rounded-full"></div>
+                  <h4 className="text-[17px] font-bold text-txt-primary">인증절차</h4>
+                </div>
+                <div className="w-full overflow-x-auto bg-bg-base rounded-lg p-4 border border-bd-subtle">
+                  <img 
+                    src={BFProcess2} 
+                    alt="본인증 절차 도표" 
+                    className="w-full min-w-[700px] h-auto object-contain dark:invert dark:hue-rotate-180" 
+                  />
+                </div>
               </div>
             </div>
 

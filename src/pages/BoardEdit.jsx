@@ -14,13 +14,11 @@ const BoardEdit = () => {
   const params = useParams();
   const navigate = useNavigate();
   
-  // ⭐ 이중 안전장치: App.jsx에서 라우터 변수명이 다를 경우를 대비해 URL 끝에서 번호를 직접 뽑아냅니다.
   const pathParts = window.location.pathname.split('/').filter(Boolean);
   const urlId = pathParts[pathParts.length - 1];
   const id = params.id || params.postId || params.boardId || urlId;
   const category = params.category || pathParts[pathParts.length - 3];
   
-  // 관리자 권한 확인
   const { data: session } = authClient.useSession();
   const isAdmin = session?.user?.role === '관리자' || session?.user?.role === '운영진';
 
@@ -40,21 +38,17 @@ const BoardEdit = () => {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        // ⭐ 캐시 무시 (항상 최신 DB 값을 가져오도록 방어)
         const res = await fetch(`/api/board-detail?id=${id}&t=${Date.now()}`);
         if (res.ok) {
           const rawData = await res.json();
-          // 백엔드가 배열을 주든 객체를 주든 무조건 알맹이를 빼오도록 방어
           const data = Array.isArray(rawData) ? rawData[0] : (rawData.post || rawData);
           
-          // 데이터가 비어있을 경우 경고창 띄우기
           if (!data || !data.title) {
-            alert("기존 글 데이터를 불러오지 못했습니다. 주소를 확인해주세요.");
+            alert("기존 글 데이터를 불러오지 못했습니다.");
             navigate(-1);
             return;
           }
 
-          // ⭐ 빈칸 방지: 데이터가 있으면 상태값에 완벽하게 세팅
           setTitle(data.title || '');
           setContent(data.content || '');
           
@@ -87,7 +81,6 @@ const BoardEdit = () => {
     if (id) fetchPost();
   }, [id, navigate]);
 
-  // 첨부파일 핸들러
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     setNewImages(prev => [...prev, ...files]);
@@ -168,67 +161,79 @@ const BoardEdit = () => {
     }
   };
 
-  if (loading) return <div className="min-h-screen flex justify-center items-center">불러오는 중...</div>;
+  if (loading) return <div className="min-h-screen bg-bg-base flex justify-center items-center text-txt-primary">불러오는 중...</div>;
 
   return (
-    <div className="min-h-screen bg-[#2a2a2a] flex flex-col font-sans">
+    <div className="min-h-screen bg-bg-base flex flex-col font-sans transition-colors duration-300">
       <Header />
       <main className="flex-grow py-10">
         <div className="max-w-[800px] mx-auto px-4">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-            <h1 className="text-2xl font-extrabold mb-6 border-b pb-4">
+          <div className="bg-bg-surface rounded-2xl shadow-sm border border-bd-default p-8 transition-colors">
+            <h1 className="text-2xl font-extrabold mb-6 border-b border-bd-default pb-4 text-txt-primary">
               {boardNames[category] || '게시판'} 글 수정
             </h1>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">제목</label>
-                <input type="text" value={title || ''} onChange={(e) => setTitle(e.target.value)} required className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#317F81] outline-none" />
+                <label className="block text-sm font-bold text-txt-primary mb-2">제목</label>
+                <input 
+                  type="text" 
+                  value={title || ''} 
+                  onChange={(e) => setTitle(e.target.value)} 
+                  required 
+                  className="w-full px-4 py-3 border border-bd-default bg-bg-base text-txt-primary rounded-lg focus:ring-2 focus:ring-brand-main outline-none transition-colors" 
+                />
               </div>
 
               {isAdmin && (
-                <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-100">
-                  <label className="block text-sm font-bold text-yellow-900 mb-2">
-                    👑 [관리자 전용] 작성 일자 수정 (달력 선택)
+                <div className="p-4 bg-brand-main/5 rounded-xl border border-brand-main/20">
+                  <label className="block text-sm font-bold text-brand-main mb-2">
+                    👑 [관리자 전용] 작성 일자 수정
                   </label>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                     <input
                       type="datetime-local"
                       value={customDate || ''}
                       onChange={(e) => setCustomDate(e.target.value)}
-                      className="px-4 py-2 border border-yellow-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-yellow-200"
+                      className="px-4 py-2 border border-bd-default bg-bg-base text-txt-primary rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand-main transition-colors"
                     />
-                    <p className="text-xs text-yellow-700">변경 시 게시판 목록에서 해당 날짜 순서로 재배치됩니다.</p>
+                    <p className="text-xs text-txt-muted">변경 시 게시판 목록에서 해당 날짜 순서로 재배치됩니다.</p>
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">내용</label>
+                <label className="block text-sm font-bold text-txt-primary mb-2">내용</label>
                 <textarea 
                   value={content || ''} 
                   onChange={(e) => setContent(e.target.value)} 
                   required 
                   rows={12}
                   placeholder="내용을 입력해 주세요..."
-                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#317F81] outline-none resize-y" 
+                  className="w-full px-4 py-3 border border-bd-default bg-bg-base text-txt-primary rounded-lg focus:ring-2 focus:ring-brand-main outline-none resize-y transition-colors" 
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">사진 첨부 (다중 선택 가능)</label>
-                <input type="file" accept="image/*" multiple onChange={handleImageChange} className="w-full px-4 py-2 border rounded-lg bg-gray-50" />
+                <label className="block text-sm font-bold text-txt-primary mb-2">사진 첨부</label>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  multiple 
+                  onChange={handleImageChange} 
+                  className="w-full px-4 py-2 border border-bd-default bg-bg-base text-txt-secondary rounded-lg text-sm" 
+                />
                 
                 {(existingImages.length > 0 || newPreviewUrls.length > 0) && (
                   <div className="flex flex-wrap gap-3 mt-4">
                     {existingImages.map((url, idx) => (
-                      <div key={`exist-img-${idx}`} className="relative border rounded-lg overflow-hidden w-24 h-24">
+                      <div key={`exist-img-${idx}`} className="relative border border-bd-default rounded-lg overflow-hidden w-24 h-24">
                         <img src={url} alt="기존 이미지" className="w-full h-full object-cover" />
                         <button type="button" onClick={() => removeExistingImage(idx)} className="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full text-xs hover:bg-red-600">✕</button>
                       </div>
                     ))}
                     {newPreviewUrls.map((url, idx) => (
-                      <div key={`new-img-${idx}`} className="relative border rounded-lg overflow-hidden w-24 h-24">
+                      <div key={`new-img-${idx}`} className="relative border border-bd-default rounded-lg overflow-hidden w-24 h-24">
                         <img src={url} alt="새 이미지" className="w-full h-full object-cover" />
                         <button type="button" onClick={() => removeNewImage(idx)} className="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full text-xs hover:bg-red-600">✕</button>
                       </div>
@@ -238,23 +243,28 @@ const BoardEdit = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">일반 파일 첨부 (다중 선택 가능)</label>
-                <input type="file" multiple onChange={handleFileChange} className="w-full px-4 py-2 border rounded-lg bg-gray-50" />
+                <label className="block text-sm font-bold text-txt-primary mb-2">일반 파일 첨부</label>
+                <input 
+                  type="file" 
+                  multiple 
+                  onChange={handleFileChange} 
+                  className="w-full px-4 py-2 border border-bd-default bg-bg-base text-txt-secondary rounded-lg text-sm" 
+                />
                 
                 {(existingFiles.length > 0 || newFiles.length > 0) && (
-                  <div className="mt-4 flex flex-col gap-2 text-sm text-gray-600">
+                  <div className="mt-4 flex flex-col gap-2 text-sm">
                     {existingFiles.map((url, idx) => {
                        const fileName = decodeURIComponent(url.split('/').pop() || `기존파일_${idx+1}`);
                        return (
-                         <div key={`exist-file-${idx}`} className="flex items-center justify-between bg-gray-100 px-4 py-2 rounded-lg border">
+                         <div key={`exist-file-${idx}`} className="flex items-center justify-between bg-bg-surface px-4 py-2 rounded-lg border border-bd-default text-txt-secondary">
                            <span className="truncate max-w-[80%]">💾 {fileName}</span>
                            <button type="button" onClick={() => removeExistingFile(idx)} className="text-red-500 hover:text-red-700 font-bold">삭제</button>
                          </div>
                        );
                     })}
                     {newFiles.map((file, idx) => (
-                      <div key={`new-file-${idx}`} className="flex items-center justify-between bg-green-50 px-4 py-2 rounded-lg border border-green-200">
-                        <span className="truncate max-w-[80%] text-green-700">새 파일: {file.name}</span>
+                      <div key={`new-file-${idx}`} className="flex items-center justify-between bg-brand-main/5 px-4 py-2 rounded-lg border border-brand-main/20 text-brand-main">
+                        <span className="truncate max-w-[80%]">새 파일: {file.name}</span>
                         <button type="button" onClick={() => removeNewFile(idx)} className="text-red-500 hover:text-red-700 font-bold">삭제</button>
                       </div>
                     ))}
@@ -262,9 +272,19 @@ const BoardEdit = () => {
                 )}
               </div>
 
-              <div className="flex justify-end gap-3 mt-4 pt-4 border-t">
-                <button type="button" onClick={() => navigate(-1)} className="px-6 py-3 font-bold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">취소</button>
-                <button type="submit" disabled={isSubmitting} className={`px-8 py-3 font-bold text-white rounded-lg transition-colors ${isSubmitting ? "bg-gray-400" : "bg-[#317F81] hover:bg-[#256062]"}`}>
+              <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-bd-default">
+                <button 
+                  type="button" 
+                  onClick={() => navigate(-1)} 
+                  className="px-6 py-3 font-bold text-txt-secondary bg-bg-surface border border-bd-default rounded-lg hover:bg-bg-surface-hover transition-colors"
+                >
+                  취소
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting} 
+                  className={`px-8 py-3 font-bold text-txt-inverse rounded-lg transition-all ${isSubmitting ? "bg-txt-muted" : "bg-brand-main hover:bg-brand-dark shadow-md"}`}
+                >
                   {isSubmitting ? "수정 중..." : "수정 완료"}
                 </button>
               </div>

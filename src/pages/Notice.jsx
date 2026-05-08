@@ -100,8 +100,8 @@ const Notice = () => {
       <Header />
       <main className="flex-grow">
         {/* 상단 타이틀 및 배너 영역 (기존과 동일) */}
-        <section className="max-w-[900px] mx-auto pt-4 pb-4 px-4 text-center">
-          <h2 className="text-3xl font-extrabold text-txt-primary mb-2 tracking-tight">
+        <section className="max-w-[900px] mx-auto pt-10 pb-4 px-4 text-center">
+          <h2 className="text-3xl font-extrabold text-txt-primary mb-4 tracking-tight">
             {category === 'search' && globalQuery ? `'${globalQuery}' 검색 결과` : currentBoard?.title}
           </h2>
           <p className="text-txt-secondary text-sm font-medium mb-4">

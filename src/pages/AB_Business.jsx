@@ -58,82 +58,84 @@ const businessData = [
 
 const AB_Business = () => {
   return (
-    <div className="min-h-screen bg-bg-base font-sans text-txt-primary overflow-x-hidden transition-colors duration-300">
+    <div className="min-h-screen bg-bg-base font-sans text-txt-primary overflow-x-hidden transition-colors duration-300 flex flex-col">
       <Header />
 
-      <main className="relative">
-        {/* 서브 페이지 헤더 */}
-        <section className="py-10 text-center">
-          <h2 className="text-3xl font-bold mb-3 text-txt-primary">사업분야</h2>
-          <div className="text-sm text-txt-muted flex justify-center items-center gap-2">
+      <main className="relative flex-grow">
+        
+        {/* 상단 타이틀 및 배너 영역 (Notice.jsx, AA_Greeting.jsx와 완벽 통일) */}
+        <section className="max-w-[900px] mx-auto pt-10 pb-4 px-4 text-center">
+          <h2 className="text-3xl font-extrabold text-txt-primary mb-4 tracking-tight">
+            사업분야
+          </h2>
+          
+          <div className="text-sm text-txt-muted flex justify-center items-center gap-2 mb-4 font-medium">
             <span>사람과건축 소개</span> 
             <span className="text-[10px] opacity-50">&gt;</span> 
             <span className="font-bold text-brand-main">사업분야</span>
           </div>
-        </section>
 
-        {/* 상단 메인 이미지 */}
-        <div className="max-w-[1000px] mx-auto px-4 mb-20">
-          <div className="w-full h-[150px] md:h-[300px] rounded-xl shadow-sm border border-bd-subtle overflow-hidden">
+          <div className="w-full h-[180px] rounded-3xl overflow-hidden shadow-sm">
             <img 
               src={BusinessMainImg} 
               alt="사업 배경" 
               className="w-full h-full object-cover object-center transition-opacity duration-300 dark:opacity-90" 
             />
           </div>
-        </div>
+        </section>
 
-        {/* 💡 배경 장식 요소들: 
-          원색(red-500 등)을 쓰면 전문성이 떨어져 보일 수 있어, 
-          brand 컬러 파생 및 은은한 무채색 계열로 변경하여 다크모드에서도 자연스럽게 배경에 스며들도록 했습니다.
-        */}
+        {/* 배경 장식 요소들 */}
         <div className="absolute top-[600px] left-[-20px] w-12 h-12 bg-brand-light rounded-lg rotate-12 opacity-50 dark:opacity-10 hidden lg:block"></div>
         <div className="absolute top-[800px] left-[5%] text-bd-strong text-4xl opacity-30 dark:opacity-20 hidden lg:block">★</div>
         <div className="absolute bottom-[200px] left-[10%] w-16 h-16 bg-bd-subtle rounded-full opacity-60 dark:opacity-10 hidden lg:block"></div>
         <div className="absolute top-[900px] right-[5%] w-10 h-10 bg-brand-main rounded-full opacity-20 dark:opacity-10 hidden lg:block"></div>
 
         {/* 사업 리스트 (타임라인 스타일) */}
-        <section className="pb-24 relative z-10">
-          <div className="max-w-[900px] mx-auto px-6">
-            <p className="text-center text-[15px] md:text-[16px] text-txt-secondary mb-16 break-keep leading-relaxed">
+        <section className="py-6 pb-24 relative z-10">
+          <div className="max-w-[1100px] mx-auto px-6">
+            
+            {/* ✨ 수정된 부분: text-left로 변경, 폰트 크기 증가(text-lg/xl), 타임라인과 정렬을 맞추기 위한 pl 추가 */}
+            <p className="text-left text-[18px] md:text-[20px] font-medium text-txt-secondary mb-12 break-keep leading-relaxed pl-0 md:pl-12 lg:pl-24">
               사단법인 사람과 건축은 다음과 같은 사업과 활동을 통해 목적을 달성하고자 합니다.
             </p>
 
-            {/* 타임라인 축: border-bd-default 적용 */}
-            <div className="relative border-l-2 border-bd-default ml-4 md:ml-8 space-y-16">
-              {businessData.map((item) => (
-                <div key={item.id} className="relative pl-10 group">
-                  {/* 💡 타임라인 포인트: 
-                    각기 다른 원색 대신, 전문적인 brand-main 컬러로 통일.
-                    ring(테두리)을 주어 선과 겹치는 부분을 깔끔하게 파냈습니다.
-                  */}
-                  <div className="absolute left-[-9px] top-1 w-4 h-4 rounded-full bg-brand-main shadow-sm ring-4 ring-bg-base transition-colors duration-300 group-hover:bg-brand-dark"></div>
-                  
-                  {/* 제목 */}
-                  <div className="flex items-start gap-3 mb-4">
-                    <span className="inline-flex items-center justify-center border border-bd-strong text-txt-secondary rounded-full min-w-[24px] h-[24px] text-xs font-bold mt-0.5 bg-bg-surface transition-colors">
-                      {item.id}
-                    </span>
-                    <h4 className="text-[17px] font-bold text-txt-primary leading-snug group-hover:text-brand-main transition-colors">
-                      {item.title}
-                    </h4>
-                  </div>
+            {/* 타임라인 컨테이너 (기존 pl 설정 유지) */}
+            <div className="w-full pl-0 md:pl-12 lg:pl-24">
+              <div className="relative border-l-2 border-bd-default ml-2 md:ml-4 space-y-16">
+                {/* ... 이하 businessData.map 부분 동일 ... */}
+                {businessData.map((item) => (
+                  <div key={item.id} className="relative pl-10 md:pl-12 group">
+                    
+                    {/* 타임라인 포인트 */}
+                    <div className="absolute left-[-9px] top-1 w-4 h-4 rounded-full bg-brand-main shadow-sm ring-4 ring-bg-base transition-colors duration-300 group-hover:bg-brand-dark"></div>
+                    
+                    {/* 제목 */}
+                    <div className="flex items-start gap-3 mb-4">
+                      <span className="inline-flex items-center justify-center border border-bd-strong text-txt-secondary rounded-full min-w-[24px] h-[24px] text-xs font-bold mt-0.5 bg-bg-surface transition-colors">
+                        {item.id}
+                      </span>
+                      <h4 className="text-[17px] font-bold text-txt-primary leading-snug pr-4 group-hover:text-brand-main transition-colors break-keep">
+                        {item.title}
+                      </h4>
+                    </div>
 
-                  {/* 서브 리스트 */}
-                  {item.subItems.length > 0 && (
-                    <ul className="space-y-2 ml-1">
-                      {item.subItems.map((sub, sIdx) => (
-                        <li key={sIdx} className="text-[14px] md:text-[15px] text-txt-secondary leading-relaxed break-keep pl-4 -indent-4">
-                          {sub}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              ))}
+                    {/* 서브 리스트 (가, 나, 다 들여쓰기 적용) */}
+                    {item.subItems.length > 0 && (
+                      <ul className="space-y-2 ml-6 md:ml-8 mt-2 pr-2 md:pr-0">
+                        {item.subItems.map((sub, sIdx) => (
+                          <li key={sIdx} className="text-[14px] md:text-[15px] text-txt-secondary leading-relaxed break-keep pl-5 -indent-5">
+                            {sub}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <p className="mt-24 text-center text-[15px] md:text-[16px] text-txt-primary font-medium leading-relaxed break-keep p-8 bg-bg-surface rounded-2xl border border-bd-subtle">
+            {/* 하단 텍스트 박스 */}
+            <p className="mt-24 text-center text-[15px] md:text-[16px] text-txt-primary font-medium leading-relaxed break-keep p-8 bg-bg-surface rounded-2xl border border-bd-subtle max-w-[900px] mx-auto">
               사단법인 사람과 건축은 다양한 분야의 전문가들과 함께 협력할 것이며, 건축 환경의 중요성을 대중에게 알리고,<br className="hidden md:block" />
               건축 환경의 미래를 위한 비전을 제시할 것입니다.
             </p>
