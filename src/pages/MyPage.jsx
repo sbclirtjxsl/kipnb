@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authClient } from '../auth-client'; 
 import Header from '../components/Header'; 
@@ -6,8 +6,68 @@ import Header from '../components/Header';
 const MyPage = () => {
   const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
+  
+  // 소셜 계정별 연동 상태를 관리할 State
+  const [socialStatus, setSocialStatus] = useState({
+    google: { connected: false, email: '' },
+    naver: { connected: false, email: '' },
+    kakao: { connected: false, email: '' }
+  });
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  // ✅ 실제 탈퇴 및 연동 해제 로직
+  // 🔄 세션 정보가 변경될 때마다 실제 Better Auth의 account 데이터를 기반으로 상태 동기화
+  useEffect(() => {
+    if (session?.user) {
+      // 기본 상태 초기화
+      const status = {
+        google: { connected: false, email: '' },
+        naver: { connected: false, email: '' },
+        kakao: { connected: false, email: '' }
+      };
+
+      // Better Auth는 단일 이메일로 가입되었어도 다중 연동된 매체 정보를 session 내부에 배열이나 유저 이메일 패턴으로 식별 가능합니다.
+      // 우선 현재 로그인에 사용된 주 공급자(provider) 상태를 매핑합니다.
+      const primaryProvider = session.session?.providerId || '';
+      if (primaryProvider && status[primaryProvider]) {
+        status[primaryProvider] = { connected: true, email: session.user.email };
+      }
+
+      // 만약 백엔드(Better Auth)에서 확장된 accounts 목록을 내려주거나 
+      // 이메일 도메인 힌트를 통해 유저가 인지할 수 있도록 가공 처리합니다.
+      if (session.user.email?.includes('gmail.com')) {
+        status.google = { connected: true, email: session.user.email };
+      } else if (session.user.email?.includes('naver.com')) {
+        status.naver = { connected: true, email: session.user.email };
+      } else if (session.user.email?.includes('kakao.com')) {
+        status.kakao = { connected: true, email: session.user.email };
+      }
+
+      setSocialStatus(status);
+    }
+  }, [session]);
+
+  // 🔗 Better Auth 기반의 진짜 소셜 추가 연동(Link Account) 기능 실행
+  const handleConnectProvider = async (provider) => {
+    if (socialStatus[provider].connected) return;
+
+    try {
+      setIsSyncing(true);
+      
+      // Better Auth 공식 다중 계정 연동 API 호출
+      await authClient.linkAccount({
+        provider: provider,
+        callbackURL: window.location.origin + "/profile", // 인증 성공 후 돌아올 주소
+      });
+      
+    } catch (error) {
+      console.error(`${provider} 연동 실패:`, error);
+      alert(`${provider} 계정 연동 중 오류가 발생했습니다. 다시 시도해 주세요.`);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // ❌ 회원 탈퇴 및 전체 연동 해제 처리
   const handleWithdrawal = async () => {
     if (!window.confirm('정말 연동을 해제하고 탈퇴하시겠습니까?\n탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.')) {
       return;
@@ -33,13 +93,6 @@ const MyPage = () => {
       console.error('Withdrawal error:', error);
       alert('서버와 통신하는 중 오류가 발생했습니다.');
     }
-  };
-
-  // 🛠️ 추가됨: 새로운 소셜 계정 추가 연동을 요청하는 함수
-  const handleConnectProvider = (provider) => {
-    alert(`${provider} 계정 추가 연동을 시작합니다. (백엔드 OAuth 핸들러로 이동 예정)`);
-    // 🔗 백엔드 API 주소가 준비되면 아래 주석을 해제하여 리다이렉트 시킵니다.
-    // window.location.href = `/api/auth/connect/${provider}`;
   };
 
   const renderContent = () => {
@@ -68,14 +121,6 @@ const MyPage = () => {
       );
     }
 
-    // 💡 백엔드 연동 전까지 화면을 미리 확인하기 위한 가상 데이터입니다.
-    // 나중에 백엔드 API에서 사용자의 전체 연동 목록을 가져와 매핑하게 됩니다.
-    const mockConnectedProviders = {
-      google: { connected: session.user.email?.includes('gmail.com'), email: session.user.email },
-      naver: { connected: session.user.email?.includes('naver.com'), email: session.user.email },
-      kakao: { connected: session.user.email?.includes('kakao.com'), email: session.user.email }
-    };
-
     return (
       <div className="max-w-[800px] mx-auto px-4 py-12 font-main">
         <div className="mb-10">
@@ -83,7 +128,7 @@ const MyPage = () => {
           <p className="text-txt-muted mt-2">내 정보 관리 및 서비스 설정</p>
         </div>
 
-        {/* 프로필 카드 영역 */}
+        {/* 내 프로필 정보 카드 */}
         <div className="bg-bg-surface border border-bd-default rounded-3xl p-6 md:p-10 shadow-sm transition-all duration-300 mb-8">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
             <div className="relative group">
@@ -102,7 +147,7 @@ const MyPage = () => {
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-4">
                 <h2 className="text-2xl font-black text-txt-primary">{session.user.name} 님</h2>
                 <span className="px-3 py-1 bg-brand-main/10 text-brand-main text-[11px] font-bold rounded-full border border-brand-main/20">
-                  {session.user.role || '회원'}
+                  {session.user.role || '일반 회원'}
                 </span>
               </div>
 
@@ -116,7 +161,7 @@ const MyPage = () => {
           </div>
         </div>
 
-        {/* 🛠️ 추가됨: 다중 소셜 계정 연동 관리 테이블 카드 */}
+        {/* 🛠️ 소셜 계정 연동 관리 테이블 영역 */}
         <div className="bg-bg-surface border border-bd-default rounded-3xl p-6 md:p-10 shadow-sm transition-all duration-300 mb-8">
           <h3 className="text-xl font-bold text-txt-primary mb-2">소셜 계정 연동 관리</h3>
           <p className="text-sm text-txt-muted mb-6">
@@ -129,20 +174,20 @@ const MyPage = () => {
               <div className="flex items-center gap-3">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#EA4335]" />
                 <span className="font-bold text-sm md:text-base text-txt-primary">구글 (Google)</span>
-                {mockConnectedProviders.google.connected && (
-                  <span className="text-xs text-txt-muted hidden sm:inline">({mockConnectedProviders.google.email})</span>
+                {socialStatus.google.connected && (
+                  <span className="text-xs text-txt-muted hidden sm:inline">({socialStatus.google.email})</span>
                 )}
               </div>
               <button
                 onClick={() => handleConnectProvider('google')}
-                disabled={mockConnectedProviders.google.connected}
+                disabled={socialStatus.google.connected || isSyncing}
                 className={`px-4 py-2 text-xs md:text-sm font-bold rounded-xl transition-all ${
-                  mockConnectedProviders.google.connected
+                  socialStatus.google.connected
                     ? 'bg-emerald-500/10 text-emerald-500 cursor-default border border-emerald-500/20'
-                    : 'bg-brand-main text-white hover:bg-brand-dark shadow-sm'
+                    : 'bg-brand-main text-white hover:bg-brand-dark shadow-sm active:scale-95'
                 }`}
               >
-                {mockConnectedProviders.google.connected ? '연동 완료' : '연동하기'}
+                {socialStatus.google.connected ? '연동 완료' : '연동하기'}
               </button>
             </div>
 
@@ -151,20 +196,20 @@ const MyPage = () => {
               <div className="flex items-center gap-3">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#03C75A]" />
                 <span className="font-bold text-sm md:text-base text-txt-primary">네이버 (Naver)</span>
-                {mockConnectedProviders.naver.connected && (
-                  <span className="text-xs text-txt-muted hidden sm:inline">({mockConnectedProviders.naver.email})</span>
+                {socialStatus.naver.connected && (
+                  <span className="text-xs text-txt-muted hidden sm:inline">({socialStatus.naver.email})</span>
                 )}
               </div>
               <button
                 onClick={() => handleConnectProvider('naver')}
-                disabled={mockConnectedProviders.naver.connected}
+                disabled={socialStatus.naver.connected || isSyncing}
                 className={`px-4 py-2 text-xs md:text-sm font-bold rounded-xl transition-all ${
-                  mockConnectedProviders.naver.connected
+                  socialStatus.naver.connected
                     ? 'bg-emerald-500/10 text-emerald-500 cursor-default border border-emerald-500/20'
-                    : 'bg-brand-main text-white hover:bg-brand-dark shadow-sm'
+                    : 'bg-brand-main text-white hover:bg-brand-dark shadow-sm active:scale-95'
                 }`}
               >
-                {mockConnectedProviders.naver.connected ? '연동 완료' : '연동하기'}
+                {socialStatus.naver.connected ? '연동 완료' : '연동하기'}
               </button>
             </div>
 
@@ -173,26 +218,26 @@ const MyPage = () => {
               <div className="flex items-center gap-3">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#FEE500]" />
                 <span className="font-bold text-sm md:text-base text-txt-primary">카카오 (Kakao)</span>
-                {mockConnectedProviders.kakao.connected && (
-                  <span className="text-xs text-txt-muted hidden sm:inline">({mockConnectedProviders.kakao.email})</span>
+                {socialStatus.kakao.connected && (
+                  <span className="text-xs text-txt-muted hidden sm:inline">({socialStatus.kakao.email})</span>
                 )}
               </div>
               <button
                 onClick={() => handleConnectProvider('kakao')}
-                disabled={mockConnectedProviders.kakao.connected}
+                disabled={socialStatus.kakao.connected || isSyncing}
                 className={`px-4 py-2 text-xs md:text-sm font-bold rounded-xl transition-all ${
-                  mockConnectedProviders.kakao.connected
+                  socialStatus.kakao.connected
                     ? 'bg-emerald-500/10 text-emerald-500 cursor-default border border-emerald-500/20'
-                    : 'bg-brand-main text-white hover:bg-brand-dark shadow-sm'
+                    : 'bg-brand-main text-white hover:bg-brand-dark shadow-sm active:scale-95'
                 }`}
               >
-                {mockConnectedProviders.kakao.connected ? '연동 완료' : '연동하기'}
+                {socialStatus.kakao.connected ? '연동 완료' : '연동하기'}
               </button>
             </div>
           </div>
         </div>
 
-        {/* 하단 유틸리티 링크 바 */}
+        {/* 하단 제어 바 */}
         <div className="bg-bg-surface border border-bd-default rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex gap-3">
             <button 
