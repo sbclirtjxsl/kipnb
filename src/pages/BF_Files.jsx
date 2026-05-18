@@ -2,9 +2,13 @@ import React from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
-//assets 폴더에 있는 SVG 파일들을 불러옵니다.
+// assets 폴더에 있는 SVG 파일들을 불러옵니다.
 import BFFiles1 from '../assets/BF_Files1.svg';
 import BFFiles2 from '../assets/BF_Files2.svg';
+
+// 📂 팩트: 경로 끝에 '?url'을 붙여 바이너리 분석 에러를 완벽히 우회합니다.
+import PreAuthFile from '../assets/file/예비인증 신청서(장애물 없는 생활환경 인증에 관한 규칙).hwp?url';
+import MainAuthFile from '../assets/file/본인증 신청서(장애물 없는 생활환경 인증에 관한 규칙).hwp?url';
 
 // 사진과 똑같은 문서 형태의 아이콘을 만들어주는 컴포넌트입니다.
 const FileIcon = () => (
@@ -43,11 +47,10 @@ const BF_Files = () => {
                     className="w-full h-auto object-contain auto-invert block" 
                   />
                   
-                  {/* 예비인증 1번 파일 링크 */}
-                  {/* 중앙 정렬 수정: translate(50%, -50%)를 사용하고 right를 조정하여 칸에 완벽한 중앙 정렬을 맞춥니다. */}
-                  {/* 수직 위치는 style의 top 퍼센트(%) 값을 살짝 조절해 보세요. */}
+                  {/* 예비인증 1번 파일 링크 (로컬 HWP 파일 다운로드) */}
                   <a 
-                    href="#" 
+                    href={PreAuthFile} 
+                    download="예비인증 신청서(장애물 없는 생활환경 인증에 관한 규칙).hwp"
                     style={{ top: '33%', right: '12.5%', transform: 'translate(250%, -70%)' }}
                     className="absolute text-txt-primary hover:text-brand-main transition-colors file-icon-wrapper"
                     title="1. 예비인증 신청공문 및 인증신청서 다운로드"
@@ -55,12 +58,14 @@ const BF_Files = () => {
                     <FileIcon />
                   </a>
 
-                  {/* 예비인증 2번 파일 링크 */}
+                  {/* 예비인증 2번 파일 링크 (외부 URL) */}
                   <a 
-                    href="#" 
+                    href="https://www.koddi.or.kr/bf/popup/popup_kind.do" 
+                    target="_blank"
+                    rel="noopener noreferrer"
                     style={{ top: '49%', right: '12.5%', transform: 'translate(250%, -30%)' }}
                     className="absolute text-txt-primary hover:text-brand-main transition-colors file-icon-wrapper"
-                    title="2. 예비인증 자체 평가서 다운로드"
+                    title="2. 예비인증 자체 평가서 다운로드 (KODDI 외부 링크)"
                   >
                     <FileIcon />
                   </a>
@@ -78,9 +83,10 @@ const BF_Files = () => {
                     className="w-full h-auto object-contain auto-invert block" 
                   />
                   
-                  {/* 본인증 1번 파일 링크 */}
+                  {/* 본인증 1번 파일 링크 (로컬 HWP 파일 다운로드) */}
                   <a 
-                    href="#" 
+                    href={MainAuthFile} 
+                    download="본인증 신청서(장애물 없는 생활환경 인증에 관한 규칙).hwp"
                     style={{ top: '36%', right: '12.5%', transform: 'translate(250%, -110%)' }}
                     className="absolute text-txt-primary hover:text-brand-main transition-colors file-icon-wrapper"
                     title="1. 본인증 신청공문 및 인증신청서 다운로드"
@@ -88,12 +94,14 @@ const BF_Files = () => {
                     <FileIcon />
                   </a>
 
-                  {/* 본인증 2번 파일 링크 */}
+                  {/* 본인증 2번 파일 링크 (외부 URL) */}
                   <a 
-                    href="#" 
+                    href="https://www.koddi.or.kr/bf/popup/popup_kind.do" 
+                    target="_blank"
+                    rel="noopener noreferrer"
                     style={{ top: '51%', right: '12.5%', transform: 'translate(250%, -60%)' }}
                     className="absolute text-txt-primary hover:text-brand-main transition-colors file-icon-wrapper"
-                    title="2. 본인증 자체 평가서 다운로드"
+                    title="2. 본인증 자체 평가서 다운로드 (KODDI 외부 링크)"
                   >
                     <FileIcon />
                   </a>
