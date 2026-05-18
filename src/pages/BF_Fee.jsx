@@ -7,6 +7,9 @@ import BFFee1 from '../assets/BF_Fee1.svg';
 import BFFee2 from '../assets/BF_Fee2.svg';
 import BFFee3 from '../assets/BF_Fee3.svg';
 
+// 📂 추가됨: PDF 파일 임포트 (경로: src/assets/file/파일명)
+import BFFeePdf from '../assets/file/[별표 8] 장애물 없는 생활환경 인증 수수료(제4조 관련).pdf';
+
 const BF_Fee = () => {
   return (
     <div className="min-h-screen bg-bg-base font-sans text-txt-primary transition-colors duration-300 flex flex-col">
@@ -17,7 +20,6 @@ const BF_Fee = () => {
         {/* 타이틀 영역 */}
         <section className="pt-12 pb-6">
           <div className="max-w-[1000px] mx-auto px-6 md:px-8">
-            {/* ✨ 수정됨: AA_Greeting 등 다른 페이지들과 통일감을 위해 제목 크기를 text-3xl로 고정 */}
             <h2 className="text-3xl font-extrabold text-txt-primary tracking-tight">
               인증 수수료
             </h2>
@@ -68,9 +70,12 @@ const BF_Fee = () => {
               
               {/* 우측 하단 첨부파일 링크 */}
               <div className="text-right">
-                {/* ✨ 수정됨: 하드코딩된 색상 대신 Tailwind v4 테마 변수(brand-main) 사용 */}
+                {/* ✨ 수정됨: href에 임포트한 BFFeePdf 변수를 넣고, 다운로드가 가능하도록 download 속성과 새창열기 속성을 추가했습니다. */}
                 <a 
-                  href="#" 
+                  href={BFFeePdf} 
+                  download="[별표 8] 장애물 없는 생활환경 인증 수수료(제4조 관련).pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-block text-brand-main hover:text-brand-dark hover:underline text-[14px] md:text-[15px] transition-colors"
                 >
                   첨부파일 : [별표 8] 장애물 없는 생활환경 인증 수수료(제4조 관련).pdf
