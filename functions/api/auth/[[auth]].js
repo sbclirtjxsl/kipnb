@@ -32,6 +32,13 @@ export const auth = (env) => betterAuth({
                 defaultValue: "일반 회원" 
             }
         }
+    },
+    // 🛠️ 추가된 부분: 다른 이메일을 사용하는 소셜 계정이라도 연동을 허용합니다.
+    account: {
+        accountLinking: {
+            enabled: true,
+            allowDifferentEmails: true, 
+        }
     }
 });
 
