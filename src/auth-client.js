@@ -1,7 +1,6 @@
-// src/auth-client.js
 import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({
-    baseURL: window.location.origin,
-    // 💡 advanced 객체는 완전히 지워주세요! SDK가 알아서 올바른 길을 찾습니다.
+    // 현재 도메인 주소를 자동 감지하여 안정적으로 엔드포인트를 매핑합니다.
+    baseURL: window.location.origin
 });
