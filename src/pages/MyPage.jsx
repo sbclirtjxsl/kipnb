@@ -4,7 +4,7 @@ import { authClient } from '../auth-client';
 import Header from '../components/Header'; 
 
 const MyPage = () => {
-  // 💡 refetch 함수를 세션에서 꺼내와 연동 후 데이터를 새로고침하도록 구조를 잡습니다.
+  // 💡 refetch 함수를 세션 구조분해 할당으로 꺼내옵니다.
   const { data: session, isPending, refetch } = authClient.useSession();
   const navigate = useNavigate();
   
@@ -15,7 +15,7 @@ const MyPage = () => {
   });
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // 🔄 세션 정보 및 내부 소셜 연동 테이블 데이터 동적 파싱
+  // 🔄 세션 정보 및 내부 소셜 연동 데이터 파싱
   useEffect(() => {
     if (session?.user) {
       const status = {
@@ -30,8 +30,7 @@ const MyPage = () => {
         status[primaryProvider] = { connected: true, email: session.user.email };
       }
 
-      // 2. 🌟 Better Auth 핵심 데이터 필드(user.accounts 배열) 완전 추적
-      // 다중 연동된 계정의 메타데이터가 이곳에 실시간 배열 구조로 담겨옵니다.
+      // 2. 🌟 Better Auth 연동 계정 배열(accounts) 실시간 동기화
       const linkedAccounts = session.user?.accounts || session?.accounts || [];
       
       if (Array.isArray(linkedAccounts) && linkedAccounts.length > 0) {
@@ -40,13 +39,12 @@ const MyPage = () => {
           if (status[provider]) {
             status[provider] = { 
               connected: true, 
-              // 디테일한 연결 이메일이 기록되어 있다면 표기하고 없으면 기본 유저 정보 연동
-              email: acc.email || (provider === 'google' ? 'moonlightonetime@gmail.com' : session.user.email)
+              email: acc.email || session.user.email
             };
           }
         });
       } else {
-        // 방어용 텍스트 유추 힌트 파서
+        // 방어용 이메일 텍스트 매칭 힌트 파서
         if (session.user.email?.includes('gmail.com')) {
           status.google = { connected: true, email: session.user.email };
         } else if (session.user.email?.includes('naver.com')) {
@@ -60,7 +58,7 @@ const MyPage = () => {
     }
   }, [session]);
 
-  // 🔗 소셜 계정 연동 핵심 핸들러
+  // 🔗 소셜 계정 연동 핸들러
   const handleConnectProvider = async (provider) => {
     if (socialStatus[provider].connected) return;
 
@@ -69,11 +67,11 @@ const MyPage = () => {
       
       await authClient.linkSocial({
         provider: provider,
-        // 💡 성공 후 404 라우팅 방지를 위해 마이페이지 경로 자체를 핀포인트로 고정합니다.
+        // 성공 후 404 라우팅 방지를 위해 마이페이지 경로를 핀포인트 고정합니다.
         callbackURL: window.location.origin + window.location.pathname, 
       });
       
-      // 세션 상태 최신화 리로드 트리거
+      // 🔄 연동 완료 후 프론트엔드 세션 상태 최신화 리로드 트리거
       if (typeof refetch === 'function') {
         await refetch();
       }
@@ -180,7 +178,7 @@ const MyPage = () => {
           </div>
         </div>
 
-        {/* 소셜 계정 연동 관리 테이블 영역 */}
+        {/* 소셜 계정 연동 관리 영역 */}
         <div className="bg-bg-surface border border-bd-default rounded-3xl p-6 md:p-10 shadow-sm transition-all duration-300 mb-8">
           <h3 className="text-xl font-bold text-txt-primary mb-2">소셜 계정 연동 관리</h3>
           <p className="text-sm text-txt-muted mb-6">
