@@ -56,7 +56,7 @@ const MyPage = () => {
       // Better Auth 공식 다중 계정 연동 API 호출
       await authClient.linkSocial({
         provider: provider,
-        callbackURL: window.location.origin + "/profile", // 인증 성공 후 돌아올 주소
+        callbackURL: window.location.origin + window.location.pathname, // 인증 성공 후 돌아올 주소
       });
       
     } catch (error) {
