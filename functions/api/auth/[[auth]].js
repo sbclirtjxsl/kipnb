@@ -33,7 +33,6 @@ export const auth = (env) => betterAuth({
             }
         }
     },
-    // 🛠️ 추가된 부분: 다른 이메일을 사용하는 소셜 계정이라도 연동을 허용합니다.
     account: {
         accountLinking: {
             enabled: true,
@@ -59,6 +58,16 @@ export async function onRequest(context) {
         } catch (e) {
             console.error(`[AUTH CRITICAL ERROR]: 로그 추출 실패`);
         }
+    }
+
+    // 🌟 [추가된 핵심 세션 방어 코드]: 소셜 로그인 완료 콜백 및 세션 체크 시 
+    // 브라우저가 옛날 인증 상태 캐시를 들고 "로그인 전" 화면을 그리는 버그를 원천 차단합니다.
+    if (request.url.includes("/callback") || request.url.includes("/session")) {
+        const newResponse = new Response(response.body, response);
+        newResponse.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+        newResponse.headers.set("Pragma", "no-cache");
+        newResponse.headers.set("Expires", "0");
+        return newResponse;
     }
 
     return response;
