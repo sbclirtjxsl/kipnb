@@ -14,7 +14,14 @@ const MyPage = () => {
   });
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // 🔄 백엔드 데이터베이스 상태와 화면 실시간 매핑
+  // 세션 강제 갱신 로직
+  useEffect(() => {
+    if (!session?.user && !isPending) {
+      if (typeof refetch === 'function') refetch();
+    }
+  }, [session, isPending, refetch]);
+
+  // 🔄 화면 상태를 오직 진짜 DB 데이터(session.accounts)로만 매핑
   useEffect(() => {
     if (session?.user) {
       const status = {
@@ -23,13 +30,11 @@ const MyPage = () => {
         kakao: { connected: false, email: '' }
       };
 
-      // 1. 현재 메인 로그인 수단 매핑
       const primaryProvider = session.session?.providerId || '';
       if (primaryProvider && status[primaryProvider]) {
         status[primaryProvider] = { connected: true, email: session.user.email };
       }
 
-      // 2. 다중 연동된 추가 계정 장부 매핑
       const linkedAccounts = session.user?.accounts || session?.accounts || [];
       if (Array.isArray(linkedAccounts) && linkedAccounts.length > 0) {
         linkedAccounts.forEach(acc => {
@@ -40,17 +45,13 @@ const MyPage = () => {
         });
       }
 
-      // 3. 최고관리자 테스트 계정 보정 방어 코드
-      if (session.user.email === 'chluge@naver.com') {
-        status.naver = { connected: true, email: 'chluge@naver.com' };
-        status.google = { connected: true, email: 'moonlightonetime@gmail.com' };
-      }
+      // 🚨 강제로 구글 불을 켜던 테스트 계정 하드코딩 완전 삭제 완료
 
       setSocialStatus(status);
     }
   }, [session]);
 
-  // 🔗 1. 소셜 계정 연동 등록 핸들러
+  // 🔗 연동하기 핸들러
   const handleConnectProvider = async (provider) => {
     if (socialStatus[provider].connected) return;
 
@@ -69,9 +70,8 @@ const MyPage = () => {
     }
   };
 
-  // ✂️ 실시간 장부 동기화 기능이 추가된 소셜 연동 해제 핸들러
+  // ✂️ 연동 해제 핸들러
   const handleDisconnectProvider = async (provider) => {
-    // 최소 1개 이상 연동 유지를 위한 체크
     const connectedCount = Object.values(socialStatus).filter(s => s.connected).length;
     if (connectedCount <= 1) {
       alert('최소 하나의 소셜 연동 계정은 유지되어야 합니다.\n다른 로그인 수단을 먼저 연동한 후 해제해 주세요.');
@@ -96,20 +96,18 @@ const MyPage = () => {
       if (response.ok) {
         alert(`${provider.toUpperCase()} 계정 연동이 성공적으로 해제되었습니다.`);
         
-        // 🌟 [핵심] 백엔드가 반환한 최신 생존 장부(activeAccounts)를 기반으로 화면 상태 즉시 강제 리매핑!
+        // 백엔드가 반환한 진짜 생존 장부만 화면에 주입
         const updatedStatus = {
           google: { connected: false, email: '' },
           naver: { connected: false, email: '' },
           kakao: { connected: false, email: '' }
         };
 
-        // 현재 주 세션 로그인 공급자 유지
         const primaryProvider = session?.session?.providerId || '';
         if (primaryProvider && updatedStatus[primaryProvider]) {
           updatedStatus[primaryProvider] = { connected: true, email: session.user.email };
         }
 
-        // DB에 실제로 살아있는 계정들만 다시 불 켜주기
         if (Array.isArray(resData.activeAccounts)) {
           resData.activeAccounts.forEach(acc => {
             const pId = acc.providerId?.toLowerCase();
@@ -119,18 +117,13 @@ const MyPage = () => {
           });
         }
 
-        // 최고관리자 테스트 계정 예외 보정 장치
-        if (session?.user?.email === 'chluge@naver.com') {
-          if (provider !== 'naver') updatedStatus.naver = { connected: true, email: 'chluge@naver.com' };
-          if (provider !== 'google') updatedStatus.google = { connected: true, email: 'moonlightonetime@gmail.com' };
-        }
-
-        // 🎯 캐시 리프레시를 기다리지 않고 화면 즉시 업데이트!
+        // 🚨 강제로 구글 불을 켜던 테스트 계정 예외 처리 삭제 완료
+        
         setSocialStatus(updatedStatus);
 
-        // 배경에서 세션 데이터 원본 동기화도 슬그머니 실행
-        if (typeof refetch === 'function') await refetch();
-
+        if (typeof refetch === 'function') {
+          await refetch();
+        }
       } else {
         alert(`연동 해제 실패: ${resData.error || '알 수 없는 오류'}`);
       }
@@ -142,7 +135,7 @@ const MyPage = () => {
     }
   };
 
-  // ❌ 3. 전면 회원 탈퇴 로직
+  // ❌ 전체 회원 탈퇴 로직
   const handleWithdrawal = async () => {
     if (!window.confirm('정말 연동을 해제하고 탈퇴하시겠습니까?\n탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.')) {
       return;
