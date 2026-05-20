@@ -69,9 +69,9 @@ const MyPage = () => {
     }
   };
 
-  // ✂️ 2. 개별 소셜 서비스 연동 해제(Unlink) 핸들러
+  // ✂️ 소셜 서비스 연동 해제(Unlink) 핸들러 수정본
   const handleDisconnectProvider = async (provider) => {
-    // 🚨 유저가 로그인 수단을 다 끊어서 낙동강 오리알이 되는 걸 방지하는 방어 로직
+    // 유저가 로그인 수단을 다 끊어서 계정이 고립되는 것을 방지하는 방어 로직
     const connectedCount = Object.values(socialStatus).filter(s => s.connected).length;
     if (connectedCount <= 1) {
       alert('최소 하나의 소셜 연동 계정은 유지되어야 합니다.\n다른 로그인 수단을 먼저 연동한 후 해제해 주세요.');
@@ -85,22 +85,31 @@ const MyPage = () => {
     try {
       setIsSyncing(true);
       
-      // Better Auth 공식 연동 해제 엔드포인트 호출
-      await authClient.unlinkAccount({
-        providerId: provider
+      // 🛠️ 400 에러 해결을 위해 우리가 만든 D1 핀포인트 연동 해제 API를 직접 호출합니다!
+      const response = await fetch('/api/auth/unlink', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ providerId: provider }),
       });
 
-      alert(`${provider.toUpperCase()} 계정 연동이 성공적으로 해제되었습니다.`);
-      
-      // 주 로그인 계정을 해제한 경우를 대비해 세션 장부 강제 전면 리프레시
-      if (typeof refetch === 'function') {
-        await refetch();
+      if (response.ok) {
+        alert(`${provider.toUpperCase()} 계정 연동이 성공적으로 해제되었습니다.`);
+        
+        // 🔄 화면 장부 최신 상태로 즉시 동기화 새로고침
+        if (typeof refetch === 'function') {
+          await refetch();
+        } else {
+          window.location.reload();
+        }
       } else {
-        window.location.reload();
+        const errData = await response.json();
+        alert(`연동 해제 실패: ${errData.error || '알 수 없는 오류'}`);
       }
     } catch (error) {
       console.error(`${provider} 연동 해제 실패:`, error);
-      alert(`${provider.toUpperCase()} 연동 해제 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.`);
+      alert(`${provider.toUpperCase()} 연동 해제 중 오류가 발생했습니다.`);
     } finally {
       setIsSyncing(false);
     }
