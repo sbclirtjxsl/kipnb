@@ -14,44 +14,57 @@ const MyPage = () => {
   });
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // 세션 강제 갱신 로직
+  // 🔄 백엔드 D1 DB로부터 진짜 연동 목록을 실시간으로 가져오는 핵심 함수
+  const loadLinkedAccounts = async () => {
+    if (!session?.user) return;
+    
+    try {
+      const response = await fetch('/api/auth/accounts');
+      if (response.ok) {
+        const resData = await response.json();
+        
+        const status = {
+          google: { connected: false, email: '' },
+          naver: { connected: false, email: '' },
+          kakao: { connected: false, email: '' }
+        };
+
+        // DB에 기록된 소셜 연동 행들을 기준으로 화면 불 켜기
+        if (Array.isArray(resData.accounts)) {
+          resData.accounts.forEach(acc => {
+            const provider = acc.providerId?.toLowerCase();
+            if (status[provider]) {
+              status[provider] = { 
+                connected: true, 
+                email: provider === 'naver' && session.user.email.includes('naver.com') 
+                  ? session.user.email 
+                  : `${provider}연동계정` 
+              };
+            }
+          });
+        }
+        setSocialStatus(status);
+      }
+    } catch (error) {
+      console.error("연동 목록 로드 실패:", error);
+    }
+  };
+
+  // 세션 체크 방어
   useEffect(() => {
     if (!session?.user && !isPending) {
       if (typeof refetch === 'function') refetch();
     }
   }, [session, isPending, refetch]);
 
-  // 🔄 화면 상태를 오직 진짜 DB 데이터(session.accounts)로만 매핑
+  // 로그인 상태가 확인되면 백엔드에서 실시간 연동 장부 가져오기
   useEffect(() => {
     if (session?.user) {
-      const status = {
-        google: { connected: false, email: '' },
-        naver: { connected: false, email: '' },
-        kakao: { connected: false, email: '' }
-      };
-
-      const primaryProvider = session.session?.providerId || '';
-      if (primaryProvider && status[primaryProvider]) {
-        status[primaryProvider] = { connected: true, email: session.user.email };
-      }
-
-      const linkedAccounts = session.user?.accounts || session?.accounts || [];
-      if (Array.isArray(linkedAccounts) && linkedAccounts.length > 0) {
-        linkedAccounts.forEach(acc => {
-          const provider = acc.providerId?.toLowerCase();
-          if (status[provider]) {
-            status[provider] = { connected: true, email: acc.email || session.user.email };
-          }
-        });
-      }
-
-      // 🚨 강제로 구글 불을 켜던 테스트 계정 하드코딩 완전 삭제 완료
-
-      setSocialStatus(status);
+      loadLinkedAccounts();
     }
   }, [session]);
 
-  // 🔗 연동하기 핸들러
+  // 연동하기 핸들러
   const handleConnectProvider = async (provider) => {
     if (socialStatus[provider].connected) return;
 
@@ -61,7 +74,6 @@ const MyPage = () => {
         provider: provider,
         callbackURL: window.location.origin + window.location.pathname, 
       });
-      if (typeof refetch === 'function') await refetch();
     } catch (error) {
       console.error(`${provider} 연동 실패:`, error);
       alert(`${provider} 계정 연동 중 오류가 발생했습니다.`);
@@ -70,7 +82,7 @@ const MyPage = () => {
     }
   };
 
-  // ✂️ 연동 해제 핸들러
+  // 연동 해제 핸들러
   const handleDisconnectProvider = async (provider) => {
     const connectedCount = Object.values(socialStatus).filter(s => s.connected).length;
     if (connectedCount <= 1) {
@@ -95,35 +107,9 @@ const MyPage = () => {
 
       if (response.ok) {
         alert(`${provider.toUpperCase()} 계정 연동이 성공적으로 해제되었습니다.`);
-        
-        // 백엔드가 반환한 진짜 생존 장부만 화면에 주입
-        const updatedStatus = {
-          google: { connected: false, email: '' },
-          naver: { connected: false, email: '' },
-          kakao: { connected: false, email: '' }
-        };
-
-        const primaryProvider = session?.session?.providerId || '';
-        if (primaryProvider && updatedStatus[primaryProvider]) {
-          updatedStatus[primaryProvider] = { connected: true, email: session.user.email };
-        }
-
-        if (Array.isArray(resData.activeAccounts)) {
-          resData.activeAccounts.forEach(acc => {
-            const pId = acc.providerId?.toLowerCase();
-            if (updatedStatus[pId]) {
-              updatedStatus[pId] = { connected: true, email: acc.email || session.user.email };
-            }
-          });
-        }
-
-        // 🚨 강제로 구글 불을 켜던 테스트 계정 예외 처리 삭제 완료
-        
-        setSocialStatus(updatedStatus);
-
-        if (typeof refetch === 'function') {
-          await refetch();
-        }
+        // 해제 완료 즉시 백엔드 실제 최신 장부로 재동기화
+        await loadLinkedAccounts();
+        if (typeof refetch === 'function') await refetch();
       } else {
         alert(`연동 해제 실패: ${resData.error || '알 수 없는 오류'}`);
       }
@@ -135,7 +121,7 @@ const MyPage = () => {
     }
   };
 
-  // ❌ 전체 회원 탈퇴 로직
+  // 회원 탈퇴
   const handleWithdrawal = async () => {
     if (!window.confirm('정말 연동을 해제하고 탈퇴하시겠습니까?\n탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.')) {
       return;
@@ -197,7 +183,7 @@ const MyPage = () => {
         {/* 내 프로필 정보 카드 */}
         <div className="bg-bg-surface border border-bd-default rounded-3xl p-6 md:p-10 shadow-sm mb-8">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-            <div className="relative group">
+            <div>
               <img 
                 src={session?.user?.image || 'https://via.placeholder.com/150?text=No+Image'} 
                 alt="프로필" 
@@ -224,7 +210,7 @@ const MyPage = () => {
           </div>
         </div>
 
-        {/* 소셜 계정 연동 및 유연한 해제 제어판 */}
+        {/* 소셜 계정 연동 및 관리 제어판 */}
         <div className="bg-bg-surface border border-bd-default rounded-3xl p-6 md:p-10 shadow-sm mb-8">
           <h3 className="text-xl font-bold text-txt-primary mb-2">소셜 계정 연동 관리</h3>
           <p className="text-sm text-txt-muted mb-6">
@@ -238,7 +224,7 @@ const MyPage = () => {
                 <div className="w-2.5 h-2.5 rounded-full bg-[#EA4335]" />
                 <span className="font-bold text-sm md:text-base text-txt-primary">구글 (Google)</span>
                 {socialStatus.google.connected && (
-                  <span className="text-xs text-emerald-500 font-semibold hidden sm:inline">(연동 완료: {socialStatus.google.email})</span>
+                  <span className="text-xs text-emerald-500 font-semibold hidden sm:inline">(연동 완료)</span>
                 )}
               </div>
               <button
@@ -260,7 +246,7 @@ const MyPage = () => {
                 <div className="w-2.5 h-2.5 rounded-full bg-[#03C75A]" />
                 <span className="font-bold text-sm md:text-base text-txt-primary">네이버 (Naver)</span>
                 {socialStatus.naver.connected && (
-                  <span className="text-xs text-emerald-500 font-semibold hidden sm:inline">(연동 완료: {socialStatus.naver.email})</span>
+                  <span className="text-xs text-emerald-500 font-semibold hidden sm:inline">(연동 완료)</span>
                 )}
               </div>
               <button
@@ -282,7 +268,7 @@ const MyPage = () => {
                 <div className="w-2.5 h-2.5 rounded-full bg-[#FEE500]" />
                 <span className="font-bold text-sm md:text-base text-txt-primary">카카오 (Kakao)</span>
                 {socialStatus.kakao.connected && (
-                  <span className="text-xs text-emerald-500 font-semibold hidden sm:inline">(연동 완료: {socialStatus.kakao.email})</span>
+                  <span className="text-xs text-emerald-500 font-semibold hidden sm:inline">(연동 완료)</span>
                 )}
               </div>
               <button
