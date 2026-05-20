@@ -26,7 +26,7 @@ export async function onRequestPost(context) {
       return new Response(JSON.stringify({ error: "해제할 소셜 공급자 정보가 없습니다." }), { status: 400 });
     }
 
-    // 3. 🛠️ 네이버 해제 시 영구 차단 버그 차단 방어막
+    // 3. 네이버 해제 시 영구 차단 방어막
     if (providerId === 'naver') {
       const account = await env.DB.prepare(
         "SELECT accessToken FROM account WHERE userId = ? AND providerId = 'naver' LIMIT 1"
@@ -39,14 +39,14 @@ export async function onRequestPost(context) {
       }
     }
 
-    // 4. 🔥 D1 데이터베이스에서 지정한 소셜 연동 행(account)만 칼같이 삭제
+    // 4. D1 데이터베이스에서 지정한 소셜 연동 행(account)만 칼같이 삭제
     await env.DB.prepare(
       "DELETE FROM account WHERE userId = ? AND providerId = ?"
     ).bind(userId, providerId).run();
 
-    // 5. 🌟 삭제 직후 현재 DB에 실제로 연동 유지 중인 목록만 새로 긁어모으기
+    // 5. 🔥 [수정 완료]: 존재하지 않는 email 컬럼을 빼고, 현재 DB에 연동 유지 중인 providerId만 안전하게 긁어옵니다.
     const { results: activeAccounts } = await env.DB.prepare(
-      "SELECT providerId, email FROM account WHERE userId = ?"
+      "SELECT providerId FROM account WHERE userId = ?"
     ).bind(userId).all();
 
     // 6. 최신 생존 장부를 프론트엔드로 즉시 전송
