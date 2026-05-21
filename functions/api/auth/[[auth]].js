@@ -37,6 +37,8 @@ export const auth = (env) => betterAuth({
         accountLinking: {
             enabled: true,
             allowDifferentEmails: true, 
+            // 🌟 추가된 핵심 코드: 이메일 인증 마크가 없어도 무조건 연동을 허용할 소셜 공급자 명시
+            trustedProviders: ["google", "naver", "kakao"]
         }
     }
 });
