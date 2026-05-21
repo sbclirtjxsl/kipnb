@@ -10,7 +10,7 @@ export async function onRequestDelete(context) {
     try {
         const numericId = parseInt(id, 10);
 
-        // 1. 🔍 DB에서 지우기 전에 먼저 해당 게시글의 정보를 가져옵니다 (R2 파일 경로 확인용)
+        // 1. DB에서 게시글 정보 가져오기
         const post = await env.DB.prepare(
             "SELECT image_url, file_url FROM board WHERE id = ?"
         ).bind(numericId).first();
@@ -19,15 +19,26 @@ export async function onRequestDelete(context) {
             return new Response(JSON.stringify({ error: "DB에 해당 게시물이 존재하지 않습니다." }), { status: 404 });
         }
 
-        // 2. 🗑️ R2 스토리지 파일 삭제 처리 함수
+        // 🌟 핵심 보완: 배열 문자열("['http...']")을 실제 자바스크립트 배열로 안전하게 변환하는 함수
+        const parseUrls = (urlData) => {
+            if (!urlData) return [];
+            try {
+                return urlData.startsWith('[') ? JSON.parse(urlData) : [urlData];
+            } catch (e) {
+                return [urlData]; // 파싱 실패 시 단일 문자열 배열로 반환
+            }
+        };
+
+        const imageUrls = parseUrls(post.image_url);
+        const fileUrls = parseUrls(post.file_url);
+
+        // 2. R2 스토리지 파일 단일 삭제 함수
         const deleteR2File = async (url) => {
             if (!url) return;
             try {
-                // URL 주소에서 도메인을 제외한 실제 파일명/경로(Key)만 추출합니다.
                 const urlObj = new URL(url);
                 const fileKey = decodeURIComponent(urlObj.pathname.substring(1));
 
-                // 🌟 핵심 변경: env.R2가 아니라 env.MY_R2 로 매칭!
                 if (fileKey && env.MY_R2) {
                     await env.MY_R2.delete(fileKey);
                     console.log(`[R2 DELETE SUCCESS]: ${fileKey}`);
@@ -37,12 +48,15 @@ export async function onRequestDelete(context) {
             }
         };
 
-        // 게시글에 등록된 이미지와 파일이 있다면 R2에서 각각 삭제 요청
-        if (post.image_url) await deleteR2File(post.image_url);
-        if (post.file_url) await deleteR2File(post.file_url);
+        // 🌟 핵심 보완: 추출된 여러 개의 이미지와 파일 URL을 하나씩 순회하며 R2에서 삭제
+        for (const url of imageUrls) {
+            await deleteR2File(url);
+        }
+        for (const url of fileUrls) {
+            await deleteR2File(url);
+        }
 
-
-        // 3. 🏛️ R2 파일 처리가 끝난 후, D1 데이터베이스에서 게시글 최종 삭제
+        // 3. R2 파일 삭제 완료 후 D1 데이터베이스에서 게시글 삭제
         const result = await env.DB.prepare(
             "DELETE FROM board WHERE id = ?"
         ).bind(numericId).run();
