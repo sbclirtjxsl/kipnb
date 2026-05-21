@@ -50,12 +50,13 @@ const MyPage = () => {
     }
   };
 
-  // 세션 체크 방어
+  // ✅ [수정] 무한 루프 방어 및 비로그인 유저 리다이렉트 처리
   useEffect(() => {
-    if (!session?.user && !isPending) {
-      if (typeof refetch === 'function') refetch();
+    // 로딩이 끝났는데 유저 정보가 없다면 자동으로 로그인 페이지로 이동시킵니다.
+    if (!isPending && !session?.user) {
+      navigate('/login');
     }
-  }, [session, isPending, refetch]);
+  }, [session, isPending, navigate]);
 
   // 로그인 상태가 확인되면 백엔드에서 실시간 연동 장부 가져오기
   useEffect(() => {
@@ -107,7 +108,6 @@ const MyPage = () => {
 
       if (response.ok) {
         alert(`${provider.toUpperCase()} 계정 연동이 성공적으로 해제되었습니다.`);
-        // 해제 완료 즉시 백엔드 실제 최신 장부로 재동기화
         await loadLinkedAccounts();
         if (typeof refetch === 'function') await refetch();
       } else {
@@ -157,20 +157,7 @@ const MyPage = () => {
     }
 
     if (!session?.user) {
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 px-4 font-main">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-txt-primary mb-2">로그인이 필요합니다</h2>
-            <p className="text-txt-secondary">마이페이지는 로그인 후 이용하실 수 있습니다.</p>
-          </div>
-          <button 
-            onClick={() => navigate('/login')}
-            className="px-8 py-3 bg-brand-main text-white font-bold rounded-xl hover:bg-brand-dark transition-all shadow-lg"
-          >
-            로그인 페이지로 이동
-          </button>
-        </div>
-      );
+      return null; // useEffect에서 리다이렉트하므로 무의미한 렌더링 방지
     }
 
     return (
