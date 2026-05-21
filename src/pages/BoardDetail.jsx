@@ -53,15 +53,19 @@ const BoardDetail = () => {
   const handleDelete = async () => {
     if (!window.confirm("정말로 이 게시글을 삭제하시겠습니까?")) return; 
     try {
-      const response = await fetch(`/api/board-delete?id=${post.id}`, { method: 'DELETE' });
+      // 🌟 핵심 보완: post.id가 아닌, 상단 useParams()에서 확실하게 가져온 id를 사용
+      const response = await fetch(`/api/board-delete?id=${id}`, { method: 'DELETE' });
+      
       if (response.ok) {
         alert("삭제되었습니다.");
         navigate(`/board/${category}`);
       } else {
-        alert(`삭제 실패`);
+        // 🌟 핵심 보완: 실패 시 백엔드에서 뱉어낸 진짜 이유를 화면에 띄워줌
+        const errData = await response.json();
+        alert(`삭제 실패: ${errData.error}`);
       }
     } catch (error) {
-      alert("오류 발생");
+      alert("서버 통신 중 오류가 발생했습니다.");
     }
   };
 
