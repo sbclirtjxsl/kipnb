@@ -219,22 +219,29 @@ const MyPage = () => {
   };
 
   // ⭐ 회원 등급 변경 실행 (API 연동 준비 완료)
+  // ⭐ 회원 등급 변경 실행 (실제 API 연동 완료)
   const handleRoleChange = async (userId, newRole) => {
     try {
-      // API가 아직 없으므로 선반영(Optimistic Update)만 실행하여 UI 테스트부터 진행
-      // API 완성 후 아래 주석을 풀 예정입니다.
-      /*
+      // 1. 백엔드 API로 실제 D1 업데이트 요청
       const response = await fetchWithSecurity('/api/auth/update-role', {
         method: 'POST',
         body: JSON.stringify({ userId, newRole })
       });
-      if (!response.ok) throw new Error('ROLE_UPDATE_FAILED');
-      */
       
+      const resData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(resData.error || '등급 변경에 실패했습니다.');
+      }
+      
+      // 2. DB 업데이트가 완벽하게 성공하면 화면의 상태도 변경
       setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
       showToast(`등급이 '${newRole}'(으)로 변경되었습니다.`, 'success');
+      
     } catch (error) {
-      showToast('등급 변경 중 오류가 발생했습니다.', 'error');
+      // 실패 시 에러 알림을 띄우고, 바뀐 척했던 UI를 원래대로 되돌리기 위해 리스트 재호출
+      showToast(error.message, 'error');
+      loadAdminUsers(); 
     }
   };
 
