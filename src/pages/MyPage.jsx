@@ -10,6 +10,15 @@ const SOCIAL_PROVIDERS = [
   { id: 'kakao', name: '카카오 (Kakao)', color: 'bg-[#FEE500]' }
 ];
 
+// ⭐ 계급 척도 정의 (UI 권한 제어 및 하극상 방지용)
+const ROLE_LEVELS = {
+  '최고 관리자': 5,
+  '관리자': 4,
+  '운영진': 3,
+  '우수 회원': 2,
+  '일반 회원': 1
+};
+
 const MyPage = () => {
   const { data: session, isPending, refetch } = authClient.useSession();
   const navigate = useNavigate();
@@ -30,24 +39,31 @@ const MyPage = () => {
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
   const [modal, setModal] = useState({ isOpen: false, type: null, target: null, confirmText: '' });
 
+  // ⭐ 관리자 전용 상태 추가
+  const [adminUsers, setAdminUsers] = useState([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+
+  // 내 계급 수치화 및 관리자 여부 판별
+  const myLevel = ROLE_LEVELS[session?.user?.role] || 1;
+  const isAdmin = myLevel >= 3;
+
   // 토스트 알림 헬퍼 함수
   const showToast = (message, type = 'info') => {
     setToast({ visible: true, message, type });
     setTimeout(() => setToast({ visible: false, message: '', type: 'info' }), 3000);
   };
 
-  // 공통 API Fetch 헬퍼 (CSRF 방어 헤더 추가 권장)
+  // 공통 API Fetch 헬퍼
   const fetchWithSecurity = async (url, options = {}) => {
     const headers = {
       'Content-Type': 'application/json',
-      // 'X-CSRF-Token': getCsrfToken(), // 실제 서비스 시 백엔드 구현에 맞게 CSRF 토큰 추가
-      'X-Requested-With': 'XMLHttpRequest', // 기본 CSRF 방어용 커스텀 헤더
+      'X-Requested-With': 'XMLHttpRequest', 
       ...options.headers,
     };
     return fetch(url, { ...options, headers, credentials: 'include' });
   };
 
-  // 연동 목록 로드
+  // 1. 연동 목록 로드
   const loadLinkedAccounts = useCallback(async (signal) => {
     if (!session?.user) return;
     
@@ -81,6 +97,28 @@ const MyPage = () => {
     }
   }, [session?.user]);
 
+  // ⭐ 2. 관리자일 경우 전체 회원 목록 로드
+  const loadAdminUsers = useCallback(async (signal) => {
+    if (!isAdmin) return;
+    setIsLoadingUsers(true);
+    try {
+      const response = await fetchWithSecurity('/api/auth/users', { method: 'GET', signal });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && !signal?.aborted) {
+          setAdminUsers(data.users);
+        }
+      }
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        console.error("회원 목록 로드 실패:", error);
+        showToast('회원 목록을 불러오지 못했습니다.', 'error');
+      }
+    } finally {
+      if (!signal?.aborted) setIsLoadingUsers(false);
+    }
+  }, [isAdmin]);
+
   useEffect(() => {
     if (!isPending && !session?.user) {
       navigate('/login', { replace: true });
@@ -91,8 +129,9 @@ const MyPage = () => {
     if (!session?.user) return;
     const controller = new AbortController();
     loadLinkedAccounts(controller.signal);
+    loadAdminUsers(controller.signal); // 컴포넌트 마운트 시 회원 목록도 함께 호출
     return () => controller.abort();
-  }, [session?.user, loadLinkedAccounts]);
+  }, [session?.user, loadLinkedAccounts, loadAdminUsers]);
 
   // 연동하기 로직
   const handleConnectProvider = async (provider) => {
@@ -120,7 +159,7 @@ const MyPage = () => {
     setModal({ isOpen: true, type: 'DISCONNECT', target: provider, confirmText: '' });
   };
 
-  // 실제 연동 해제 실행 (모달에서 승인 시)
+  // 실제 연동 해제 실행
   const executeDisconnect = async () => {
     const provider = modal.target;
     setModal({ isOpen: false, type: null, target: null, confirmText: '' });
@@ -134,20 +173,15 @@ const MyPage = () => {
 
       if (response.ok) {
         showToast(`${provider.toUpperCase()} 연동이 해제되었습니다.`, 'success');
-        
-        // 1. 낙관적 업데이트(Optimistic Update)로 UI 즉각 반영
         setSocialStatus(prev => ({
           ...prev,
           [provider]: { connected: false, email: '' }
         }));
-
-        // 2. 백그라운드에서 세션 및 DB 상태 최종 동기화
         if (typeof refetch === 'function') refetch();
       } else {
         throw new Error('UNLINK_FAILED');
       }
     } catch (error) {
-      // 서버 에러 메시지 직접 노출 방지 (정제된 메시지 제공)
       showToast('연동 해제에 실패했습니다. 잠시 후 다시 시도해주세요.', 'error');
     } finally {
       setIsSyncing(false);
@@ -172,7 +206,7 @@ const MyPage = () => {
 
       if (response.ok) {
         await authClient.signOut();
-        alert('그동안 이용해 주셔서 감사합니다. 탈퇴가 완료되었습니다.'); // 리다이렉트 전 마지막 알림은 브라우저 알림 허용
+        alert('그동안 이용해 주셔서 감사합니다. 탈퇴가 완료되었습니다.'); 
         window.location.replace('/'); 
       } else {
         throw new Error('WITHDRAW_FAILED');
@@ -181,6 +215,26 @@ const MyPage = () => {
       showToast('탈퇴 처리 중 오류가 발생했습니다. 고객센터로 문의해주세요.', 'error');
       setIsSyncing(false);
       setModal({ isOpen: false, type: null, target: null, confirmText: '' });
+    }
+  };
+
+  // ⭐ 회원 등급 변경 실행 (API 연동 준비 완료)
+  const handleRoleChange = async (userId, newRole) => {
+    try {
+      // API가 아직 없으므로 선반영(Optimistic Update)만 실행하여 UI 테스트부터 진행
+      // API 완성 후 아래 주석을 풀 예정입니다.
+      /*
+      const response = await fetchWithSecurity('/api/auth/update-role', {
+        method: 'POST',
+        body: JSON.stringify({ userId, newRole })
+      });
+      if (!response.ok) throw new Error('ROLE_UPDATE_FAILED');
+      */
+      
+      setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+      showToast(`등급이 '${newRole}'(으)로 변경되었습니다.`, 'success');
+    } catch (error) {
+      showToast('등급 변경 중 오류가 발생했습니다.', 'error');
     }
   };
 
@@ -260,7 +314,8 @@ const MyPage = () => {
         </div>
       )}
 
-      <main className="max-w-[800px] mx-auto px-4 py-12 font-main">
+      {/* 테이블이 들어갈 공간을 위해 max-w를 1000px로 소폭 확대 */}
+      <main className="max-w-[1000px] mx-auto px-4 py-12 font-main">
         <div className="mb-10">
           <h1 className="text-3xl font-extrabold text-txt-primary tracking-tight">마이페이지</h1>
           <p className="text-txt-muted mt-2">내 정보 관리 및 서비스 설정</p>
@@ -331,6 +386,83 @@ const MyPage = () => {
             })}
           </div>
         </div>
+
+        {/* ⭐ 관리자 전용: 회원 목록 섹션 (새로 추가됨) */}
+        {isAdmin && (
+          <div className="bg-bg-surface border border-brand-main/30 rounded-3xl p-6 md:p-10 shadow-sm mb-8 overflow-hidden">
+            <div className="mb-6 border-b border-bd-default pb-4">
+              <h3 className="text-xl font-extrabold text-brand-main flex items-center gap-2">
+                👑 관리자 전용: 전체 회원 목록
+              </h3>
+              <p className="text-sm text-txt-muted mt-2">나보다 하위 등급의 회원만 권한을 변경할 수 있습니다.</p>
+            </div>
+
+            {isLoadingUsers ? (
+              <div className="text-center py-10 text-txt-muted font-bold animate-pulse">회원 장부를 불러오는 중입니다...</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[700px]">
+                  <thead>
+                    <tr className="bg-bg-base text-txt-secondary text-sm border-b border-bd-default">
+                      <th className="p-4 font-bold rounded-tl-xl">이름</th>
+                      <th className="p-4 font-bold">이메일</th>
+                      <th className="p-4 font-bold text-center">연동 수단</th>
+                      <th className="p-4 font-bold">가입일</th>
+                      <th className="p-4 font-bold text-center rounded-tr-xl">현재 등급 관리</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {adminUsers.map(user => {
+                      const targetLevel = ROLE_LEVELS[user.role] || 1;
+                      // 하극상 방지: 타겟 유저의 계급이 내 계급과 같거나 높으면 변경 불가!
+                      const canManage = myLevel > targetLevel; 
+                      
+                      return (
+                        <tr key={user.id} className="border-b border-bd-default hover:bg-bg-base transition-colors text-sm">
+                          <td className="p-4 font-bold text-txt-primary">{user.name}</td>
+                          <td className="p-4 text-txt-secondary">{user.email}</td>
+                          <td className="p-4 text-center">
+                            <div className="flex items-center justify-center gap-1 flex-wrap">
+                              {user.providers && user.providers.map(p => {
+                                const providerInfo = SOCIAL_PROVIDERS.find(sp => sp.id === p);
+                                const bgColor = providerInfo ? providerInfo.color : 'bg-gray-500';
+                                const textColor = p === 'kakao' ? 'text-black' : 'text-white';
+                                return (
+                                  <span key={p} className={`px-2 py-1 text-[10px] font-bold rounded-md uppercase ${bgColor} ${textColor}`}>
+                                    {p}
+                                  </span>
+                                )
+                              })}
+                            </div>
+                          </td>
+                          <td className="p-4 text-txt-muted text-xs">{new Date(user.createdAt).toLocaleDateString()}</td>
+                          <td className="p-4 text-center">
+                            <select 
+                              value={user.role}
+                              onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                              disabled={!canManage}
+                              className={`text-xs font-bold rounded-lg px-3 py-2 border outline-none ${
+                                canManage 
+                                  ? 'bg-bg-surface border-brand-main text-brand-main cursor-pointer hover:bg-brand-main/5' 
+                                  : 'bg-bg-base border-bd-default text-txt-muted cursor-not-allowed opacity-60'
+                              }`}
+                            >
+                              <option value="최고 관리자">최고 관리자</option>
+                              <option value="관리자">관리자</option>
+                              <option value="운영진">운영진</option>
+                              <option value="우수 회원">우수 회원</option>
+                              <option value="일반 회원">일반 회원</option>
+                            </select>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 하단 제어 바 */}
         <div className="bg-bg-surface border border-bd-default rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
