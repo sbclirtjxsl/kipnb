@@ -1,24 +1,73 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 const AD_Location = () => {
-  // 네이버 지도 검색 결과 주소
+  const mapRef = useRef(null);
+  
+  // 네이버 지도 검색 결과 주소 (바로가기 버튼용)
   const mapUrl = "https://map.naver.com/v5/search/%EC%B2%AD%EC%88%985%EB%A1%9C%209/address/14154768.2921403,4408962.7689035,15,14154768.2921403,4408962.7689035,15,14154768.2921403,4408962.7689035,15";
 
+  useEffect(() => {
+    // 1. 이미 네이버 지도 스크립트가 로드되어 있다면 즉시 지도 초기화
+    if (window.naver) {
+      initMap();
+      return;
+    }
+
+    // 2. 스크립트가 없다면 Vite 환경 변수를 활용해 동적으로 헤드에 주입
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = `https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${import.meta.env.VITE_NAVER_MAP_CLIENT_ID}`;
+    script.async = true;
+    
+    // 로드가 완료되면 지도를 생성하도록 설정
+    script.onload = () => {
+      initMap();
+    };
+
+    document.head.appendChild(script);
+
+    // [지도 초기화 함수]
+    function initMap() {
+      if (window.naver && mapRef.current) {
+        // 천안시 동남구 청수5로 9 좌표 (위도, 경도)
+        const location = new window.naver.maps.LatLng(36.786523, 127.155823); 
+        
+        const mapOptions = {
+          center: location,
+          zoom: 16, // 확대 레벨
+          zoomControl: true, // 줌 컨트롤러 표시
+          zoomControlOptions: {
+            position: window.naver.maps.Position.RIGHT_BOTTOM
+          }
+        };
+
+        // 지도 객체 생성 및 div 주입
+        const map = new window.naver.maps.Map(mapRef.current, mapOptions);
+
+        // 목적지 마커 표시
+        new window.naver.maps.Marker({
+          position: location,
+          map: map,
+          title: "사단법인 사람과건축"
+        });
+      }
+    }
+  }, []);
+
   return (
-    /* 1. 전체 배경 및 기본 텍스트 색상 연동 */
     <div className="min-h-screen bg-bg-base font-sans text-txt-primary transition-colors duration-300">
       <Header />
 
       <main>
-        {/* 서브 페이지 헤더 (타이틀 영역) */}
+        {/* 서브 페이지 헤더 */}
         <section className="py-10 text-center">
           <div className="max-w-[1200px] mx-auto px-4">
             <h2 className="text-3xl font-bold mb-3 text-txt-primary">오시는 길</h2>
             <div className="text-sm text-txt-muted flex justify-center items-center gap-2">
               <span>사람과건축 소개</span>
-              <span className="text-[10px] opacity-50">&gt;</span>
+              <span className="text-[10px] opacity-50">></span>
               <span className="font-bold text-brand-main">오시는 길</span>
             </div>
           </div>
@@ -31,15 +80,14 @@ const AD_Location = () => {
             {/* 1. 지도 영역 */}
             <div className="mb-12">
               <div className="w-full h-[450px] bg-bg-surface rounded-xl overflow-hidden border border-bd-subtle shadow-sm relative">
-                <iframe 
-                  title="naver-map"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3215.123!2d127.15!3d36.78!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzbCsDQ2JzQ4LjAiTiAxMjfCsDA5JzAwLjAiRQ!5e0!3m2!1sko!2skr!4v123456789"
-                  className="w-full h-full border-0 grayscale-[20%] dark:grayscale-[40%] dark:invert-[90%] dark:hue-rotate-180 transition-all duration-300"
-                  allowFullScreen=""
-                  loading="lazy"
-                ></iframe>
                 
-                {/* 지도 위에 바로가기 버튼 */}
+                {/* 네이버 API가 지도를 렌더링할 공간 */}
+                <div 
+                  ref={mapRef} 
+                  className="w-full h-full"
+                />
+                
+                {/* 지도 위 바로가기 버튼 */}
                 <div className="absolute bottom-4 right-4 z-10">
                   <a 
                     href={mapUrl}
@@ -47,7 +95,6 @@ const AD_Location = () => {
                     rel="noreferrer"
                     className="bg-bg-surface px-4 py-2 rounded-md shadow-md border border-bd-default text-sm font-bold text-txt-primary flex items-center gap-2 hover:bg-bg-surface-hover transition-colors"
                   >
-                    {/* 네이버 고유의 초록색은 인지성을 위해 유지하거나 살짝 조정 */}
                     <span className="text-[#03c75a] dark:text-[#2db400]">N</span> 네이버 지도에서 보기
                   </a>
                 </div>
@@ -56,7 +103,6 @@ const AD_Location = () => {
 
             {/* 2. 주소 및 연락처 정보 박스 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-              {/* 기존 연한 청록색 하드코딩 대신 bg-bg-surface를 사용하고 테두리에 포인트를 줌 */}
               <div className="p-8 bg-bg-surface rounded-2xl border border-bd-subtle hover:border-brand-main transition-colors">
                 <h4 className="text-brand-main font-bold text-lg mb-4 flex items-center gap-2">
                   📍 주소 안내
@@ -84,7 +130,6 @@ const AD_Location = () => {
             <div className="border-t border-bd-default pt-12 space-y-10">
               <div>
                 <h4 className="text-xl font-bold text-txt-primary mb-4 flex items-center gap-3">
-                  {/* 알록달록한 배경 대신 브랜드 컬러 베이스의 아이콘 컨테이너 사용 */}
                   <span className="w-10 h-10 bg-brand-light text-brand-main rounded-xl flex items-center justify-center text-lg shadow-sm">🚌</span>
                   버스 이용 시
                 </h4>
