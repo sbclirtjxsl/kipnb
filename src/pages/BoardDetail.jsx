@@ -142,7 +142,9 @@ const BoardDetail = () => {
   // 👇 권한을 통과한 사람들만 아래부터 실제 글을 렌더링합니다. 👇
 
   const isAuthor = session?.user?.name === post.author_name;
-  const hasManagerRole = session?.user?.role === '관리자' || session?.user?.role === '운영진' || session?.user?.role === '최고 관리자';
+  
+  // ⭐ 핵심 수정: 하드코딩된 문자열 비교를 myLevel 수치 비교로 깔끔하게 변경!
+  const hasManagerRole = myLevel >= 3; 
   const canEditOrDelete = isAuthor || hasManagerRole;
 
   const isQnA = category === 'qna';
