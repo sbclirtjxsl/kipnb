@@ -36,6 +36,15 @@ const boardSettings = {
   search: { title: "통합 검색 결과", description: "입력하신 검색어와 일치하는 게시글 목록입니다.", banner: BannerArchive },
 };
 
+// ⭐ 계급 척도 정의 (권한 제어용)
+const ROLE_LEVELS = {
+  '최고 관리자': 5,
+  '관리자': 4,
+  '운영진': 3,
+  '우수 회원': 2,
+  '일반 회원': 1
+};
+
 const Notice = () => {
   const { category = "notice" } = useParams();
   const navigate = useNavigate();
@@ -91,15 +100,19 @@ const Notice = () => {
     setCurrentPage(1); 
   };
 
+  // ⭐ 내 계급 수치화 및 글쓰기 권한 부여 로직 변경
+  // 로그인 안 한 상태면 0, 로그인 했으면 해당 계급의 레벨값 부여
+  const myLevel = session?.user?.role ? (ROLE_LEVELS[session.user.role] || 1) : 0;
+  
   const isQnA = category === 'qna';
-  const hasManagerRole = session?.user?.role === '관리자' || session?.user?.role === '운영진';
+  const hasManagerRole = myLevel >= 3; // ⭐ 레벨 3(운영진) 이상이면 무조건 true
   const canWrite = category !== 'search' && (isQnA ? true : hasManagerRole);
 
   return (
     <div className="min-h-screen bg-bg-base flex flex-col font-sans transition-colors duration-300">
       <Header />
       <main className="flex-grow">
-        {/* 상단 타이틀 및 배너 영역 (기존과 동일) */}
+        {/* 상단 타이틀 및 배너 영역 */}
         <section className="max-w-[900px] mx-auto pt-10 pb-4 px-4 text-center">
           <h2 className="text-3xl font-extrabold text-txt-primary mb-4 tracking-tight">
             {category === 'search' && globalQuery ? `'${globalQuery}' 검색 결과` : currentBoard?.title}
@@ -134,7 +147,7 @@ const Notice = () => {
                <div className="py-20 text-center text-txt-muted border-t-2 border-txt-primary">데이터를 불러오는 중...</div>
             ) : Array.isArray(posts) && posts.length > 0 ? (
               <>
-                {/* 1. 데스크탑용 테이블 레이아웃 (md 이상에서만 보임) */}
+                {/* 1. 데스크탑용 테이블 레이아웃 */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full border-t-2 border-txt-primary">
                     <thead>
@@ -166,6 +179,7 @@ const Notice = () => {
                                   {boardNames[post.category] || '게시판'}
                                 </span>
                               )}
+                              {/* 비밀글 등 권한 자물쇠 표시 필요시 여기에 추가 가능 */}
                               {post.title || "제목 없음"}
                             </td>
                             <td className="py-4 text-center text-lg flex items-center justify-center gap-1">
@@ -186,7 +200,7 @@ const Notice = () => {
                   </table>
                 </div>
 
-                {/* 2. 모바일용 리스트 레이아웃 (md 미만에서만 보임) */}
+                {/* 2. 모바일용 리스트 레이아웃 */}
                 <div className="md:hidden border-t-2 border-txt-primary">
                   {posts.map((post, index) => {
                     const displayNumber = totalCount - ((currentPage - 1) * itemsPerPage) - index;
@@ -199,7 +213,6 @@ const Notice = () => {
                         onClick={() => navigate(`/board/${targetCategory}/${post.id}`)}
                         className="py-4 border-b border-bd-subtle hover:bg-bg-surface-hover cursor-pointer flex flex-col gap-2"
                       >
-                        {/* 상단: 번호 및 제목 */}
                         <div className="flex items-start gap-2">
                           <span className="text-xs font-bold text-txt-muted mt-1 w-6 shrink-0">{displayNumber || 0}</span>
                           <h3 className="font-medium text-txt-primary leading-tight break-all">
@@ -212,7 +225,6 @@ const Notice = () => {
                           </h3>
                         </div>
                         
-                        {/* 하단: 부가 정보 (작성자, 날짜, 조회수, 아이콘) */}
                         <div className="flex justify-between items-center pl-8 text-[11px] text-txt-muted">
                           <div className="flex items-center gap-3">
                             <span>{post.category === 'qna' ? (post.author_name || '익명') : '관리자'}</span>
@@ -233,10 +245,10 @@ const Notice = () => {
               <div className="py-20 text-center text-txt-muted border-t-2 border-txt-primary">등록된 게시물이 없습니다.</div>
             )}
 
-            {/* 페이지네이션 구역 (기존과 구조 동일, 모바일 대응 위해 flex 레이아웃 수정) */}
+            {/* 페이지네이션 구역 */}
             {totalCount > 0 && (
               <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="hidden sm:block w-24"></div> {/* 데스크탑용 빈 공간 */}
+                <div className="hidden sm:block w-24"></div>
                 <div className="flex gap-2">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
                     <button
@@ -253,6 +265,7 @@ const Notice = () => {
                   ))}
                 </div>
                 <div className="w-full sm:w-24 flex justify-end">
+                  {/* ⭐ 권한이 있는 경우 글쓰기 버튼 노출 */}
                   {canWrite && (
                     <button 
                       className="w-full sm:w-auto px-6 py-2 bg-brand-main text-txt-inverse font-bold rounded-lg hover:bg-brand-dark transition-colors"
@@ -265,7 +278,7 @@ const Notice = () => {
               </div>
             )}
             
-            {/* 데이터가 0개일 때 글쓰기 버튼 (모바일 꽉 차게) */}
+            {/* 데이터가 0개일 때 글쓰기 버튼 */}
             {totalCount === 0 && canWrite && (
               <div className="mt-6 flex justify-end">
                  <button 
