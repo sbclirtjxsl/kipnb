@@ -10,17 +10,30 @@ const boardNames = {
   forms: "인증 관련 서식", notice: "공지사항", qna: "문의상담", archive: "자료실",
 };
 
+// ⭐ 계급 척도 정의 (권한 제어용)
+const ROLE_LEVELS = {
+  '최고 관리자': 5,
+  '관리자': 4,
+  '운영진': 3,
+  '우수 회원': 2,
+  '일반 회원': 1
+};
+
 const BoardWrite = () => {
   const { category } = useParams();
   const navigate = useNavigate();
 
   const { data: session } = authClient.useSession();
-  const isAdmin = session?.user?.role === '관리자' || session?.user?.role === '운영진';
+  
+  // ⭐ 수치형 권한 체크 적용: 레벨 3(운영진) 이상이면 모두 관리자 권한 획득
+  const myLevel = session?.user?.role ? (ROLE_LEVELS[session.user.role] || 1) : 0;
+  const isAdmin = myLevel >= 3;
   
   const [customDate, setCustomDate] = useState('');
   
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [accessLevel, setAccessLevel] = useState(0); 
   const [isSubmitting, setIsSubmitting] = useState(false); 
 
   const [selectedImages, setSelectedImages] = useState([]);
@@ -28,8 +41,7 @@ const BoardWrite = () => {
   const [attachedFiles, setAttachedFiles] = useState([]); 
 
   const isQnA = category === 'qna';
-  const hasManagerRole = session?.user?.role === '관리자' || session?.user?.role === '운영진';
-  const canWrite = isQnA || hasManagerRole;
+  const canWrite = isQnA || isAdmin;
 
   if (!session || !canWrite) {
     return (
@@ -154,6 +166,7 @@ const BoardWrite = () => {
           file_url: finalFileUrlString, 
           has_file: uploadedFileUrls.length > 0 ? 1 : 0, 
           custom_date: customDate ? new Date(customDate).toISOString() : null,
+          access_level: accessLevel, 
         }),
       });
 
@@ -171,12 +184,10 @@ const BoardWrite = () => {
   };
 
   return (
-    // ⭐ 전체 배경 다크모드 대응
     <div className="min-h-screen bg-[#2a2a2a] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
       <Header />
       <main className="flex-grow py-10">
         <div className="max-w-[800px] mx-auto px-4">
-          {/* ⭐ 폼 컨테이너 다크모드 대응 */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 transition-colors duration-300">
             <h1 className="text-2xl font-extrabold mb-6 border-b border-gray-200 dark:border-gray-700 pb-4 text-gray-900 dark:text-white">
               {boardNames[category] || '게시판'} 글쓰기
@@ -184,10 +195,8 @@ const BoardWrite = () => {
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
               
-              {/* 1. 제목 */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">제목</label>
-                {/* ⭐ 입력칸 다크모드 대응 (어두운 배경 + 흰 글씨) */}
                 <input 
                   type="text" 
                   value={title} 
@@ -197,28 +206,39 @@ const BoardWrite = () => {
                 />
               </div>
 
-              {/* 2. 날짜 (관리자 전용) */}
               {isAdmin && (
-                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors">
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    👑 [관리자 전용] 과거/미래 작성 일자 지정 (선택)
-                  </label>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                      👑 과거/미래 작성 일자 지정
+                    </label>
                     <input
                       type="date"
                       value={customDate}
                       onChange={(e) => setCustomDate(e.target.value)}
                       onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-[#317F81]/50 cursor-pointer transition-colors"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-[#317F81]/50 cursor-pointer transition-colors"
                     />
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      ※ 달력을 비워두시면 <strong className="text-red-500 dark:text-red-400 underline">오늘 날짜</strong>로 자동 등록됩니다.
-                    </span>
+                    <p className="text-[11px] text-gray-500 mt-1">※ 비워두면 오늘 날짜로 등록됩니다.</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                      🔒 게시물 열람 권한 설정
+                    </label>
+                    <select
+                      value={accessLevel}
+                      onChange={(e) => setAccessLevel(Number(e.target.value))}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-[#317F81]/50 cursor-pointer transition-colors font-medium"
+                    >
+                      <option value={0}>모든 사람 가능 (비회원 포함)</option>
+                      <option value={1}>일반 회원 이상 가능 (로그인 필요)</option>
+                      <option value={2}>우수 회원 이상 가능</option>
+                    </select>
                   </div>
                 </div>
               )}
 
-              {/* 3. 내용 (순서 변경됨) */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">내용</label>
                 <textarea 
@@ -229,7 +249,6 @@ const BoardWrite = () => {
                 ></textarea>
               </div>
 
-              {/* 4. 사진 첨부 (순서 변경됨) */}
               <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors">
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">📷 본문 사진 첨부 (여러 장 가능, 자동 변환)</label>
                 <input 
@@ -258,7 +277,6 @@ const BoardWrite = () => {
                 )}
               </div>
 
-              {/* 5. 자료 첨부 */}
               <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors">
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">📁 다운로드용 자료 첨부 (여러 개 선택 가능)</label>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">지원 형식: zip, pdf, hwp, ppt, xlsx 등</p>
@@ -290,7 +308,6 @@ const BoardWrite = () => {
                 )}
               </div>
 
-              {/* 하단 버튼 구역 */}
               <div className="flex justify-end gap-3 mt-4">
                 <button 
                   type="button" 

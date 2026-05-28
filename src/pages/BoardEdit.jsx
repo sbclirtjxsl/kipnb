@@ -10,6 +10,15 @@ const boardNames = {
   forms: "인증 관련 서식", notice: "공지사항", qna: "문의상담", archive: "자료실",
 };
 
+// ⭐ 계급 척도 정의 (권한 제어용)
+const ROLE_LEVELS = {
+  '최고 관리자': 5,
+  '관리자': 4,
+  '운영진': 3,
+  '우수 회원': 2,
+  '일반 회원': 1
+};
+
 const BoardEdit = () => {
   const params = useParams();
   const navigate = useNavigate();
@@ -20,11 +29,15 @@ const BoardEdit = () => {
   const category = params.category || pathParts[pathParts.length - 3];
   
   const { data: session } = authClient.useSession();
-  const isAdmin = session?.user?.role === '관리자' || session?.user?.role === '운영진';
+  
+  // ⭐ 수치형 권한 체크 적용
+  const myLevel = session?.user?.role ? (ROLE_LEVELS[session.user.role] || 1) : 0;
+  const isAdmin = myLevel >= 3;
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [customDate, setCustomDate] = useState('');
+  const [accessLevel, setAccessLevel] = useState(0); // ⭐ 권한 상태 추가
   
   const [isSubmitting, setIsSubmitting] = useState(false); 
   const [loading, setLoading] = useState(true);
@@ -51,6 +64,7 @@ const BoardEdit = () => {
 
           setTitle(data.title || '');
           setContent(data.content || '');
+          setAccessLevel(data.access_level || 0); // ⭐ 기존 권한 불러오기
           
           if (data.created_at) {
             const date = new Date(data.created_at);
@@ -145,6 +159,7 @@ const BoardEdit = () => {
           file_url: finalFiles.length > 0 ? JSON.stringify(finalFiles) : "", 
           has_file: finalFiles.length > 0 ? 1 : 0, 
           custom_date: customDate ? new Date(customDate).toISOString() : null,
+          access_level: accessLevel, // ⭐ 권한 레벨 수정 데이터 전송
         }),
       });
 
@@ -186,18 +201,34 @@ const BoardEdit = () => {
               </div>
 
               {isAdmin && (
-                <div className="p-4 bg-brand-main/5 rounded-xl border border-brand-main/20">
-                  <label className="block text-sm font-bold text-brand-main mb-2">
-                    👑 [관리자 전용] 작성 일자 수정
-                  </label>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="p-4 bg-brand-main/5 rounded-xl border border-brand-main/20 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-brand-main mb-2">
+                      👑 [관리자 전용] 작성 일자 수정
+                    </label>
                     <input
                       type="datetime-local"
                       value={customDate || ''}
                       onChange={(e) => setCustomDate(e.target.value)}
-                      className="px-4 py-2 border border-bd-default bg-bg-base text-txt-primary rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand-main transition-colors"
+                      className="w-full px-4 py-2 border border-bd-default bg-bg-base text-txt-primary rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand-main transition-colors"
                     />
-                    <p className="text-xs text-txt-muted">변경 시 게시판 목록에서 해당 날짜 순서로 재배치됩니다.</p>
+                    <p className="text-xs text-txt-muted mt-1">변경 시 게시판 목록에서 해당 날짜 순서로 재배치됩니다.</p>
+                  </div>
+                  
+                  {/* ⭐ 열람 권한 수정 UI 추가 */}
+                  <div>
+                    <label className="block text-sm font-bold text-brand-main mb-2">
+                      🔒 [관리자 전용] 열람 권한 수정
+                    </label>
+                    <select
+                      value={accessLevel}
+                      onChange={(e) => setAccessLevel(Number(e.target.value))}
+                      className="w-full px-4 py-2 border border-bd-default bg-bg-base text-txt-primary rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand-main transition-colors"
+                    >
+                      <option value={0}>모든 사람 가능 (비회원 포함)</option>
+                      <option value={1}>일반 회원 이상 가능 (로그인 필요)</option>
+                      <option value={2}>우수 회원 이상 가능</option>
+                    </select>
                   </div>
                 </div>
               )}
