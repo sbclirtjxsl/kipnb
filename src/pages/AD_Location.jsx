@@ -67,7 +67,7 @@ const AD_Location = () => {
             <h2 className="text-3xl font-bold mb-3 text-txt-primary">오시는 길</h2>
             <div className="text-sm text-txt-muted flex justify-center items-center gap-2">
               <span>사람과건축 소개</span>
-              <span className="text-[10px] opacity-50">></span>
+              <span className="text-[10px] opacity-50"></span>
               <span className="font-bold text-brand-main">오시는 길</span>
             </div>
           </div>
