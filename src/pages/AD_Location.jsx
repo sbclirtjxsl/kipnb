@@ -9,29 +9,50 @@ const AD_Location = () => {
   const mapUrl = "https://map.naver.com/v5/search/%EC%B2%AD%EC%88%985%EB%A1%9C%209/address/14154768.2921403,4408962.7689035,15,14154768.2921403,4408962.7689035,15,14154768.2921403,4408962.7689035,15";
 
   useEffect(() => {
-    // 네이버 지도 스크립트가 로드되었고, 지도를 넣을 DOM(mapRef)이 준비되었을 때 실행
-    if (window.naver && mapRef.current) {
-      // 제공해주신 천안시 동남구 청수5로 9 좌표 (위도, 경도)
-      const location = new window.naver.maps.LatLng(36.786523, 127.155823); 
-      
-      const mapOptions = {
-        center: location,
-        zoom: 16, // 확대 레벨
-        zoomControl: true, // 줌 컨트롤러 표시
-        zoomControlOptions: {
-          position: window.naver.maps.Position.RIGHT_BOTTOM
-        }
-      };
+    // 1. 이미 네이버 지도 스크립트가 로드되어 있다면 바로 지도 초기화 진행
+    if (window.naver) {
+      initMap();
+      return;
+    }
 
-      // 지도 생성
-      const map = new window.naver.maps.Map(mapRef.current, mapOptions);
+    // 2. 스크립트가 없다면 Vite 환경 변수를 활용해 헤드에 동적으로 주입
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = `https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${import.meta.env.VITE_NAVER_MAP_CLIENT_ID}`;
+    script.async = true;
+    
+    // 스크립트 로드가 완료되면 지도를 생성하도록 콜백 설정
+    script.onload = () => {
+      initMap();
+    };
 
-      // 목적지 마커 표시
-      new window.naver.maps.Marker({
-        position: location,
-        map: map,
-        title: "사단법인 사람과건축"
-      });
+    document.head.appendChild(script);
+
+    // [함수 정의] 실제 지도를 그리고 마커를 찍는 로직
+    function initMap() {
+      if (window.naver && mapRef.current) {
+        // 제공해주신 천안시 동남구 청수5로 9 좌표 (위도, 경도)
+        const location = new window.naver.maps.LatLng(36.786523, 127.155823); 
+        
+        const mapOptions = {
+          center: location,
+          zoom: 16, // 확대 레벨
+          zoomControl: true, // 줌 컨트롤러 표시
+          zoomControlOptions: {
+            position: window.naver.maps.Position.RIGHT_BOTTOM
+          }
+        };
+
+        // 지도 생성
+        const map = new window.naver.maps.Map(mapRef.current, mapOptions);
+
+        // 목적지 마커 표시
+        new window.naver.maps.Marker({
+          position: location,
+          map: map,
+          title: "사단법인 사람과건축"
+        });
+      }
     }
   }, []);
 
