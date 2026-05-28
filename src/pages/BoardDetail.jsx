@@ -10,7 +10,7 @@ const boardNames = {
   forms: "인증 관련 서식", notice: "공지사항", qna: "문의상담", archive: "자료실",
 };
 
-// ⭐ 계급 척도 정의 (열람 권한 계산용)
+// ⭐ 계급 척도 정의
 const ROLE_LEVELS = {
   '최고 관리자': 5,
   '관리자': 4,
@@ -46,7 +46,6 @@ const BoardDetail = () => {
         if (response.ok) {
           setPost(await response.json());
         } else {
-          // 백엔드 통신 실패 시 무한 루프나 빈 화면이 되지 않도록 처리
           setPost(null); 
         }
       } catch (error) {
@@ -76,7 +75,7 @@ const BoardDetail = () => {
     }
   };
 
-  // 1. 로딩 중일 때 화면
+  // 1. 로딩 중
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
@@ -89,7 +88,7 @@ const BoardDetail = () => {
     );
   }
 
-  // 2. 데이터가 없을 때 404 안내 화면
+  // 2. 게시글 없음
   if (!post) {
     return (
       <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
@@ -107,12 +106,10 @@ const BoardDetail = () => {
     );
   }
 
-  // ⭐ 3. 접근 권한(Access Level) 검사 방어막 로직
+  // ⭐ 3. 열람 권한 검사
   const requiredLevel = post.access_level || 0;
-  // 비회원이면 0, 로그인을 했다면 본인 계급의 전투력 반환
   const myLevel = session?.user?.role ? (ROLE_LEVELS[session.user.role] || 1) : 0;
 
-  // 내 레벨이 요구 레벨보다 낮으면 자물쇠 화면으로 강제 차단!
   if (requiredLevel > myLevel) {
     return (
       <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
@@ -139,15 +136,19 @@ const BoardDetail = () => {
     );
   }
 
-  // 👇 권한을 통과한 사람들만 아래부터 실제 글을 렌더링합니다. 👇
 
-  const isAuthor = session?.user?.name === post.author_name;
-  
-  // ⭐ 핵심 수정: 하드코딩된 문자열 비교를 myLevel 수치 비교로 깔끔하게 변경!
-  const hasManagerRole = myLevel >= 3; 
-  const canEditOrDelete = isAuthor || hasManagerRole;
-
+  // ⭐ 핵심 수정: 수정/삭제 권한 방어막 강화
   const isQnA = category === 'qna';
+  // 게시글 작성자 이름과 현재 로그인한 유저 이름이 같은지 확인
+  const isAuthor = session?.user?.name === post.author_name; 
+  // 레벨 3(운영진) 이상인지 확인
+  const hasManagerRole = myLevel >= 3; 
+
+  // [수정/삭제 가능 조건] 
+  // 1. 내가 운영진 이상(레벨 3 이상)이거나,
+  // 2. 현재 게시판이 '문의상담(qna)' 이면서, 동시에 내가 쓴 글일 때만 허용!
+  const canEditOrDelete = hasManagerRole || (isQnA && isAuthor);
+
   const displayAuthor = isQnA ? post.author_name : '관리자';
 
   let imageUrls = [];
@@ -174,7 +175,6 @@ const BoardDetail = () => {
               <span className="text-xs font-extrabold text-[#317F81] dark:text-[#4fd1d5] bg-[#eef6f6] dark:bg-gray-700 px-2 py-1 rounded mr-2">
                 {boardNames[category]}
               </span>
-              {/* ⭐ 열람 제한이 있는 글은 제목 위에 빨간 자물쇠 표시 */}
               {requiredLevel > 0 && (
                 <span className="text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/30 px-2 py-1 rounded">
                   {requiredLevel === 1 ? "🔒 일반 회원 공개" : "🔒 우수 회원 전용"}
@@ -252,6 +252,7 @@ const BoardDetail = () => {
 
           <div className="mt-6 flex justify-between items-center">
             <button onClick={() => navigate(`/board/${category}`)} className="px-6 py-2 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-bold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">목록으로</button>
+            {/* ⭐ 조건에 부합할 때만 노출! */}
             {canEditOrDelete && (
               <div className="flex gap-2">
                 <button onClick={() => navigate(`/board/${category}/edit/${post.id}`)} className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">수정</button>
