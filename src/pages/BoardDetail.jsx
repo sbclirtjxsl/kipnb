@@ -10,6 +10,15 @@ const boardNames = {
   forms: "인증 관련 서식", notice: "공지사항", qna: "문의상담", archive: "자료실",
 };
 
+// ⭐ 계급 척도 정의 (열람 권한 계산용)
+const ROLE_LEVELS = {
+  '최고 관리자': 5,
+  '관리자': 4,
+  '운영진': 3,
+  '우수 회원': 2,
+  '일반 회원': 1
+};
+
 const BoardDetail = () => {
   const { category, id } = useParams(); 
   const navigate = useNavigate();
@@ -53,14 +62,12 @@ const BoardDetail = () => {
   const handleDelete = async () => {
     if (!window.confirm("정말로 이 게시글을 삭제하시겠습니까?")) return; 
     try {
-      // 🌟 핵심 보완: post.id가 아닌, 상단 useParams()에서 확실하게 가져온 id를 사용
       const response = await fetch(`/api/board-delete?id=${id}`, { method: 'DELETE' });
       
       if (response.ok) {
         alert("삭제되었습니다.");
         navigate(`/board/${category}`);
       } else {
-        // 🌟 핵심 보완: 실패 시 백엔드에서 뱉어낸 진짜 이유를 화면에 띄워줌
         const errData = await response.json();
         alert(`삭제 실패: ${errData.error}`);
       }
@@ -69,7 +76,7 @@ const BoardDetail = () => {
     }
   };
 
-  // ⭐ 1. 로딩 중일 때도 빈 화면이 아니라 예쁘게 띄워줍니다.
+  // 1. 로딩 중일 때 화면
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
@@ -82,7 +89,7 @@ const BoardDetail = () => {
     );
   }
 
-  // ⭐ 2. 함정 제거! 데이터가 없을 때 백지(null) 대신 친절한 안내를 띄웁니다.
+  // 2. 데이터가 없을 때 404 안내 화면
   if (!post) {
     return (
       <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
@@ -100,8 +107,42 @@ const BoardDetail = () => {
     );
   }
 
+  // ⭐ 3. 접근 권한(Access Level) 검사 방어막 로직
+  const requiredLevel = post.access_level || 0;
+  // 비회원이면 0, 로그인을 했다면 본인 계급의 전투력 반환
+  const myLevel = session?.user?.role ? (ROLE_LEVELS[session.user.role] || 1) : 0;
+
+  // 내 레벨이 요구 레벨보다 낮으면 자물쇠 화면으로 강제 차단!
+  if (requiredLevel > myLevel) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
+        <Header />
+        <main className="flex-grow flex flex-col items-center justify-center text-center px-4">
+          <span className="text-6xl mb-6">🔒</span>
+          <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 mb-3">
+            접근 권한이 없습니다
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-sm leading-relaxed">
+            {requiredLevel === 1 
+              ? "이 게시물은 로그인을 한 회원만 열람할 수 있습니다. 상단 메뉴에서 로그인해 주세요." 
+              : "이 게시물은 '우수 회원' 이상만 열람할 수 있는 제한된 자료입니다."}
+          </p>
+          <button 
+            onClick={() => navigate(-1)} 
+            className="px-8 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold rounded-xl transition-all"
+          >
+            이전 페이지로 돌아가기
+          </button>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // 👇 권한을 통과한 사람들만 아래부터 실제 글을 렌더링합니다. 👇
+
   const isAuthor = session?.user?.name === post.author_name;
-  const hasManagerRole = session?.user?.role === '관리자' || session?.user?.role === '운영진';
+  const hasManagerRole = session?.user?.role === '관리자' || session?.user?.role === '운영진' || session?.user?.role === '최고 관리자';
   const canEditOrDelete = isAuthor || hasManagerRole;
 
   const isQnA = category === 'qna';
@@ -128,7 +169,16 @@ const BoardDetail = () => {
           
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors">
             <div className="px-8 py-6 border-b border-gray-100 dark:border-gray-700">
-              <span className="text-xs font-extrabold text-[#317F81] dark:text-[#4fd1d5] bg-[#eef6f6] dark:bg-gray-700 px-2 py-1 rounded">{boardNames[category]}</span>
+              <span className="text-xs font-extrabold text-[#317F81] dark:text-[#4fd1d5] bg-[#eef6f6] dark:bg-gray-700 px-2 py-1 rounded mr-2">
+                {boardNames[category]}
+              </span>
+              {/* ⭐ 열람 제한이 있는 글은 제목 위에 빨간 자물쇠 표시 */}
+              {requiredLevel > 0 && (
+                <span className="text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/30 px-2 py-1 rounded">
+                  {requiredLevel === 1 ? "🔒 일반 회원 공개" : "🔒 우수 회원 전용"}
+                </span>
+              )}
+
               <h1 className="text-2xl font-extrabold mt-3 mb-4 text-gray-900 dark:text-white">{post.title}</h1>
               <div className="text-sm text-gray-500 dark:text-gray-400 flex gap-4 items-center">
                 <span className="font-bold text-gray-700 dark:text-gray-300">👤 {displayAuthor}</span>
@@ -182,7 +232,7 @@ const BoardDetail = () => {
                   className="flex items-center px-8 py-4 border-b border-gray-100 dark:border-gray-700 cursor-pointer hover:bg-white dark:hover:bg-gray-700 transition-colors group"
                 >
                   <span className="text-sm font-extrabold text-[#317F81] dark:text-[#4fd1d5] w-20">▲ 다음글</span>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white">{post.nextPost.title}</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white truncate">{post.nextPost.title}</span>
                 </div>
               )}
               {post.prevPost && (
@@ -191,7 +241,7 @@ const BoardDetail = () => {
                   className="flex items-center px-8 py-4 cursor-pointer hover:bg-white dark:hover:bg-gray-700 transition-colors group"
                 >
                   <span className="text-sm font-extrabold text-gray-400 w-20">▼ 이전글</span>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white">{post.prevPost.title}</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white truncate">{post.prevPost.title}</span>
                 </div>
               )}
             </div>
