@@ -39,9 +39,12 @@ const MyPage = () => {
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
   const [modal, setModal] = useState({ isOpen: false, type: null, target: null, confirmText: '' });
 
-  // ⭐ 관리자 전용 상태 추가
+  // ⭐ 관리자 전용 상태 (검색 및 페이징 추가)
   const [adminUsers, setAdminUsers] = useState([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [searchEmail, setSearchEmail] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 15; // 한 페이지당 표시할 회원 수
 
   // 내 계급 수치화 및 관리자 여부 판별
   const myLevel = ROLE_LEVELS[session?.user?.role] || 1;
@@ -97,7 +100,7 @@ const MyPage = () => {
     }
   }, [session?.user]);
 
-  // ⭐ 2. 관리자일 경우 전체 회원 목록 로드
+  // 2. 관리자일 경우 전체 회원 목록 로드
   const loadAdminUsers = useCallback(async (signal) => {
     if (!isAdmin) return;
     setIsLoadingUsers(true);
@@ -129,7 +132,7 @@ const MyPage = () => {
     if (!session?.user) return;
     const controller = new AbortController();
     loadLinkedAccounts(controller.signal);
-    loadAdminUsers(controller.signal); // 컴포넌트 마운트 시 회원 목록도 함께 호출
+    loadAdminUsers(controller.signal); 
     return () => controller.abort();
   }, [session?.user, loadLinkedAccounts, loadAdminUsers]);
 
@@ -218,11 +221,9 @@ const MyPage = () => {
     }
   };
 
-  // ⭐ 회원 등급 변경 실행 (API 연동 준비 완료)
-  // ⭐ 회원 등급 변경 실행 (실제 API 연동 완료)
+  // 회원 등급 변경 실행
   const handleRoleChange = async (userId, newRole) => {
     try {
-      // 1. 백엔드 API로 실제 D1 업데이트 요청
       const response = await fetchWithSecurity('/api/auth/update-role', {
         method: 'POST',
         body: JSON.stringify({ userId, newRole })
@@ -234,15 +235,28 @@ const MyPage = () => {
         throw new Error(resData.error || '등급 변경에 실패했습니다.');
       }
       
-      // 2. DB 업데이트가 완벽하게 성공하면 화면의 상태도 변경
       setAdminUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
       showToast(`등급이 '${newRole}'(으)로 변경되었습니다.`, 'success');
       
     } catch (error) {
-      // 실패 시 에러 알림을 띄우고, 바뀐 척했던 UI를 원래대로 되돌리기 위해 리스트 재호출
       showToast(error.message, 'error');
       loadAdminUsers(); 
     }
+  };
+
+  // ⭐ 검색 및 페이징 처리 로직
+  const filteredUsers = adminUsers.filter(user => 
+    user.email.toLowerCase().includes(searchEmail.toLowerCase())
+  );
+  
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentUsers = filteredUsers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  // 검색어 입력 시 1페이지로 초기화
+  const handleSearchEmail = (e) => {
+    setSearchEmail(e.target.value);
+    setCurrentPage(1);
   };
 
   if (isPending) {
@@ -321,7 +335,6 @@ const MyPage = () => {
         </div>
       )}
 
-      {/* 테이블이 들어갈 공간을 위해 max-w를 1000px로 소폭 확대 */}
       <main className="max-w-[1000px] mx-auto px-4 py-12 font-main">
         <div className="mb-10">
           <h1 className="text-3xl font-extrabold text-txt-primary tracking-tight">마이페이지</h1>
@@ -394,14 +407,28 @@ const MyPage = () => {
           </div>
         </div>
 
-        {/* ⭐ 관리자 전용: 회원 목록 섹션 (새로 추가됨) */}
+        {/* ⭐ 관리자 전용: 회원 목록 섹션 (검색 및 페이징 적용) */}
         {isAdmin && (
           <div className="bg-bg-surface border border-brand-main/30 rounded-3xl p-6 md:p-10 shadow-sm mb-8 overflow-hidden">
             <div className="mb-6 border-b border-bd-default pb-4">
               <h3 className="text-xl font-extrabold text-brand-main flex items-center gap-2">
                 👑 관리자 전용: 전체 회원 목록
               </h3>
-              <p className="text-sm text-txt-muted mt-2">나보다 하위 등급의 회원만 권한을 변경할 수 있습니다.</p>
+              <p className="text-sm text-txt-muted mt-2 mb-4">나보다 하위 등급의 회원만 권한을 변경할 수 있습니다.</p>
+              
+              {/* ⭐ 이메일 검색 바 추가 */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-bg-base p-4 rounded-xl border border-bd-default">
+                <span className="text-sm font-bold text-txt-secondary">
+                  검색된 회원: <span className="text-brand-main">{filteredUsers.length}</span>명
+                </span>
+                <input 
+                  type="text" 
+                  placeholder="이메일 주소 검색..."
+                  value={searchEmail}
+                  onChange={handleSearchEmail}
+                  className="w-full sm:w-64 px-4 py-2 text-sm border border-bd-strong bg-white dark:bg-gray-800 text-txt-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-main transition-colors"
+                />
+              </div>
             </div>
 
             {isLoadingUsers ? (
@@ -419,53 +446,93 @@ const MyPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {adminUsers.map(user => {
-                      const targetLevel = ROLE_LEVELS[user.role] || 1;
-                      // 하극상 방지: 타겟 유저의 계급이 내 계급과 같거나 높으면 변경 불가!
-                      const canManage = myLevel > targetLevel; 
-                      
-                      return (
-                        <tr key={user.id} className="border-b border-bd-default hover:bg-bg-base transition-colors text-sm">
-                          <td className="p-4 font-bold text-txt-primary">{user.name}</td>
-                          <td className="p-4 text-txt-secondary">{user.email}</td>
-                          <td className="p-4 text-center">
-                            <div className="flex items-center justify-center gap-1 flex-wrap">
-                              {user.providers && user.providers.map(p => {
-                                const providerInfo = SOCIAL_PROVIDERS.find(sp => sp.id === p);
-                                const bgColor = providerInfo ? providerInfo.color : 'bg-gray-500';
-                                const textColor = p === 'kakao' ? 'text-black' : 'text-white';
-                                return (
-                                  <span key={p} className={`px-2 py-1 text-[10px] font-bold rounded-md uppercase ${bgColor} ${textColor}`}>
-                                    {p}
-                                  </span>
-                                )
-                              })}
-                            </div>
-                          </td>
-                          <td className="p-4 text-txt-muted text-xs">{new Date(user.createdAt).toLocaleDateString()}</td>
-                          <td className="p-4 text-center">
-                            <select 
-                              value={user.role}
-                              onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                              disabled={!canManage}
-                              className={`text-xs font-bold rounded-lg px-3 py-2 border outline-none ${
-                                canManage 
-                                  ? 'bg-bg-surface border-brand-main text-brand-main cursor-pointer hover:bg-brand-main/5' 
-                                  : 'bg-bg-base border-bd-default text-txt-muted cursor-not-allowed opacity-60'
-                              }`}
-                            >
-                              <option value="최고 관리자">최고 관리자</option>
-                              <option value="관리자">관리자</option>
-                              <option value="운영진">운영진</option>
-                              <option value="우수 회원">우수 회원</option>
-                              <option value="일반 회원">일반 회원</option>
-                            </select>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {currentUsers.length > 0 ? (
+                      currentUsers.map(user => {
+                        const targetLevel = ROLE_LEVELS[user.role] || 1;
+                        const canManage = myLevel > targetLevel; 
+                        
+                        return (
+                          <tr key={user.id} className="border-b border-bd-default hover:bg-bg-base transition-colors text-sm">
+                            <td className="p-4 font-bold text-txt-primary">{user.name}</td>
+                            <td className="p-4 text-txt-secondary">{user.email}</td>
+                            <td className="p-4 text-center">
+                              <div className="flex items-center justify-center gap-1 flex-wrap">
+                                {user.providers && user.providers.map(p => {
+                                  const providerInfo = SOCIAL_PROVIDERS.find(sp => sp.id === p);
+                                  const bgColor = providerInfo ? providerInfo.color : 'bg-gray-500';
+                                  const textColor = p === 'kakao' ? 'text-black' : 'text-white';
+                                  return (
+                                    <span key={p} className={`px-2 py-1 text-[10px] font-bold rounded-md uppercase ${bgColor} ${textColor}`}>
+                                      {p}
+                                    </span>
+                                  )
+                                })}
+                              </div>
+                            </td>
+                            <td className="p-4 text-txt-muted text-xs">{new Date(user.createdAt).toLocaleDateString()}</td>
+                            <td className="p-4 text-center">
+                              <select 
+                                value={user.role}
+                                onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                                disabled={!canManage}
+                                className={`text-xs font-bold rounded-lg px-3 py-2 border outline-none ${
+                                  canManage 
+                                    ? 'bg-bg-surface border-brand-main text-brand-main cursor-pointer hover:bg-brand-main/5' 
+                                    : 'bg-bg-base border-bd-default text-txt-muted cursor-not-allowed opacity-60'
+                                }`}
+                              >
+                                <option value="최고 관리자">최고 관리자</option>
+                                <option value="관리자">관리자</option>
+                                <option value="운영진">운영진</option>
+                                <option value="우수 회원">우수 회원</option>
+                                <option value="일반 회원">일반 회원</option>
+                              </select>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan="5" className="p-10 text-center text-txt-muted font-bold">
+                          조건에 맞는 회원이 없습니다.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
+                
+                {/* ⭐ 페이지네이션 컨트롤 */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center gap-2 mt-6">
+                    <button 
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(prev => prev - 1)}
+                      className="px-3 py-1.5 border border-bd-default bg-bg-base text-txt-secondary text-sm font-bold rounded-lg disabled:opacity-50 hover:bg-bg-surface-hover transition-colors"
+                    >
+                      이전
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold transition-colors ${
+                          currentPage === page 
+                            ? 'bg-brand-main text-white border border-brand-main' 
+                            : 'bg-bg-base text-txt-secondary border border-bd-default hover:bg-bg-surface-hover'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                    <button
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(prev => prev + 1)}
+                      className="px-3 py-1.5 border border-bd-default bg-bg-base text-txt-secondary text-sm font-bold rounded-lg disabled:opacity-50 hover:bg-bg-surface-hover transition-colors"
+                    >
+                      다음
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
