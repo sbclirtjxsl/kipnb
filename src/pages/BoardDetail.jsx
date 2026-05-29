@@ -10,7 +10,6 @@ const boardNames = {
   forms: "인증 관련 서식", notice: "공지사항", qna: "문의상담", archive: "자료실",
 };
 
-// ⭐ 계급 척도 정의
 const ROLE_LEVELS = {
   '최고 관리자': 5,
   '관리자': 4,
@@ -75,7 +74,6 @@ const BoardDetail = () => {
     }
   };
 
-  // 1. 로딩 중
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
@@ -88,7 +86,6 @@ const BoardDetail = () => {
     );
   }
 
-  // 2. 게시글 없음
   if (!post) {
     return (
       <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
@@ -106,10 +103,18 @@ const BoardDetail = () => {
     );
   }
 
-  // ⭐ 3. 열람 권한 검사
-  const requiredLevel = post.access_level || 0;
+  // ⭐ 유저 권한 및 본인 확인 세팅 (동명이인 방지 이메일 확인 추가)
   const myLevel = session?.user?.role ? (ROLE_LEVELS[session.user.role] || 1) : 0;
+  
+  // 이메일이 있으면 이메일로 완벽 비교, 이메일 정보가 없으면 예비로 이름 비교
+  const isAuthor = session?.user?.email 
+    ? session.user.email === post.author_email 
+    : session?.user?.name === post.author_name; 
+    
+  const hasManagerRole = myLevel >= 3; 
 
+  // ⭐ 방어막 1: 열람 권한(access_level) 등급 검사
+  const requiredLevel = post.access_level || 0;
   if (requiredLevel > myLevel) {
     return (
       <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
@@ -136,19 +141,35 @@ const BoardDetail = () => {
     );
   }
 
+  // ⭐ 방어막 2: 비밀글(is_secret) 검사
+  // 비밀글인데, 내가 쓴 글도 아니고 운영진 이상(레벨 3)도 아니면 튕겨냄!
+  if (post.is_secret === 1 && !isAuthor && !hasManagerRole) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900 flex flex-col font-sans transition-colors duration-300">
+        <Header />
+        <main className="flex-grow flex flex-col items-center justify-center text-center px-4">
+          <span className="text-6xl mb-6">🔒</span>
+          <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 mb-3">
+            비밀글입니다
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-sm leading-relaxed">
+            해당 게시물은 작성자 본인과 운영진만 열람할 수 있습니다.
+          </p>
+          <button 
+            onClick={() => navigate(-1)} 
+            className="px-8 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold rounded-xl transition-all"
+          >
+            이전 페이지로 돌아가기
+          </button>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
-  // ⭐ 핵심 수정: 수정/삭제 권한 방어막 강화
+  // 이하 로직은 방어막을 통과한 사람(본인, 혹은 운영진)에게만 렌더링됩니다.
   const isQnA = category === 'qna';
-  // 게시글 작성자 이름과 현재 로그인한 유저 이름이 같은지 확인
-  const isAuthor = session?.user?.name === post.author_name; 
-  // 레벨 3(운영진) 이상인지 확인
-  const hasManagerRole = myLevel >= 3; 
-
-  // [수정/삭제 가능 조건] 
-  // 1. 내가 운영진 이상(레벨 3 이상)이거나,
-  // 2. 현재 게시판이 '문의상담(qna)' 이면서, 동시에 내가 쓴 글일 때만 허용!
   const canEditOrDelete = hasManagerRole || (isQnA && isAuthor);
-
   const displayAuthor = isQnA ? post.author_name : '관리자';
 
   let imageUrls = [];
@@ -178,6 +199,12 @@ const BoardDetail = () => {
               {requiredLevel > 0 && (
                 <span className="text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/30 px-2 py-1 rounded">
                   {requiredLevel === 1 ? "🔒 일반 회원 공개" : "🔒 우수 회원 전용"}
+                </span>
+              )}
+              {/* ⭐ 비밀글 뱃지 추가 노출 */}
+              {post.is_secret === 1 && (
+                <span className="text-xs font-bold text-gray-600 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded ml-2">
+                  🔒 비밀글
                 </span>
               )}
 
@@ -252,7 +279,6 @@ const BoardDetail = () => {
 
           <div className="mt-6 flex justify-between items-center">
             <button onClick={() => navigate(`/board/${category}`)} className="px-6 py-2 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-bold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">목록으로</button>
-            {/* ⭐ 조건에 부합할 때만 노출! */}
             {canEditOrDelete && (
               <div className="flex gap-2">
                 <button onClick={() => navigate(`/board/${category}/edit/${post.id}`)} className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">수정</button>

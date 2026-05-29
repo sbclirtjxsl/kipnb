@@ -100,19 +100,17 @@ const Notice = () => {
     setCurrentPage(1); 
   };
 
-  // ⭐ 내 계급 수치화 및 글쓰기 권한 부여 로직 변경
-  // 로그인 안 한 상태면 0, 로그인 했으면 해당 계급의 레벨값 부여
+  // 내 계급 수치화 및 글쓰기 권한 부여 로직
   const myLevel = session?.user?.role ? (ROLE_LEVELS[session.user.role] || 1) : 0;
   
   const isQnA = category === 'qna';
-  const hasManagerRole = myLevel >= 3; // ⭐ 레벨 3(운영진) 이상이면 무조건 true
+  const hasManagerRole = myLevel >= 3; 
   const canWrite = category !== 'search' && (isQnA ? true : hasManagerRole);
 
   return (
     <div className="min-h-screen bg-bg-base flex flex-col font-sans transition-colors duration-300">
       <Header />
       <main className="flex-grow">
-        {/* 상단 타이틀 및 배너 영역 */}
         <section className="max-w-[900px] mx-auto pt-10 pb-4 px-4 text-center">
           <h2 className="text-3xl font-extrabold text-txt-primary mb-4 tracking-tight">
             {category === 'search' && globalQuery ? `'${globalQuery}' 검색 결과` : currentBoard?.title}
@@ -125,11 +123,9 @@ const Notice = () => {
           </div>
         </section>
 
-        {/* 게시판 목록 영역 */}
         <section className="py-2">
           <div className="max-w-[900px] mx-auto px-4">
             
-            {/* 검색 및 건수 */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
               <div className="text-sm text-txt-secondary font-medium">
                 총 <span className="text-brand-main font-bold">{totalCount}</span>건
@@ -147,7 +143,6 @@ const Notice = () => {
                <div className="py-20 text-center text-txt-muted border-t-2 border-txt-primary">데이터를 불러오는 중...</div>
             ) : Array.isArray(posts) && posts.length > 0 ? (
               <>
-                {/* 1. 데스크탑용 테이블 레이아웃 */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full border-t-2 border-txt-primary">
                     <thead>
@@ -179,7 +174,8 @@ const Notice = () => {
                                   {boardNames[post.category] || '게시판'}
                                 </span>
                               )}
-                              {/* 비밀글 등 권한 자물쇠 표시 필요시 여기에 추가 가능 */}
+                              {/* ⭐ 비밀글 자물쇠 아이콘 추가 (데스크탑) */}
+                              {post.is_secret === 1 && <span className="mr-1.5" title="비밀글">🔒</span>}
                               {post.title || "제목 없음"}
                             </td>
                             <td className="py-4 text-center text-lg flex items-center justify-center gap-1">
@@ -200,7 +196,6 @@ const Notice = () => {
                   </table>
                 </div>
 
-                {/* 2. 모바일용 리스트 레이아웃 */}
                 <div className="md:hidden border-t-2 border-txt-primary">
                   {posts.map((post, index) => {
                     const displayNumber = totalCount - ((currentPage - 1) * itemsPerPage) - index;
@@ -221,6 +216,8 @@ const Notice = () => {
                                 {boardNames[post.category] || '게시판'}
                               </span>
                             )}
+                            {/* ⭐ 비밀글 자물쇠 아이콘 추가 (모바일) */}
+                            {post.is_secret === 1 && <span className="mr-1" title="비밀글">🔒</span>}
                             {post.title || "제목 없음"}
                           </h3>
                         </div>
@@ -245,7 +242,6 @@ const Notice = () => {
               <div className="py-20 text-center text-txt-muted border-t-2 border-txt-primary">등록된 게시물이 없습니다.</div>
             )}
 
-            {/* 페이지네이션 구역 */}
             {totalCount > 0 && (
               <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="hidden sm:block w-24"></div>
@@ -265,7 +261,6 @@ const Notice = () => {
                   ))}
                 </div>
                 <div className="w-full sm:w-24 flex justify-end">
-                  {/* ⭐ 권한이 있는 경우 글쓰기 버튼 노출 */}
                   {canWrite && (
                     <button 
                       className="w-full sm:w-auto px-6 py-2 bg-brand-main text-txt-inverse font-bold rounded-lg hover:bg-brand-dark transition-colors"
@@ -278,7 +273,6 @@ const Notice = () => {
               </div>
             )}
             
-            {/* 데이터가 0개일 때 글쓰기 버튼 */}
             {totalCount === 0 && canWrite && (
               <div className="mt-6 flex justify-end">
                  <button 

@@ -4,26 +4,27 @@ export async function onRequestPost(context) {
     try {
         const data = await request.json();
         
-        // ⭐ 1. 프론트에서 보낸 custom_date와 access_level을 추가로 받습니다!
+        // ⭐ 1. 프론트에서 보낸 custom_date, access_level과 함께 'is_secret'도 받습니다!
         const { 
             category, title, content, author_name, author_email, 
-            has_file, image_url, file_url, custom_date, access_level 
+            has_file, image_url, file_url, custom_date, access_level, is_secret 
         } = data;
 
         if (!category || !title || !content || !author_name || !author_email) {
             return new Response(JSON.stringify({ error: "필수 항목이 누락되었습니다." }), { status: 400 });
         }
 
-        // ⭐ 2. 권한 레벨 숫자 변환 (값이 없으면 0: 전체 공개)
+        // ⭐ 2. 권한 레벨 및 비밀글 값 안전 변환 (값이 없으면 0)
         const safeAccessLevel = access_level ? parseInt(access_level, 10) : 0;
+        const safeIsSecret = is_secret ? 1 : 0; // 프론트엔드에서 보낸 true/false를 1/0으로 변환
 
         // 3. 작성일 결정 (관리자가 날짜를 골랐으면 그 날짜, 안 골랐으면 현재 시간)
         const finalCreatedAt = custom_date ? custom_date : new Date().toISOString();
 
-        // ⭐ 4. DB 장부에 created_at(작성일)과 access_level(접근 권한)을 같이 저장합니다.
+        // ⭐ 4. DB 장부에 is_secret 컬럼을 추가해서 데이터를 꽂아 넣습니다.
         const result = await env.DB.prepare(
-            `INSERT INTO board (category, title, content, author_name, author_email, has_file, image_url, file_url, created_at, access_level)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            `INSERT INTO board (category, title, content, author_name, author_email, has_file, image_url, file_url, created_at, access_level, is_secret)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
             category, 
             title, 
@@ -34,7 +35,8 @@ export async function onRequestPost(context) {
             image_url || "", 
             file_url || "",
             finalCreatedAt, 
-            safeAccessLevel // ⭐ 파싱한 권한 레벨 삽입
+            safeAccessLevel, 
+            safeIsSecret // ⭐ 비밀글 값 바인딩
         ).run();
 
         if (result.success) {

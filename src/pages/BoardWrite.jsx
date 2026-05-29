@@ -25,7 +25,7 @@ const BoardWrite = () => {
 
   const { data: session } = authClient.useSession();
   
-  // ⭐ 수치형 권한 체크 적용: 레벨 3(운영진) 이상이면 모두 관리자 권한 획득
+  // 수치형 권한 체크 적용: 레벨 3(운영진) 이상이면 모두 관리자 권한 획득
   const myLevel = session?.user?.role ? (ROLE_LEVELS[session.user.role] || 1) : 0;
   const isAdmin = myLevel >= 3;
   
@@ -34,6 +34,9 @@ const BoardWrite = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [accessLevel, setAccessLevel] = useState(0); 
+  // ⭐ 비밀글 체크 상태 추가
+  const [isSecret, setIsSecret] = useState(false); 
+
   const [isSubmitting, setIsSubmitting] = useState(false); 
 
   const [selectedImages, setSelectedImages] = useState([]);
@@ -167,6 +170,7 @@ const BoardWrite = () => {
           has_file: uploadedFileUrls.length > 0 ? 1 : 0, 
           custom_date: customDate ? new Date(customDate).toISOString() : null,
           access_level: accessLevel, 
+          is_secret: isSecret ? 1 : 0, // ⭐ 비밀글 데이터를 1 또는 0으로 변환하여 전송
         }),
       });
 
@@ -205,6 +209,22 @@ const BoardWrite = () => {
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#317F81] dark:focus:ring-[#4fd1d5] outline-none transition-colors" 
                 />
               </div>
+
+              {/* ⭐ 문의상담(qna) 게시판 전용: 비밀글 체크박스 */}
+              {isQnA && (
+                <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors">
+                  <input
+                    type="checkbox"
+                    id="secret-check"
+                    checked={isSecret}
+                    onChange={(e) => setIsSecret(e.target.checked)}
+                    className="w-5 h-5 text-[#317F81] border-gray-300 rounded focus:ring-[#317F81] cursor-pointer"
+                  />
+                  <label htmlFor="secret-check" className="text-sm font-bold text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                    🔒 비밀글로 작성하기 (운영진 이상 관리자와 본인만 열람 가능)
+                  </label>
+                </div>
+              )}
 
               {isAdmin && (
                 <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 transition-colors grid grid-cols-1 md:grid-cols-2 gap-4">
