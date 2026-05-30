@@ -62,33 +62,33 @@ const Home = () => {
           ref={sectionRef} 
           className="py-20 md:py-32 bg-bg-surface transition-colors duration-300 relative overflow-hidden flex items-center min-h-[500px]"
         >
-          {/* 우측: 애니메이션 색상 막대 */}
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[60%] md:w-[50%] lg:w-[45%] flex flex-col items-end gap-4 md:gap-6 z-0 pointer-events-none">
+          {/* ⭐ 우측: 애니메이션 색상 막대 (겹침 방지를 위해 해상도별 너비(w) 엄격하게 제한) */}
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[15%] sm:w-[20%] md:w-[28%] lg:w-[35%] xl:w-[42%] flex flex-col items-end gap-3 md:gap-5 lg:gap-6 z-0 pointer-events-none">
             <div 
-              className={`h-12 md:h-20 lg:h-24 w-full bg-gradient-to-r from-[#fbb635] to-[#f47f20] rounded-l-full shadow-lg transition-all duration-[1000ms] ease-out delay-[0ms] ${
+              className={`h-8 sm:h-10 md:h-16 lg:h-20 xl:h-24 w-full bg-gradient-to-r from-[#fbb635] to-[#f47f20] rounded-l-full shadow-lg transition-all duration-[1000ms] ease-out delay-[0ms] ${
                 isBarsVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
               }`}
             />
             <div 
-              className={`h-12 md:h-20 lg:h-24 w-[85%] bg-gradient-to-r from-[#f5ecd8] to-[#e4d2b2] rounded-l-full shadow-lg transition-all duration-[1000ms] ease-out delay-[150ms] ${
+              className={`h-8 sm:h-10 md:h-16 lg:h-20 xl:h-24 w-[85%] bg-gradient-to-r from-[#f5ecd8] to-[#e4d2b2] rounded-l-full shadow-lg transition-all duration-[1000ms] ease-out delay-[150ms] ${
                 isBarsVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
               }`}
             />
             <div 
-              className={`h-12 md:h-20 lg:h-24 w-[95%] bg-gradient-to-r from-[#ef4643] to-[#d32f2f] rounded-l-full shadow-lg transition-all duration-[1000ms] ease-out delay-[300ms] ${
+              className={`h-8 sm:h-10 md:h-16 lg:h-20 xl:h-24 w-[95%] bg-gradient-to-r from-[#ef4643] to-[#d32f2f] rounded-l-full shadow-lg transition-all duration-[1000ms] ease-out delay-[300ms] ${
                 isBarsVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
               }`}
             />
             <div 
-              className={`h-12 md:h-20 lg:h-24 w-[75%] bg-gradient-to-r from-[#ffc82a] to-[#fca000] rounded-l-full shadow-lg transition-all duration-[1000ms] ease-out delay-[450ms] ${
+              className={`h-8 sm:h-10 md:h-16 lg:h-20 xl:h-24 w-[75%] bg-gradient-to-r from-[#ffc82a] to-[#fca000] rounded-l-full shadow-lg transition-all duration-[1000ms] ease-out delay-[450ms] ${
                 isBarsVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
               }`}
             />
           </div>
 
-          {/* ⭐ 좌측: 텍스트 콘텐츠 (헤더 로고와 정렬을 맞추기 위해 컨테이너 너비와 좌측 여백 대폭 증가) */}
+          {/* ⭐ 좌측: 텍스트 콘텐츠 (모바일/태블릿에서 막대 영역을 침범하지 않도록 w-[80%] 등으로 여백 확보) */}
           <div className="max-w-[1200px] w-full mx-auto px-4 md:px-8 relative z-10 flex flex-col md:flex-row">
-            <div className="md:w-[65%] lg:w-[60%] xl:w-[55%] text-left bg-bg-surface/80 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none p-6 md:p-0 md:pl-12 lg:pl-24 xl:pl-32 rounded-2xl">
+            <div className="w-[85%] sm:w-[80%] md:w-[65%] lg:w-[60%] xl:w-[55%] text-left bg-bg-surface/80 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none p-6 md:p-0 md:pl-12 lg:pl-24 xl:pl-32 rounded-2xl">
               <h2 className="text-4xl md:text-5xl font-Jua mb-8 text-txt-primary transition-colors duration-300">
                 BARRIER FREE
               </h2>
