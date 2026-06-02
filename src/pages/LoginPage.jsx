@@ -26,25 +26,25 @@ const LoginPage = () => {
         }
       },
     },
-    {
-      id: 'kakao',
-      name: '카카오',
-      color: 'bg-[#FEE500]',
-      textColor: 'text-[#191919]',
-      icon: 'K',
-      action: async () => {
-        setIsLoading('kakao'); // ⭐ 로딩 시작
-        try {
-          document.cookie = "app_session=active; path=/;"; 
-          await authClient.signIn.social({
-            provider: "kakao",
-            callbackURL: "/",
-          });
-        } catch (error) {
-          setIsLoading(null);
-        }
-      },
-    },
+    // {
+    //   id: 'kakao',
+    //   name: '카카오',
+    //   color: 'bg-[#FEE500]',
+    //   textColor: 'text-[#191919]',
+    //   icon: 'K',
+    //   action: async () => {
+    //     setIsLoading('kakao'); // ⭐ 로딩 시작
+    //     try {
+    //       document.cookie = "app_session=active; path=/;"; 
+    //       await authClient.signIn.social({
+    //         provider: "kakao",
+    //         callbackURL: "/",
+    //       });
+    //     } catch (error) {
+    //       setIsLoading(null);
+    //     }
+    //   },
+    // },
     {
       id: 'google',
       name: '구글',
