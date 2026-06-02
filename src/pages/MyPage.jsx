@@ -6,8 +6,8 @@ import Header from '../components/Header';
 // 확장성을 고려하여 소셜 프로바이더 정보를 상수로 분리
 const SOCIAL_PROVIDERS = [
   { id: 'google', name: '구글 (Google)', color: 'bg-[#EA4335]' },
-  { id: 'naver', name: '네이버 (Naver)', color: 'bg-[#03C75A]' },
-  { id: 'kakao', name: '카카오 (Kakao)', color: 'bg-[#FEE500]' }
+  { id: 'naver', name: '네이버 (Naver)', color: 'bg-[#03C75A]' }
+  // ,{ id: 'kakao', name: '카카오 (Kakao)', color: 'bg-[#FEE500]' }
 ];
 
 // ⭐ 계급 척도 정의 (UI 권한 제어 및 하극상 방지용)
